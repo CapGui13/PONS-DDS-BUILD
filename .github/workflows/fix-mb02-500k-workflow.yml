@@ -42,7 +42,6 @@ jobs:
               raise SystemExit(f'unexpected changed line count: {changed}')
           if new==s:
               raise SystemExit('no patch applied')
-          # After YAML block indentation is stripped, the JS block must retain 8-space indentation.
           assert '                  const vulState=String(ctx.deal?.vulnerable' in new
           assert '                    return out(target,' in new
           p.write_text(new)
@@ -57,3 +56,5 @@ jobs:
           git diff --cached --quiet && exit 0
           git commit -m "Fix MB02 500K D13 reconstruction indentation"
           git push origin HEAD:main
+
+# retrigger 2026-08-23
