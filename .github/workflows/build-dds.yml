@@ -1,11 +1,11 @@
-name: Build official DDS 2.9.0 self-contained
+name: Build validated static DDS 2.9.1
 
 on:
   workflow_dispatch:
   push:
     branches: [ "main" ]
     paths:
-      - ".github/workflows/build-dds.yml"
+      - ".github/workflows/build-dds-static.yml"
 
 permissions:
   contents: read
@@ -21,85 +21,138 @@ jobs:
       - name: Install compiler dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential libboost-all-dev
+          sudo apt-get install -y build-essential
 
-      - name: Fetch official DDS 2.9.0
+      - name: Fetch vendored upstream DDS 2.9.1
         run: |
-          git clone --depth 1 --branch v2.9.0 https://github.com/dds-bridge/dds.git dds
-          cd dds
-          echo "DDS source commit:"
-          git rev-parse HEAD
-          git status --short
-          git describe --tags --always
+          git clone --depth 1 --branch 2026-08 https://github.com/enerqi/odin-dds.git odin-dds
+          echo "odin-dds commit:"
+          git -C odin-dds rev-parse HEAD
+          echo
+          echo "DDS provenance:"
+          cat odin-dds/external/dds/VENDORED.md
+          grep -qi "7219c95" odin-dds/external/dds/VENDORED.md
 
-      - name: Build official shared library
-        working-directory: dds/src
+      - name: Build static DDS
         run: |
-          make -f Makefiles/Makefile_linux_shared linux
-          test -s libdds.so
-          file libdds.so
-          ldd libdds.so | tee ../../LDD.txt
+          make -C odin-dds/src
+          test -s odin-dds/lib/dds.a
+          file odin-dds/lib/dds.a
+          ar t odin-dds/lib/dds.a | head -50
 
-      - name: Verify expected DDS exports
-        working-directory: dds/src
+      - name: Build and run real DDS smoke solve
+        shell: bash
         run: |
-          nm -D --defined-only libdds.so | tee ../../DDS_EXPORTS.txt
-          grep -q "SolveBoardPBN" ../../DDS_EXPORTS.txt
-          grep -q "CalcDDtablePBN" ../../DDS_EXPORTS.txt
-          grep -q "DealerPar" ../../DDS_EXPORTS.txt
-          grep -q "GetDDSInfo" ../../DDS_EXPORTS.txt
+          cat > /tmp/dds_smoke.cpp <<'CPP'
+          #include <cstring>
+          #include <iostream>
+          #include "dll.h"
 
-      - name: Prepare self-contained artifact
+          int main() {
+            SetMaxThreads(1);
+
+            DDSInfo info{};
+            GetDDSInfo(&info);
+
+            std::cout
+              << "DDS_VERSION=" << info.versionString << "\n"
+              << "CORES=" << info.numCores << "\n"
+              << "THREADS=" << info.noOfThreads << "\n"
+              << "THREADING=" << info.threading << "\n"
+              << "CONSTRUCTOR=" << info.constructor << "\n";
+
+            ddTableDealPBN deal{};
+            const char *pbn =
+              "N:K764.83.KQT87.T2 "
+              "JT82.A.954.AQ986 "
+              "95.KQT7654.63.J4 "
+              "AQ3.J92.AJ2.K753";
+            std::strncpy(deal.cards, pbn, sizeof(deal.cards) - 1);
+
+            ddTableResults table{};
+            const int rc = CalcDDtablePBN(deal, &table);
+            std::cout << "CALC_RC=" << rc << "\n";
+
+            if (rc != RETURN_NO_FAULT) {
+              char msg[80]{};
+              ErrorMessage(rc, msg);
+              std::cerr << "DDS error: " << msg << "\n";
+              FreeMemory();
+              return 2;
+            }
+
+            long checksum = 0;
+            for (int strain = 0; strain < 5; ++strain) {
+              for (int seat = 0; seat < 4; ++seat) {
+                const int tricks = table.resTable[strain][seat];
+                if (tricks < 0 || tricks > 13) {
+                  std::cerr << "Invalid trick count\n";
+                  FreeMemory();
+                  return 3;
+                }
+                checksum += (strain + 1) * (seat + 1) * tricks;
+              }
+            }
+            std::cout << "DD_TABLE_CHECKSUM=" << checksum << "\n";
+            FreeMemory();
+            return 0;
+          }
+          CPP
+
+          g++ -std=c++20 -O2 \
+            -I odin-dds/external/dds/include \
+            /tmp/dds_smoke.cpp \
+            odin-dds/lib/dds.a \
+            -pthread \
+            -o /tmp/dds_smoke
+
+          /tmp/dds_smoke | tee DDS_SMOKE.txt
+
+      - name: Prepare artifact
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p artifact/include artifact/lib
-
-          cp dds/src/libdds.so artifact/
-          cp dds/include/dll.h artifact/include/
-          cp dds/include/portab.h artifact/include/
-          cp dds/LICENSE artifact/DDS_LICENSE.txt
-          cp DDS_EXPORTS.txt artifact/
-          cp LDD.txt artifact/
-
-          BOOST_THREAD="$(ldd dds/src/libdds.so | awk '/libboost_thread/ && /=>/ {print $3; exit}')"
-          if [ -z "${BOOST_THREAD}" ] || [ ! -f "${BOOST_THREAD}" ]; then
-            echo "Unable to locate resolved libboost_thread dependency" >&2
-            exit 1
-          fi
-          cp -L "${BOOST_THREAD}" artifact/lib/
-          BOOST_BASENAME="$(basename "${BOOST_THREAD}")"
+          mkdir -p artifact/include artifact/provenance
+          cp odin-dds/lib/dds.a artifact/
+          cp odin-dds/external/dds/include/dll.h artifact/include/
+          cp odin-dds/external/dds/include/portab.h artifact/include/
+          cp odin-dds/external/dds/LICENSE artifact/DDS_LICENSE.txt
+          cp odin-dds/external/dds/VENDORED.md artifact/provenance/
+          cp DDS_SMOKE.txt artifact/
 
           {
-            echo "DDS_SOURCE_REPOSITORY=https://github.com/dds-bridge/dds"
-            echo "DDS_TAG=v2.9.0"
-            echo "DDS_COMMIT=$(git -C dds rev-parse HEAD)"
-            echo "RUNNER_OS=${RUNNER_OS}"
-            echo "RUNNER_ARCH=${RUNNER_ARCH}"
-            echo "COMPILER=$(g++ --version | head -n 1)"
-            echo "BOOST_THREAD_SOURCE=${BOOST_THREAD}"
-            echo "BOOST_THREAD_BUNDLED=lib/${BOOST_BASENAME}"
+            echo "DDS_TYPE=real Double Dummy Solver"
+            echo "DDS_UPSTREAM=https://github.com/dds-bridge/dds"
+            echo "DDS_UPSTREAM_COMMIT=7219c95"
+            echo "DDS_SOURCE_WRAPPER=https://github.com/enerqi/odin-dds"
+            echo "DDS_SOURCE_WRAPPER_TAG=2026-08"
+            echo "DDS_SOURCE_WRAPPER_COMMIT=$(git -C odin-dds rev-parse HEAD)"
+            echo "BUILD_OS=${RUNNER_OS}"
+            echo "BUILD_ARCH=${RUNNER_ARCH}"
+            echo "COMPILER=$(g++ --version | head -n1)"
+            echo "LINKAGE=static"
+            echo "THREADING=STL/pthread"
+            echo "AUTO_CONSTRUCTOR=none"
           } > artifact/BUILD_INFO.txt
 
           (
             cd artifact
             sha256sum \
-              libdds.so \
-              "lib/${BOOST_BASENAME}" \
+              dds.a \
               include/dll.h \
               include/portab.h \
               DDS_LICENSE.txt \
+              provenance/VENDORED.md \
+              DDS_SMOKE.txt \
               BUILD_INFO.txt \
-              DDS_EXPORTS.txt \
-              LDD.txt \
               > SHA256SUMS.txt
             cat SHA256SUMS.txt
           )
 
-      - name: Upload self-contained DDS runtime artifact
+      - name: Upload static DDS artifact
         uses: actions/upload-artifact@v4
         with:
-          name: dds-2.9.0-linux-amd64-selfcontained
+          name: dds-2.9.1-static-linux-amd64
           path: artifact/
           if-no-files-found: error
           compression-level: 9
