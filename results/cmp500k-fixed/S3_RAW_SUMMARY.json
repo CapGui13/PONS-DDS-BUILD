@@ -1,0 +1,11 @@
+{
+  "auction_only_same_contract": 6566,
+  "contract_changed": 15535,
+  "deals": 100000,
+  "differences": 22101,
+  "harness_status": "FIXED_VULNERABLE_ALIAS",
+  "master_seed": 992200000001,
+  "runtime_changes": "NONE",
+  "same": 77899,
+  "shard": "S3"
+}
