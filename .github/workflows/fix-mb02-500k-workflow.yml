@@ -1,0 +1,59 @@
+name: Fix MB02 500K workflow indentation
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "main" ]
+    paths:
+      - ".github/workflows/fix-mb02-500k-workflow.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fix D13 reconstruction indentation
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('.github/workflows/compare-v261-mb02-500k-dds.yml')
+          s=p.read_text()
+          anchor="          p=Path('work/mb02/pons-critic.js')\n"
+          start=s.index(anchor)
+          end=s.index('          test "$(sha256sum work/mb02/pons-critic.js', start)
+          prefix=s[:start]; mid=s[start:end]; suffix=s[end:]
+          out=[]; in_triple=False; changed=0
+          for line in mid.splitlines(True):
+              stripped=line.rstrip('\n')
+              if stripped.startswith('          old="""') or stripped.startswith('          new="""'):
+                  in_triple=True; out.append(line); continue
+              if in_triple and stripped=='          """':
+                  in_triple=False; out.append(line); continue
+              if in_triple:
+                  out.append('        '+line); changed += 1
+              else:
+                  out.append(line)
+          new=prefix+''.join(out)+suffix
+          if changed < 10:
+              raise SystemExit(f'unexpected changed line count: {changed}')
+          if new==s:
+              raise SystemExit('no patch applied')
+          # After YAML block indentation is stripped, the JS block must retain 8-space indentation.
+          assert '                  const vulState=String(ctx.deal?.vulnerable' in new
+          assert '                    return out(target,' in new
+          p.write_text(new)
+          print('patched lines', changed)
+          PY
+      - name: Commit corrected workflow
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .github/workflows/compare-v261-mb02-500k-dds.yml
+          git diff --cached --quiet && exit 0
+          git commit -m "Fix MB02 500K D13 reconstruction indentation"
+          git push origin HEAD:main
