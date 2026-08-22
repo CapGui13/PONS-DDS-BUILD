@@ -1,0 +1,16 @@
+{
+  "status": "DDS_COMPLETE_133",
+  "solver": "TRUE_DDS_PINNED_ODIN_VENDOR",
+  "rows": 133,
+  "completion_counts": {
+    "BETTER": 45,
+    "WORSE": 57,
+    "EQUIVALENT": 31
+  },
+  "completion_net_dds_impact": 3880,
+  "known_13655_net_dds_impact": -61290,
+  "full_13788_mb02_d13_net_dds_impact": -57410,
+  "original_r7_d13_net_dds_impact": 235780,
+  "full_improvement": 293190,
+  "mb02_critic_sha256": "6f236dcb597ec5502b44e7e66cd79515051be5268de9f9d010fd621dea8b0511"
+}
