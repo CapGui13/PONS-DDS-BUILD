@@ -1,0 +1,20 @@
+--- mb01/pons-critic.js
++++ mb02/pons-critic.js
+@@ -4207,11 +4207,14 @@
+         const s=exact5[0], target=`1${s}`;
+         const vulState=String(ctx.deal?.vulnerable||'None'), ownSide=sideOf(seat);
+         const ownVul=vulState==='Both'||vulState===ownSide;
+-        const floor=ownVul?10:8;
++        const oldFloor=ownVul?10:8;
++        const floor=ownVul?12:11;
+         if(HL>=floor && legal(target))
+-          return out(target,'instance-d-wave2-d13-vulnerability-one-level-overcall',`WAVE2 D13 : ${target} naturel, couleur 5e et ${HL} HL ; seuil PONS ${floor} HL (${ownVul?'vulnérable':'non vulnérable'})`,{suits:{[s]:{min:5,max:5}},points:{min:floor,max:11},vulnerabilitySensitive:true});
+-        if(HL<floor && legal('PASS'))
+-          return out('PASS','instance-d-wave2-d13-vulnerability-one-level-overcall',`WAVE2 D13 : ${HL} HL sous le seuil PONS ${floor} HL ${ownVul?'vulnérable':'non vulnérable'} => Passe`,{natural:false,points:{min:8,max:floor-1},vulnerabilitySensitive:true});
++          return out(target,'instance-d-wave2-d13-vulnerability-one-level-overcall',`WAVE2 D13 : ${target} naturel, couleur 5e et ${HL} HL ; seuil PONS FIXED ${floor} HL (${ownVul?'vulnérable':'non vulnérable'})`,{suits:{[s]:{min:5,max:5}},points:{min:floor,max:11},vulnerabilitySensitive:true});
++        if(HL<floor && legal('PASS')){
++          const source=HL>=oldFloor?'r7-fixed-mb02-d13-tighten-vulnerability-one-level-overcall':'instance-d-wave2-d13-vulnerability-one-level-overcall';
++          return out('PASS',source,`R7 FIXED MB02 D13 : ${HL} HL sous le seuil ${floor} HL ${ownVul?'vulnérable':'non vulnérable'} => Passe`,{natural:false,points:{min:8,max:floor-1},vulnerabilitySensitive:true});
++        }
+       }
+     }
