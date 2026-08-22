@@ -84,13 +84,39 @@ jobs:
         run: |
           python - <<'PY'
           import glob,json,os
+
           parts=[]
           for p in sorted(glob.glob('parts/*/SUMMARY.json')):
-              x=json.load(open(p)); parts.append({'artifact':os.path.basename(os.path.dirname(p)),**x})
-          assert len(parts)==5, len(parts)
-          deals=sum(x['deals'] for x in parts); changed=sum(x['changed'] for x in parts); exact=sum(x['exact_d9'] for x in parts); collateral=sum(x['collateral'] for x in parts)
-          assert deals==50000 and collateral==0 and exact==changed
-          out={'status':'FINAL_GATE_PASS','deals':deals,'changed':changed,'exact_d9':exact,'collateral':collateral,'shards':parts,'base_critic_sha256':os.environ['BASE_CRITIC_SHA'],'mb01_critic_sha256':os.environ['MB01_CRITIC_SHA']}
+              x=json.load(open(p))
+              parts.append({'artifact':os.path.basename(os.path.dirname(p)),**x})
+
+          assert len(parts)==5, f"expected 5 shards, got {len(parts)}"
+          assert all(x.get('status')=='SHARD_PASS' for x in parts), parts
+
+          deals=sum(x['deals'] for x in parts)
+          same=sum(x['same'] for x in parts)
+          changed=sum(x['changed'] for x in parts)
+          exact=sum(x['exact_d9'] for x in parts)
+          collateral_examples=[e for x in parts for e in x.get('collateral_examples',[])]
+          collateral=len(collateral_examples)
+
+          assert deals==50000, deals
+          assert same+changed==deals, (same,changed,deals)
+          assert exact==changed, (exact,changed)
+          assert collateral==0, collateral_examples
+
+          out={
+              'status':'FINAL_GATE_PASS',
+              'deals':deals,
+              'same':same,
+              'changed':changed,
+              'exact_d9':exact,
+              'collateral':collateral,
+              'collateral_examples':collateral_examples,
+              'shards':parts,
+              'base_critic_sha256':os.environ['BASE_CRITIC_SHA'],
+              'mb01_critic_sha256':os.environ['MB01_CRITIC_SHA']
+          }
           os.makedirs('final',exist_ok=True)
           json.dump(out,open('final/FINAL_GATE_SUMMARY.json','w'),indent=2)
           print(json.dumps(out,indent=2))
