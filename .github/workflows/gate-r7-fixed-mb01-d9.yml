@@ -1,0 +1,113 @@
+name: Gate R7 FIXED MB01 D9
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "main" ]
+    paths:
+      - "PONS_R7_FIXED_MB01_D9_GATE_PACKAGE.zip"
+      - ".github/workflows/gate-r7-fixed-mb01-d9.yml"
+
+permissions:
+  contents: write
+
+env:
+  PACKAGE: PONS_R7_FIXED_MB01_D9_GATE_PACKAGE.zip
+  BASE_CRITIC_SHA: f1991fba7f818668aa55ab1776c63afd6b4f52b3b8a9565b599bc44ec236ca85
+  MB01_CRITIC_SHA: 52d548cdd5c41206e89c1d970e12c663850b0955f6157da03bd938dae0df59c8
+
+jobs:
+  gate:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - shard: S1
+            seed: 994000000001
+          - shard: S2
+            seed: 994100000001
+          - shard: S3
+            seed: 994200000001
+          - shard: S4
+            seed: 994300000001
+          - shard: S5
+            seed: 994400000001
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Unpack package
+        run: |
+          set -euo pipefail
+          rm -rf work && mkdir work
+          unzip -q "$PACKAGE" -d work/pkg
+          cd work/pkg
+          sha256sum -c SHA256SUMS.txt
+          unzip -q R7_GREEN.zip -d ../r7zip
+          RUNTIME="$(dirname "$(find ../r7zip -type f -name pons-critic.js | head -1)")"
+          test -n "$RUNTIME"
+          echo "RUNTIME=$RUNTIME" >> "$GITHUB_ENV"
+          test "$(sha256sum "$RUNTIME/pons-critic.js" | awk '{print $1}')" = "$BASE_CRITIC_SHA"
+          cp -a "$RUNTIME" ../mb01
+          cp MB01_pons-critic.js ../mb01/pons-critic.js
+          test "$(sha256sum ../mb01/pons-critic.js | awk '{print $1}')" = "$MB01_CRITIC_SHA"
+          node --check ../mb01/pons-critic.js
+      - name: Generate 10K fresh deals
+        run: python work/pkg/GENERATOR.py work/deals.jsonl 10000 ${{ matrix.seed }}
+      - name: Run R7 GREEN
+        run: node work/pkg/GATE_RUNNER_FIXED.mjs "$RUNTIME" work/deals.jsonl work/r7.jsonl
+      - name: Run MB01
+        run: node work/pkg/GATE_RUNNER_FIXED.mjs work/mb01 work/deals.jsonl work/mb01.jsonl
+      - name: Compare exact domain
+        run: python work/pkg/COMPARE_GATE.py work/r7.jsonl work/mb01.jsonl work/SUMMARY.json
+      - name: Verify counts
+        run: |
+          test "$(wc -l < work/r7.jsonl)" -eq 10000
+          test "$(wc -l < work/mb01.jsonl)" -eq 10000
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mb01-d9-${{ matrix.shard }}
+          path: work/SUMMARY.json
+          if-no-files-found: error
+          retention-days: 30
+
+  aggregate:
+    needs: gate
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: mb01-d9-*
+          path: parts
+      - name: Aggregate 50K gate
+        run: |
+          python - <<'PY'
+          import glob,json,os
+          parts=[]
+          for p in sorted(glob.glob('parts/*/SUMMARY.json')):
+              x=json.load(open(p)); parts.append({'artifact':os.path.basename(os.path.dirname(p)),**x})
+          assert len(parts)==5, len(parts)
+          deals=sum(x['deals'] for x in parts); changed=sum(x['changed'] for x in parts); exact=sum(x['exact_d9'] for x in parts); collateral=sum(x['collateral'] for x in parts)
+          assert deals==50000 and collateral==0 and exact==changed
+          out={'status':'FINAL_GATE_PASS','deals':deals,'changed':changed,'exact_d9':exact,'collateral':collateral,'shards':parts,'base_critic_sha256':os.environ['BASE_CRITIC_SHA'],'mb01_critic_sha256':os.environ['MB01_CRITIC_SHA']}
+          os.makedirs('final',exist_ok=True)
+          json.dump(out,open('final/FINAL_GATE_SUMMARY.json','w'),indent=2)
+          print(json.dumps(out,indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PONS_R7_FIXED_MB01_D9_FINAL_GATE
+          path: final/
+          if-no-files-found: error
+          retention-days: 30
+      - name: Commit final gate result
+        run: |
+          set -euo pipefail
+          mkdir -p results/r7-fixed-mb01-d9-gate
+          cp final/FINAL_GATE_SUMMARY.json results/r7-fixed-mb01-d9-gate/
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add results/r7-fixed-mb01-d9-gate/FINAL_GATE_SUMMARY.json
+          git diff --cached --quiet && exit 0
+          git commit -m "Add R7 FIXED MB01 D9 50K gate result"
+          git push
