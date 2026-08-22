@@ -1,0 +1,329 @@
+name: Solve fixed-harness missing DDS cases
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "main" ]
+    paths:
+      - "DDS_FIXED_MISSING.tsv.gz"
+      - ".github/workflows/solve-fixed-missing-dds.yml"
+
+permissions:
+  contents: write
+
+env:
+  ODIN_COMMIT: 38fcd537dd6c7dec7ef596e861551f1b278f2f98
+  DDS_UPSTREAM_COMMIT: 7219c956f4ed9a9f8d1585e9a1a2c57465745ac5
+  DDS_A_SHA256: e5c7bcdcf96d3ed24b14b2840303a0d0936b05419de463809f68982c565c7f4c
+  INPUT_SHA256: 5daf2b6cd6488c15f4c7e9e1fa8e4135ba6d5a7f832873d903783d706fb549e2
+  EXPECTED_ROWS: "7178"
+  PARTS: "20"
+
+jobs:
+  build-dds:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Fetch pinned DDS vendor
+        run: |
+          set -euo pipefail
+          git clone https://github.com/enerqi/odin-dds.git odin-dds
+          git -C odin-dds checkout "$ODIN_COMMIT"
+          test "$(git -C odin-dds rev-parse HEAD)" = "$ODIN_COMMIT"
+          grep -q "$DDS_UPSTREAM_COMMIT" odin-dds/external/dds/VENDORED.md
+      - name: Build pinned static DDS
+        run: |
+          set -euo pipefail
+          make -C odin-dds/src
+          test -s odin-dds/lib/dds.a
+          test "$(sha256sum odin-dds/lib/dds.a | awk '{print $1}')" = "$DDS_A_SHA256"
+      - name: Stage pinned DDS runtime
+        run: |
+          set -euo pipefail
+          mkdir -p runtime/include runtime/provenance
+          cp odin-dds/lib/dds.a runtime/dds.a
+          cp odin-dds/external/dds/include/dll.h runtime/include/dll.h
+          cp odin-dds/external/dds/include/portab.h runtime/include/portab.h
+          cp odin-dds/external/dds/VENDORED.md runtime/provenance/VENDORED.md
+          sha256sum runtime/dds.a
+      - name: Upload DDS runtime
+        uses: actions/upload-artifact@v4
+        with:
+          name: pinned-dds-runtime
+          path: runtime/
+          compression-level: 9
+          retention-days: 7
+
+  solve:
+    needs: build-dds
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        part: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: pinned-dds-runtime
+          path: dds-runtime
+      - name: Verify immutable input and runtime
+        run: |
+          set -euo pipefail
+          test "$(sha256sum DDS_FIXED_MISSING.tsv.gz | awk '{print $1}')" = "$INPUT_SHA256"
+          test "$(sha256sum dds-runtime/dds.a | awk '{print $1}')" = "$DDS_A_SHA256"
+          test "$(gzip -cd DDS_FIXED_MISSING.tsv.gz | wc -l)" = "$EXPECTED_ROWS"
+      - name: Select partition
+        env:
+          PART: ${{ matrix.part }}
+        run: |
+          set -euo pipefail
+          gzip -cd DDS_FIXED_MISSING.tsv.gz > all.tsv
+          python3 - <<'PY2'
+          import os
+          part=int(os.environ['PART']); parts=int(os.environ['PARTS'])
+          n=0
+          with open('all.tsv','r',encoding='utf-8') as src, open('part.tsv','w',encoding='utf-8') as out:
+              for i,line in enumerate(src):
+                  if i % parts == part:
+                      out.write(line); n += 1
+          print('partition_rows', n)
+          assert n > 0
+          PY2
+      - name: Materialize native runner
+        run: |
+          cat > dds_batch_runner.cpp <<'CPP'
+          #include <algorithm>
+          #include <array>
+          #include <cerrno>
+          #include <cstring>
+          #include <fstream>
+          #include <iostream>
+          #include <sstream>
+          #include <string>
+          #include <vector>
+          #include "dll.h"
+          
+          struct Contract {
+            bool passout{}; int level{}; char strain{'-'}; char declarer{'-'}; std::string dbl{"NONE"};
+          };
+          struct Row {
+            std::string shard; long long idx{}; unsigned long long seed{}; char dealer{}; std::string vul; std::string pbn; Contract a,b;
+          };
+          
+          static std::vector<std::string> splitTab(const std::string& s){
+            std::vector<std::string> v; size_t p=0;
+            while(true){ size_t q=s.find('\t',p); if(q==std::string::npos){v.push_back(s.substr(p)); break;} v.push_back(s.substr(p,q-p)); p=q+1; }
+            return v;
+          }
+          static int handCode(char c){ return c=='N'?0:c=='E'?1:c=='S'?2:3; }
+          static int strainCode(char c){ return c=='S'?0:c=='H'?1:c=='D'?2:c=='C'?3:4; }
+          static int vulCode(const std::string& v){ return v=="None"?0:v=="Both"?1:v=="NS"?2:3; }
+          static bool isVul(char declarer, int vul){
+            if(vul==1) return true; if(vul==0) return false;
+            bool ns=(declarer=='N'||declarer=='S'); return vul==2?ns:!ns;
+          }
+          static int duplicateScoreDecl(const Contract& c, int tricks, int vul){
+            if(c.passout) return 0;
+            int target=c.level+6; int delta=tricks-target; bool vulnerable=isVul(c.declarer,vul);
+            int mult=(c.dbl=="XX"?4:(c.dbl=="X"?2:1));
+            if(delta>=0){
+              int base;
+              if(c.strain=='C'||c.strain=='D') base=20*c.level;
+              else if(c.strain=='H'||c.strain=='S') base=30*c.level;
+              else base=40+30*(c.level-1);
+              int contractPts=base*mult;
+              int score=contractPts;
+              if(mult==2) score+=50; else if(mult==4) score+=100;
+              if(delta>0){
+                if(mult==1){ int rate=(c.strain=='C'||c.strain=='D')?20:30; score+=delta*rate; }
+                else if(mult==2) score+=delta*(vulnerable?200:100);
+                else score+=delta*(vulnerable?400:200);
+              }
+              score += (contractPts>=100 ? (vulnerable?500:300) : 50);
+              if(c.level==6) score += vulnerable?750:500;
+              else if(c.level==7) score += vulnerable?1500:1000;
+              return score;
+            } else {
+              int u=-delta, pen=0;
+              if(mult==1) pen=u*(vulnerable?100:50);
+              else {
+                int doubled;
+                if(vulnerable) doubled=200 + (u-1)*300;
+                else if(u==1) doubled=100;
+                else if(u==2) doubled=300;
+                else if(u==3) doubled=500;
+                else doubled=500+(u-3)*300;
+                pen=doubled*(mult==4?2:1);
+              }
+              return -pen;
+            }
+          }
+          static int nsScore(const Contract& c, int tricks, int vul){
+            if(c.passout) return 0; int s=duplicateScoreDecl(c,tricks,vul); return (c.declarer=='N'||c.declarer=='S')?s:-s;
+          }
+          static bool parseRow(const std::string& line, Row& r){
+            auto f=splitTab(line); if(f.size()!=16) return false;
+            r.shard=f[0]; r.idx=std::stoll(f[1]); r.seed=std::stoull(f[2]); r.dealer=f[3][0]; r.vul=f[4]; r.pbn=f[5];
+            auto pc=[&](int o, Contract& c){ c.passout=(f[o]=="1"); c.level=std::stoi(f[o+1]); c.strain=f[o+2][0]; c.declarer=f[o+3][0]; c.dbl=f[o+4]; };
+            pc(6,r.a); pc(11,r.b); return true;
+          }
+          static std::string joinPar(const parResultsDealer& p){
+            std::string s; for(int i=0;i<p.number;i++){ if(i) s.push_back('|'); s += p.contracts[i]; } return s;
+          }
+          int main(int argc,char**argv){
+            if(argc<3){ std::cerr<<"usage input.tsv output.tsv [max]\n"; return 2; }
+            long long maxRows=(argc>=4?std::stoll(argv[3]):-1);
+            std::ifstream in(argv[1]); if(!in){perror("input");return 2;}
+            std::ofstream out(argv[2]); if(!out){perror("output");return 2;}
+            std::vector<Row> rows; std::string line;
+            while(std::getline(in,line)){ if(line.empty())continue; Row r; if(!parseRow(line,r)){std::cerr<<"bad input\n";return 3;} rows.push_back(std::move(r)); if(maxRows>=0 && (long long)rows.size()>=maxRows)break; }
+            SetMaxThreads(0);
+            DDSInfo info{}; GetDDSInfo(&info); std::cerr<<"DDS "<<info.versionString<<" threads="<<info.noOfThreads<<" rows="<<rows.size()<<"\n";
+            const size_t B=40; int filter[5]={0,0,0,0,0}; size_t done=0; long long errors=0;
+            for(size_t base=0;base<rows.size();base+=B){
+              size_t n=std::min(B,rows.size()-base);
+              ddTableDealsPBN deals{}; deals.noOfTables=(int)n;
+              for(size_t i=0;i<n;i++) std::strncpy(deals.deals[i].cards, rows[base+i].pbn.c_str(), sizeof(deals.deals[i].cards)-1);
+              ddTablesRes res{}; allParResults pars{};
+              int rc=CalcAllTablesPBN(&deals,-1,filter,&res,&pars);
+              if(rc!=RETURN_NO_FAULT){
+                char msg[80]{}; ErrorMessage(rc,msg); std::cerr<<"batch rc="<<rc<<" "<<msg<<" at "<<base<<"; fallback scalar\n";
+                res.noOfBoards=(int)n;
+                for(size_t i=0;i<n;i++){
+                  ddTableDealPBN d{}; std::strncpy(d.cards,rows[base+i].pbn.c_str(),sizeof(d.cards)-1);
+                  int rr=CalcDDtablePBN(d,&res.results[i]);
+                  if(rr!=RETURN_NO_FAULT){ errors++; for(int s=0;s<5;s++)for(int h=0;h<4;h++)res.results[i].resTable[s][h]=-99; }
+                }
+              }
+              for(size_t i=0;i<n;i++){
+                const Row&r=rows[base+i]; const auto&t=res.results[i]; int vul=vulCode(r.vul);
+                int ta=r.a.passout?0:t.resTable[strainCode(r.a.strain)][handCode(r.a.declarer)];
+                int tb=r.b.passout?0:t.resTable[strainCode(r.b.strain)][handCode(r.b.declarer)];
+                int sa=nsScore(r.a,ta,vul), sb=nsScore(r.b,tb,vul);
+                parResultsDealer pr{}; int prc=DealerPar(const_cast<ddTableResults*>(&t),&pr,handCode(r.dealer),vul);
+                if(prc!=RETURN_NO_FAULT) errors++;
+                out<<r.shard<<'\t'<<r.idx<<'\t'<<r.seed<<'\t'<<ta<<'\t'<<sa<<'\t'<<tb<<'\t'<<sb<<'\t'<<prc<<'\t'<<pr.score<<'\t'<<joinPar(pr)<<'\t';
+                for(int s=0;s<5;s++)for(int h=0;h<4;h++){ if(s||h)out<<','; out<<t.resTable[s][h]; }
+                out<<'\n';
+              }
+              done+=n; if(done%1024==0 || done==rows.size()) std::cerr<<"done="<<done<<" errors="<<errors<<"\n";
+            }
+            FreeMemory(); std::cerr<<"COMPLETE rows="<<done<<" errors="<<errors<<"\n"; return errors?4:0;
+          }
+          CPP
+      - name: Compile native runner
+        run: |
+          set -euo pipefail
+          g++ -std=c++17 -O3 \
+            -I dds-runtime/include \
+            dds_batch_runner.cpp \
+            dds-runtime/dds.a \
+            -pthread -o dds_batch_runner
+      - name: Solve true DDS + DealerPar
+        env:
+          PART: ${{ matrix.part }}
+        run: |
+          set -euo pipefail
+          /usr/bin/time -v ./dds_batch_runner part.tsv "DDS_PART_${PART}.tsv" 2> "DDS_PART_${PART}.log"
+          test "$(wc -l < "DDS_PART_${PART}.tsv")" = "$(wc -l < part.tsv)"
+          tail -20 "DDS_PART_${PART}.log"
+      - name: Upload partition
+        uses: actions/upload-artifact@v4
+        with:
+          name: dds-part-${{ matrix.part }}
+          path: |
+            DDS_PART_${{ matrix.part }}.tsv
+            DDS_PART_${{ matrix.part }}.log
+          if-no-files-found: error
+          compression-level: 9
+          retention-days: 7
+
+  aggregate:
+    needs: solve
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: dds-part-*
+          path: parts
+          merge-multiple: true
+      - name: Aggregate and validate
+        run: |
+          set -euo pipefail
+          cat parts/DDS_PART_*.tsv | sort -t $'\t' -k1,1 -k2,2n > DDS_RESULTS.tsv
+          python3 - <<'PY2'
+          import gzip, hashlib, json, os
+          exp=int(os.environ['EXPECTED_ROWS'])
+          input_keys=[]
+          with gzip.open('DDS_FIXED_MISSING.tsv.gz','rt',encoding='utf-8') as f:
+              for line in f:
+                  z=line.rstrip('\n').split('\t')
+                  assert len(z)==16
+                  input_keys.append((z[0],int(z[1]),int(z[2])))
+          assert len(input_keys)==exp
+          assert len(set(input_keys))==exp
+
+          out=[]; dirs={'R7_CLOSER_TO_PAR':0,'V261_CLOSER_TO_PAR':0,'DDS_PAR_GAP_TIE':0}
+          sum_gap_delta=0
+          with open('DDS_RESULTS.tsv','r',encoding='utf-8') as f:
+              for line in f:
+                  z=line.rstrip('\n').split('\t')
+                  assert len(z)==11, (len(z),z[:3])
+                  key=(z[0],int(z[1]),int(z[2]))
+                  ta,sa,tb,sb,prc,par=map(int,z[3:9])
+                  assert prc==1
+                  vals=list(map(int,z[10].split(',')))
+                  assert len(vals)==20 and all(0<=x<=13 for x in vals)
+                  ga=abs(sa-par); gb=abs(sb-par)
+                  if gb<ga: d='R7_CLOSER_TO_PAR'
+                  elif ga<gb: d='V261_CLOSER_TO_PAR'
+                  else: d='DDS_PAR_GAP_TIE'
+                  dirs[d]+=1; sum_gap_delta += gb-ga
+                  out.append(key)
+          assert len(out)==exp
+          assert len(set(out))==exp
+          assert set(out)==set(input_keys)
+          summary={
+            'status':'DDS_COMPLETE',
+            'expected_rows':exp,
+            'result_rows':len(out),
+            'unique_index_seed_keys':len(set(out)),
+            'dds_solver':'real bridge Double Dummy Solver',
+            'dds_upstream_commit':os.environ['DDS_UPSTREAM_COMMIT'],
+            'dds_static_sha256':os.environ['DDS_A_SHA256'],
+            'input_sha256':os.environ['INPUT_SHA256'],
+            'dealer_par':'computed for every row',
+            'direction_counts_by_abs_par_gap':dirs,
+            'sum_r7_minus_v261_abs_par_gap':sum_gap_delta,
+            'missing':0,
+            'duplicates':0,
+            'dds_errors':0,
+          }
+          open('DDS_SUMMARY.json','w').write(json.dumps(summary,indent=2,sort_keys=True)+'\n')
+          print(json.dumps(summary,indent=2))
+          PY2
+          gzip -9 -c DDS_RESULTS.tsv > DDS_RESULTS.tsv.gz
+          sha256sum DDS_RESULTS.tsv.gz DDS_SUMMARY.json DDS_FIXED_MISSING.tsv.gz > SHA256SUMS.txt
+      - name: Upload consolidated result
+        uses: actions/upload-artifact@v4
+        with:
+          name: PONS_DDS_FIXED_7178_COMPLETE
+          path: |
+            DDS_RESULTS.tsv.gz
+            DDS_SUMMARY.json
+            SHA256SUMS.txt
+          if-no-files-found: error
+          compression-level: 9
+          retention-days: 30
+      - name: Commit consolidated result to repository
+        run: |
+          set -euo pipefail
+          mkdir -p results/fixed-missing-dds
+          cp DDS_RESULTS.tsv.gz DDS_SUMMARY.json SHA256SUMS.txt results/fixed-missing-dds/
+          git config user.name "PONS DDS Actions"
+          git config user.email "actions@users.noreply.github.com"
+          git add results/fixed-missing-dds/
+          git commit -m "Add DDS results for 7,178 fixed-harness missing cases"
+          git push
