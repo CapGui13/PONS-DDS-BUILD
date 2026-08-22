@@ -1,0 +1,769 @@
+{
+  "status": "FINAL_GATE_PASS",
+  "baseline": "R7_FIXED_MB01_D9_GREEN",
+  "candidate": "R7_FIXED_MB02_D9_D13",
+  "deals": 50000,
+  "same": 48108,
+  "changed": 1892,
+  "exact_d13": 1892,
+  "collateral": 0,
+  "shards": [
+    {
+      "artifact": "mb02-d13-S1",
+      "status": "SHARD_PASS",
+      "deals": 10000,
+      "same": 9639,
+      "changed": 361,
+      "exact_d13": 361,
+      "collateral_examples": [],
+      "exact_examples": [
+        {
+          "index_global": 30,
+          "seed": 996000000031,
+          "ply": 4,
+          "mb01_call": "1S",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 106,
+          "seed": 996000000107,
+          "ply": 1,
+          "mb01_call": "1S",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 109,
+          "seed": 996000000110,
+          "ply": 2,
+          "mb01_call": "1S",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 135,
+          "seed": 996000000136,
+          "ply": 2,
+          "mb01_call": "1H",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 162,
+          "seed": 996000000163,
+          "ply": 4,
+          "mb01_call": "1S",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 168,
+          "seed": 996000000169,
+          "ply": 1,
+          "mb01_call": "1H",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 208,
+          "seed": 996000000209,
+          "ply": 2,
+          "mb01_call": "1S",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 209,
+          "seed": 996000000210,
+          "ply": 3,
+          "mb01_call": "1S",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 215,
+          "seed": 996000000216,
+          "ply": 3,
+          "mb01_call": "1H",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 242,
+          "seed": 996000000243,
+          "ply": 2,
+          "mb01_call": "1S",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 246,
+          "seed": 996000000247,
+          "ply": 2,
+          "mb01_call": "1S",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 292,
+          "seed": 996000000293,
+          "ply": 2,
+          "mb01_call": "1H",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 300,
+          "seed": 996000000301,
+          "ply": 3,
+          "mb01_call": "1S",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 341,
+          "seed": 996000000342,
+          "ply": 4,
+          "mb01_call": "1S",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 354,
+          "seed": 996000000355,
+          "ply": 1,
+          "mb01_call": "1H",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 367,
+          "seed": 996000000368,
+          "ply": 2,
+          "mb01_call": "1H",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 384,
+          "seed": 996000000385,
+          "ply": 1,
+          "mb01_call": "1S",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 386,
+          "seed": 996000000387,
+          "ply": 2,
+          "mb01_call": "1S",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 393,
+          "seed": 996000000394,
+          "ply": 1,
+          "mb01_call": "1D",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 438,
+          "seed": 996000000439,
+          "ply": 3,
+          "mb01_call": "1H",
+          "mb02_call": "PASS"
+        }
+      ]
+    },
+    {
+      "artifact": "mb02-d13-S2",
+      "status": "SHARD_PASS",
+      "deals": 10000,
+      "same": 9620,
+      "changed": 380,
+      "exact_d13": 380,
+      "collateral_examples": [],
+      "exact_examples": [
+        {
+          "index_global": 26,
+          "seed": 996100000027,
+          "ply": 3,
+          "mb01_call": "1D",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 27,
+          "seed": 996100000028,
+          "ply": 2,
+          "mb01_call": "1D",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 108,
+          "seed": 996100000109,
+          "ply": 3,
+          "mb01_call": "1D",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 158,
+          "seed": 996100000159,
+          "ply": 1,
+          "mb01_call": "1H",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 196,
+          "seed": 996100000197,
+          "ply": 1,
+          "mb01_call": "1S",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 205,
+          "seed": 996100000206,
+          "ply": 1,
+          "mb01_call": "1S",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 288,
+          "seed": 996100000289,
+          "ply": 1,
+          "mb01_call": "1H",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 334,
+          "seed": 996100000335,
+          "ply": 1,
+          "mb01_call": "1S",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 351,
+          "seed": 996100000352,
+          "ply": 2,
+          "mb01_call": "1S",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 361,
+          "seed": 996100000362,
+          "ply": 1,
+          "mb01_call": "1S",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 394,
+          "seed": 996100000395,
+          "ply": 2,
+          "mb01_call": "1S",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 429,
+          "seed": 996100000430,
+          "ply": 4,
+          "mb01_call": "1S",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 438,
+          "seed": 996100000439,
+          "ply": 3,
+          "mb01_call": "1D",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 484,
+          "seed": 996100000485,
+          "ply": 1,
+          "mb01_call": "1D",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 493,
+          "seed": 996100000494,
+          "ply": 1,
+          "mb01_call": "1S",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 506,
+          "seed": 996100000507,
+          "ply": 1,
+          "mb01_call": "1S",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 510,
+          "seed": 996100000511,
+          "ply": 3,
+          "mb01_call": "1S",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 536,
+          "seed": 996100000537,
+          "ply": 2,
+          "mb01_call": "1D",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 553,
+          "seed": 996100000554,
+          "ply": 1,
+          "mb01_call": "1H",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 589,
+          "seed": 996100000590,
+          "ply": 1,
+          "mb01_call": "1S",
+          "mb02_call": "PASS"
+        }
+      ]
+    },
+    {
+      "artifact": "mb02-d13-S3",
+      "status": "SHARD_PASS",
+      "deals": 10000,
+      "same": 9612,
+      "changed": 388,
+      "exact_d13": 388,
+      "collateral_examples": [],
+      "exact_examples": [
+        {
+          "index_global": 5,
+          "seed": 996200000006,
+          "ply": 2,
+          "mb01_call": "1H",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 23,
+          "seed": 996200000024,
+          "ply": 2,
+          "mb01_call": "1H",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 27,
+          "seed": 996200000028,
+          "ply": 1,
+          "mb01_call": "1S",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 32,
+          "seed": 996200000033,
+          "ply": 2,
+          "mb01_call": "1S",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 42,
+          "seed": 996200000043,
+          "ply": 3,
+          "mb01_call": "1H",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 187,
+          "seed": 996200000188,
+          "ply": 4,
+          "mb01_call": "1S",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 224,
+          "seed": 996200000225,
+          "ply": 2,
+          "mb01_call": "1S",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 257,
+          "seed": 996200000258,
+          "ply": 2,
+          "mb01_call": "1S",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 290,
+          "seed": 996200000291,
+          "ply": 1,
+          "mb01_call": "1S",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 298,
+          "seed": 996200000299,
+          "ply": 2,
+          "mb01_call": "1S",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 300,
+          "seed": 996200000301,
+          "ply": 3,
+          "mb01_call": "1D",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 328,
+          "seed": 996200000329,
+          "ply": 1,
+          "mb01_call": "1S",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 441,
+          "seed": 996200000442,
+          "ply": 3,
+          "mb01_call": "1S",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 445,
+          "seed": 996200000446,
+          "ply": 1,
+          "mb01_call": "1H",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 479,
+          "seed": 996200000480,
+          "ply": 4,
+          "mb01_call": "1H",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 502,
+          "seed": 996200000503,
+          "ply": 1,
+          "mb01_call": "1S",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 535,
+          "seed": 996200000536,
+          "ply": 1,
+          "mb01_call": "1S",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 568,
+          "seed": 996200000569,
+          "ply": 3,
+          "mb01_call": "1D",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 570,
+          "seed": 996200000571,
+          "ply": 1,
+          "mb01_call": "1D",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 587,
+          "seed": 996200000588,
+          "ply": 4,
+          "mb01_call": "1S",
+          "mb02_call": "PASS"
+        }
+      ]
+    },
+    {
+      "artifact": "mb02-d13-S4",
+      "status": "SHARD_PASS",
+      "deals": 10000,
+      "same": 9603,
+      "changed": 397,
+      "exact_d13": 397,
+      "collateral_examples": [],
+      "exact_examples": [
+        {
+          "index_global": 34,
+          "seed": 996300000035,
+          "ply": 1,
+          "mb01_call": "1S",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 64,
+          "seed": 996300000065,
+          "ply": 1,
+          "mb01_call": "1H",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 86,
+          "seed": 996300000087,
+          "ply": 4,
+          "mb01_call": "1S",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 109,
+          "seed": 996300000110,
+          "ply": 1,
+          "mb01_call": "1H",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 116,
+          "seed": 996300000117,
+          "ply": 1,
+          "mb01_call": "1H",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 173,
+          "seed": 996300000174,
+          "ply": 1,
+          "mb01_call": "1H",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 197,
+          "seed": 996300000198,
+          "ply": 1,
+          "mb01_call": "1S",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 200,
+          "seed": 996300000201,
+          "ply": 2,
+          "mb01_call": "1S",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 203,
+          "seed": 996300000204,
+          "ply": 3,
+          "mb01_call": "1S",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 245,
+          "seed": 996300000246,
+          "ply": 2,
+          "mb01_call": "1H",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 277,
+          "seed": 996300000278,
+          "ply": 1,
+          "mb01_call": "1H",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 281,
+          "seed": 996300000282,
+          "ply": 2,
+          "mb01_call": "1S",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 321,
+          "seed": 996300000322,
+          "ply": 1,
+          "mb01_call": "1H",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 350,
+          "seed": 996300000351,
+          "ply": 1,
+          "mb01_call": "1H",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 404,
+          "seed": 996300000405,
+          "ply": 2,
+          "mb01_call": "1H",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 415,
+          "seed": 996300000416,
+          "ply": 2,
+          "mb01_call": "1H",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 417,
+          "seed": 996300000418,
+          "ply": 1,
+          "mb01_call": "1H",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 464,
+          "seed": 996300000465,
+          "ply": 4,
+          "mb01_call": "1D",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 478,
+          "seed": 996300000479,
+          "ply": 4,
+          "mb01_call": "1S",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 492,
+          "seed": 996300000493,
+          "ply": 4,
+          "mb01_call": "1H",
+          "mb02_call": "PASS"
+        }
+      ]
+    },
+    {
+      "artifact": "mb02-d13-S5",
+      "status": "SHARD_PASS",
+      "deals": 10000,
+      "same": 9634,
+      "changed": 366,
+      "exact_d13": 366,
+      "collateral_examples": [],
+      "exact_examples": [
+        {
+          "index_global": 1,
+          "seed": 996400000002,
+          "ply": 1,
+          "mb01_call": "1D",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 41,
+          "seed": 996400000042,
+          "ply": 2,
+          "mb01_call": "1H",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 62,
+          "seed": 996400000063,
+          "ply": 1,
+          "mb01_call": "1D",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 82,
+          "seed": 996400000083,
+          "ply": 1,
+          "mb01_call": "1S",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 135,
+          "seed": 996400000136,
+          "ply": 1,
+          "mb01_call": "1H",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 136,
+          "seed": 996400000137,
+          "ply": 3,
+          "mb01_call": "1S",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 155,
+          "seed": 996400000156,
+          "ply": 3,
+          "mb01_call": "1H",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 185,
+          "seed": 996400000186,
+          "ply": 3,
+          "mb01_call": "1S",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 188,
+          "seed": 996400000189,
+          "ply": 4,
+          "mb01_call": "1S",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 227,
+          "seed": 996400000228,
+          "ply": 2,
+          "mb01_call": "1S",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 246,
+          "seed": 996400000247,
+          "ply": 1,
+          "mb01_call": "1S",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 257,
+          "seed": 996400000258,
+          "ply": 4,
+          "mb01_call": "1H",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 262,
+          "seed": 996400000263,
+          "ply": 1,
+          "mb01_call": "1S",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 283,
+          "seed": 996400000284,
+          "ply": 1,
+          "mb01_call": "1H",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 305,
+          "seed": 996400000306,
+          "ply": 3,
+          "mb01_call": "1S",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 333,
+          "seed": 996400000334,
+          "ply": 3,
+          "mb01_call": "1S",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 363,
+          "seed": 996400000364,
+          "ply": 3,
+          "mb01_call": "1H",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 368,
+          "seed": 996400000369,
+          "ply": 2,
+          "mb01_call": "1D",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 369,
+          "seed": 996400000370,
+          "ply": 1,
+          "mb01_call": "1S",
+          "mb02_call": "PASS"
+        },
+        {
+          "index_global": 380,
+          "seed": 996400000381,
+          "ply": 1,
+          "mb01_call": "1S",
+          "mb02_call": "PASS"
+        }
+      ]
+    }
+  ],
+  "mb01_critic_sha256": "52d548cdd5c41206e89c1d970e12c663850b0955f6157da03bd938dae0df59c8",
+  "mb02_critic_sha256": "6f236dcb597ec5502b44e7e66cd79515051be5268de9f9d010fd621dea8b0511"
+}
