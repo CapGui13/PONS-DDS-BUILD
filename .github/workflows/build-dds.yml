@@ -1,0 +1,84 @@
+name: Build official DDS 2.9.0
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "main" ]
+    paths:
+      - ".github/workflows/build-dds.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  build-linux-amd64:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout build repository
+        uses: actions/checkout@v4
+
+      - name: Install compiler dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential libboost-all-dev
+
+      - name: Fetch official DDS 2.9.0
+        run: |
+          git clone --depth 1 --branch v2.9.0 https://github.com/dds-bridge/dds.git dds
+          cd dds
+          echo "DDS source commit:"
+          git rev-parse HEAD
+          git status --short
+          git describe --tags --always
+
+      - name: Build official shared library
+        working-directory: dds/src
+        run: |
+          make -f Makefiles/Makefile_linux_shared linux
+          test -s libdds.so
+          file libdds.so
+          ldd libdds.so
+
+      - name: Verify expected DDS exports
+        working-directory: dds/src
+        run: |
+          nm -D --defined-only libdds.so | tee ../../DDS_EXPORTS.txt
+          grep -q "SolveBoardPBN" ../../DDS_EXPORTS.txt
+          grep -q "CalcDDtablePBN" ../../DDS_EXPORTS.txt
+          grep -q "DealerPar" ../../DDS_EXPORTS.txt
+          grep -q "GetDDSInfo" ../../DDS_EXPORTS.txt
+
+      - name: Prepare reproducible artifact
+        run: |
+          mkdir -p artifact/include
+          cp dds/src/libdds.so artifact/
+          cp dds/include/dll.h artifact/include/
+          cp dds/include/portab.h artifact/include/
+          cp dds/LICENSE artifact/DDS_LICENSE.txt
+
+          {
+            echo "DDS_SOURCE_REPOSITORY=https://github.com/dds-bridge/dds"
+            echo "DDS_TAG=v2.9.0"
+            echo "DDS_COMMIT=$(git -C dds rev-parse HEAD)"
+            echo "RUNNER_OS=${RUNNER_OS}"
+            echo "RUNNER_ARCH=${RUNNER_ARCH}"
+            echo "COMPILER=$(g++ --version | head -n 1)"
+          } > artifact/BUILD_INFO.txt
+
+          cp DDS_EXPORTS.txt artifact/
+          (
+            cd artifact
+            sha256sum libdds.so include/dll.h include/portab.h DDS_LICENSE.txt BUILD_INFO.txt DDS_EXPORTS.txt \
+              > SHA256SUMS.txt
+            cat SHA256SUMS.txt
+          )
+
+      - name: Upload DDS runtime artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dds-2.9.0-linux-amd64
+          path: artifact/
+          if-no-files-found: error
+          compression-level: 9
+          retention-days: 30
