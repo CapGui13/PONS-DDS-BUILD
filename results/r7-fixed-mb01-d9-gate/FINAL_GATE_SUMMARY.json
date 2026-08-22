@@ -1,0 +1,58 @@
+{
+  "status": "FINAL_GATE_PASS",
+  "deals": 50000,
+  "same": 49049,
+  "changed": 951,
+  "exact_d9": 951,
+  "collateral": 0,
+  "collateral_examples": [],
+  "shards": [
+    {
+      "artifact": "mb01-d9-S1",
+      "status": "SHARD_PASS",
+      "deals": 10000,
+      "same": 9788,
+      "changed": 212,
+      "exact_d9": 212,
+      "collateral_examples": []
+    },
+    {
+      "artifact": "mb01-d9-S2",
+      "status": "SHARD_PASS",
+      "deals": 10000,
+      "same": 9788,
+      "changed": 212,
+      "exact_d9": 212,
+      "collateral_examples": []
+    },
+    {
+      "artifact": "mb01-d9-S3",
+      "status": "SHARD_PASS",
+      "deals": 10000,
+      "same": 9812,
+      "changed": 188,
+      "exact_d9": 188,
+      "collateral_examples": []
+    },
+    {
+      "artifact": "mb01-d9-S4",
+      "status": "SHARD_PASS",
+      "deals": 10000,
+      "same": 9837,
+      "changed": 163,
+      "exact_d9": 163,
+      "collateral_examples": []
+    },
+    {
+      "artifact": "mb01-d9-S5",
+      "status": "SHARD_PASS",
+      "deals": 10000,
+      "same": 9824,
+      "changed": 176,
+      "exact_d9": 176,
+      "collateral_examples": []
+    }
+  ],
+  "base_critic_sha256": "f1991fba7f818668aa55ab1776c63afd6b4f52b3b8a9565b599bc44ec236ca85",
+  "mb01_critic_sha256": "52d548cdd5c41206e89c1d970e12c663850b0955f6157da03bd938dae0df59c8"
+}
