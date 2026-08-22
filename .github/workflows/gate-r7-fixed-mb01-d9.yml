@@ -45,6 +45,7 @@ jobs:
           unzip -q R7_GREEN.zip -d ../r7zip
           RUNTIME="$(dirname "$(find ../r7zip -type f -name pons-critic.js | head -1)")"
           test -n "$RUNTIME"
+          RUNTIME="$(realpath "$RUNTIME")"
           echo "RUNTIME=$RUNTIME" >> "$GITHUB_ENV"
           test "$(sha256sum "$RUNTIME/pons-critic.js" | awk '{print $1}')" = "$BASE_CRITIC_SHA"
           cp -a "$RUNTIME" ../mb01
