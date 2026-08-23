@@ -1,0 +1,70 @@
+name: Gate R7 FIXED MB06 O2 six-card rollback
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "main" ]
+    paths:
+      - ".github/workflows/gate-r7-fixed-mb06-o2-sixcard.yml"
+      - "tools/MB05_TO_MB06_O2_SIXCARD_ROLLBACK.patch"
+      - "tools/run_mb06_gate_shard.sh"
+      - "tools/aggregate_mb06_gate.py"
+
+permissions:
+  contents: write
+
+jobs:
+  gate:
+    name: gate ${{ matrix.shard }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { shard: S1, seed: 999500000001, deals_sha256: 487008e7999671a05420ff3737a2a55145b6941937339417827da68a41d27d24 }
+          - { shard: S2, seed: 999600000001, deals_sha256: 6f191cbce229d49b07efa91e8467048247e8a5387396f153b8103599865c2cca }
+          - { shard: S3, seed: 999700000001, deals_sha256: fc95173c45098af22f1dc689edab30ac1e13381dff9a27617c1de8c4f9101b8e }
+          - { shard: S4, seed: 999800000001, deals_sha256: d822dc819cc614f402c397e1a050494937efc1eb60744ef89d8cb5ea0b74970c }
+          - { shard: S5, seed: 999900000001, deals_sha256: e3bd47f48c05a1a9ff64790c67bfe5930c201986a084d35303e490f4cc82a256 }
+    runs-on: ubuntu-22.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "22" }
+      - name: Run exact 20K shard
+        run: bash tools/run_mb06_gate_shard.sh "${{ matrix.shard }}" "${{ matrix.seed }}" "${{ matrix.deals_sha256 }}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mb06-o2-sixcard-${{ matrix.shard }}
+          path: ${{ matrix.shard }}_SUMMARY.json
+          if-no-files-found: error
+          retention-days: 30
+
+  aggregate:
+    needs: gate
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: mb06-o2-sixcard-*
+          path: incoming
+          merge-multiple: true
+      - run: python3 tools/aggregate_mb06_gate.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PONS_R7_FIXED_MB06_O2_SIXCARD_100K_GATE
+          path: final/
+          retention-days: 30
+      - name: Commit compact result
+        run: |
+          git pull --rebase origin main
+          mkdir -p results/r7-fixed-mb06-o2-sixcard-gate
+          cp final/FINAL_GATE_SUMMARY.json results/r7-fixed-mb06-o2-sixcard-gate/
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add results/r7-fixed-mb06-o2-sixcard-gate
+          if ! git diff --cached --quiet; then
+            git commit -m "Add R7 FIXED MB06 O2 six-card 100K gate result"
+            git push origin HEAD:main
+          fi
