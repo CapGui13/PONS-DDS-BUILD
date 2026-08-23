@@ -1,0 +1,203 @@
+name: Gate R7 FIXED MB03 Branch-K
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "main" ]
+    paths:
+      - ".github/workflows/gate-r7-fixed-mb03-branchk.yml"
+      - "tools/MB02_TO_MB03_BRANCHK.patch"
+
+permissions:
+  contents: write
+
+env:
+  PACKAGE: PONS_R7_FIXED_MB01_D9_GATE_PACKAGE.zip
+  R7_CRITIC_SHA: f1991fba7f818668aa55ab1776c63afd6b4f52b3b8a9565b599bc44ec236ca85
+  MB01_CRITIC_SHA: 52d548cdd5c41206e89c1d970e12c663850b0955f6157da03bd938dae0df59c8
+  MB02_CRITIC_SHA: 6f236dcb597ec5502b44e7e66cd79515051be5268de9f9d010fd621dea8b0511
+  MB03_CRITIC_SHA: 7f8c10371be03ed35729f7ca0adbd8a374ebd01afed90aa987fc94ae4e02d35a
+  MB03_PATCH_SHA: 697fae933ce44104fb4824f2aa8f35aa64d3a78797f9eb28eb04fe877819c9f1
+
+jobs:
+  gate:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - shard: S1
+            seed: 998300000001
+          - shard: S2
+            seed: 998400000001
+          - shard: S3
+            seed: 998500000001
+          - shard: S4
+            seed: 998600000001
+          - shard: S5
+            seed: 998700000001
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Reconstruct exact MB02 and MB03
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(sha256sum tools/MB02_TO_MB03_BRANCHK.patch | awk '{print $1}')" = "$MB03_PATCH_SHA"
+          rm -rf work && mkdir -p work/pkg work/r7zip work/mb01 work/mb02 work/mb03
+          unzip -q "$PACKAGE" -d work/pkg
+          (cd work/pkg && sha256sum -c SHA256SUMS.txt)
+          unzip -q work/pkg/R7_GREEN.zip -d work/r7zip
+          R7_RUNTIME="$(dirname "$(find work/r7zip -type f -name pons-critic.js | head -1)")"
+          test -n "$R7_RUNTIME"
+          test "$(sha256sum "$R7_RUNTIME/pons-critic.js" | awk '{print $1}')" = "$R7_CRITIC_SHA"
+          cp -a "$R7_RUNTIME"/. work/mb01/
+          cp work/pkg/MB01_pons-critic.js work/mb01/pons-critic.js
+          test "$(sha256sum work/mb01/pons-critic.js | awk '{print $1}')" = "$MB01_CRITIC_SHA"
+          cp -a work/mb01/. work/mb02/
+          (cd work && patch --batch --forward mb02/pons-critic.js < ../tools/MB01_TO_MB02_D13.patch)
+          node --check work/mb02/pons-critic.js
+          test "$(sha256sum work/mb02/pons-critic.js | awk '{print $1}')" = "$MB02_CRITIC_SHA"
+          cp -a work/mb02/. work/mb03/
+          (cd work && patch --batch --forward mb03/pons-critic.js < ../tools/MB02_TO_MB03_BRANCHK.patch)
+          node --check work/mb03/pons-critic.js
+          test "$(sha256sum work/mb03/pons-critic.js | awk '{print $1}')" = "$MB03_CRITIC_SHA"
+          echo "MB02_RUNTIME=$(realpath work/mb02)" >> "$GITHUB_ENV"
+          echo "MB03_RUNTIME=$(realpath work/mb03)" >> "$GITHUB_ENV"
+          echo "PKG=$(realpath work/pkg)" >> "$GITHUB_ENV"
+
+      - name: Generate 10K fresh deals
+        run: |
+          python3 "$PKG/GENERATOR.py" work/deals.jsonl 10000 "${{ matrix.seed }}"
+          test "$(wc -l < work/deals.jsonl)" -eq 10000
+
+      - name: Run MB02
+        run: node "$PKG/GATE_RUNNER_FIXED.mjs" "$MB02_RUNTIME" work/deals.jsonl work/mb02.jsonl
+
+      - name: Run MB03
+        run: node "$PKG/GATE_RUNNER_FIXED.mjs" "$MB03_RUNTIME" work/deals.jsonl work/mb03.jsonl
+
+      - name: Verify exact Branch-K rollback domain
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json,re
+          def load(path):
+              d={}
+              with open(path) as f:
+                  for line in f:
+                      x=json.loads(line); d[(int(x['index_global']),int(x['seed']))]=x
+              return d
+          A=load('work/mb02.jsonl'); B=load('work/mb03.jsonl'); D=load('work/deals.jsonl')
+          assert A.keys()==B.keys()==D.keys() and len(A)==10000
+          R={'C':0,'D':1,'H':2,'S':3,'NT':4}
+          def parse(c):
+              m=re.fullmatch(r'([1-7])(C|D|H|S|NT)',str(c or ''))
+              return (int(m.group(1)),m.group(2)) if m else None
+          def rank(c):
+              p=parse(c); return (p[0]-1)*5+R[p[1]] if p else -1
+          def cheapest(hist,suit):
+              last=max([rank(c) for c in hist if parse(c)] or [-1])
+              for level in range(1,8):
+                  c=f'{level}{suit}'
+                  if rank(c)>last: return c
+          def zone(k,a,i):
+              hist=a['auction'][:i]
+              op=next(c for c in hist if parse(c)); os=parse(op)[1]
+              seats='NESW'; acting=seats[(seats.index(a['dealer'])+i)%4]
+              hand=D[k]['hands'][acting]
+              lens={s:(0 if hand[s]=='-' else len(hand[s])) for s in 'CDHS'}
+              second=next((s for s in 'CDHS' if s!=os and lens[s]>=4),None)
+              if not second: return 'unknown'
+              simple=cheapest(hist,second); repeat=cheapest(hist,os); target=a['auction'][i]
+              if target==repeat: return 'reverse-understrength'
+              if target==simple: return 'economic-simple' if rank(simple)<rank(repeat) else 'reverse'
+              if parse(target) and parse(simple) and parse(target)[1]==second and parse(target)[0]==parse(simple)[0]+1:
+                  return 'economic-jump'
+              return 'other'
+          changed=exact=0; bad=[]; zones={}
+          for k,a in A.items():
+              b=B[k]
+              if a['auction']==b['auction']: continue
+              changed+=1
+              n=min(len(a['auction']),len(b['auction']))
+              i=next((j for j in range(n) if a['auction'][j]!=b['auction'][j]),n)
+              am=next((m for m in a.get('marks',[]) if m.get('i')==i),None)
+              z=zone(k,a,i) if i<n else 'length'
+              zones[z]=zones.get(z,0)+1
+              ok=(i<n and am and am.get('reviewedSource')=='branch-k-natural-distribution-root' and z in ('economic-simple','reverse'))
+              if ok: exact+=1
+              else: bad.append({'key':k,'ply':i,'zone':z,'mb02_mark':am,'mb02':a['auction'],'mb03':b['auction']})
+          assert changed>0, 'no MB03 changes observed'
+          assert exact==changed and not bad, bad[:5]
+          out={'status':'SHARD_PASS','deals':10000,'same':10000-changed,'changed':changed,'exact_mb03':exact,'collateral':0,'zones':zones,'collateral_examples':[]}
+          json.dump(out,open('work/SUMMARY.json','w'),indent=2,sort_keys=True)
+          print(json.dumps(out,indent=2))
+          PY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mb03-branchk-${{ matrix.shard }}
+          path: work/SUMMARY.json
+          if-no-files-found: error
+          retention-days: 30
+
+  aggregate:
+    needs: gate
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: mb03-branchk-*
+          path: parts
+
+      - name: Aggregate 50K gate
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import glob,json,os
+          parts=[]
+          for p in sorted(glob.glob('parts/*/SUMMARY.json')):
+              x=json.load(open(p)); parts.append({'artifact':os.path.basename(os.path.dirname(p)),**x})
+          assert len(parts)==5, len(parts)
+          assert all(x.get('status')=='SHARD_PASS' for x in parts), parts
+          deals=sum(x['deals'] for x in parts)
+          same=sum(x['same'] for x in parts)
+          changed=sum(x['changed'] for x in parts)
+          exact=sum(x['exact_mb03'] for x in parts)
+          collateral=sum(x['collateral'] for x in parts)
+          zones={}
+          for x in parts:
+              for k,v in x.get('zones',{}).items(): zones[k]=zones.get(k,0)+v
+          assert deals==50000 and same+changed==deals
+          assert changed>0 and exact==changed and collateral==0
+          out={'status':'FINAL_GATE_PASS','baseline':'R7_FIXED_MB02_D9_D13','candidate':'R7_FIXED_MB03_BRANCHK_ROLLBACK','deals':deals,'same':same,'changed':changed,'exact_mb03':exact,'collateral':collateral,'zones':zones,'mb02_critic_sha256':os.environ['MB02_CRITIC_SHA'],'mb03_critic_sha256':os.environ['MB03_CRITIC_SHA'],'mb03_patch_sha256':os.environ['MB03_PATCH_SHA'],'shards':parts}
+          os.makedirs('final',exist_ok=True)
+          json.dump(out,open('final/FINAL_GATE_SUMMARY.json','w'),indent=2,sort_keys=True)
+          print(json.dumps(out,indent=2))
+          PY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PONS_R7_FIXED_MB03_BRANCHK_FINAL_GATE
+          path: final/
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Commit compact gate result
+        run: |
+          set -euo pipefail
+          git pull --rebase origin main
+          mkdir -p results/r7-fixed-mb03-branchk-gate
+          cp final/FINAL_GATE_SUMMARY.json results/r7-fixed-mb03-branchk-gate/
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add results/r7-fixed-mb03-branchk-gate/FINAL_GATE_SUMMARY.json
+          git diff --cached --quiet && exit 0
+          git commit -m "Add R7 FIXED MB03 Branch-K 50K gate result"
+          git push origin HEAD:main
