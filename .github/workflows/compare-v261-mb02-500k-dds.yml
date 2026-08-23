@@ -77,35 +77,10 @@ jobs:
           cp work/mb01pkg/MB01_pons-critic.js work/mb01/pons-critic.js
           test "$(sha256sum work/mb01/pons-critic.js | awk '{print $1}')" = "$MB01_CRITIC_SHA"
           cp -a work/mb01/. work/mb02/
-          python3 - <<'PY'
-          from pathlib import Path
-          p=Path('work/mb02/pons-critic.js')
-          s=p.read_text()
-          old="""        const s=exact5[0], target=`1${s}`;
-          const vulState=String(ctx.deal?.vulnerable||'None'), ownSide=sideOf(seat);
-          const ownVul=vulState==='Both'||vulState===ownSide;
-          const floor=ownVul?10:8;
-          if(HL>=floor && legal(target))
-            return out(target,'instance-d-wave2-d13-vulnerability-one-level-overcall',`WAVE2 D13 : ${target} naturel, couleur 5e et ${HL} HL ; seuil PONS ${floor} HL (${ownVul?'vulnérable':'non vulnérable'})`,{suits:{[s]:{min:5,max:5}},points:{min:floor,max:11},vulnerabilitySensitive:true});
-          if(HL<floor && legal('PASS'))
-            return out('PASS','instance-d-wave2-d13-vulnerability-one-level-overcall',`WAVE2 D13 : ${HL} HL sous le seuil PONS ${floor} HL ${ownVul?'vulnérable':'non vulnérable'} => Passe`,{natural:false,points:{min:8,max:floor-1},vulnerabilitySensitive:true});
-          """
-          new="""        const s=exact5[0], target=`1${s}`;
-          const vulState=String(ctx.deal?.vulnerable||'None'), ownSide=sideOf(seat);
-          const ownVul=vulState==='Both'||vulState===ownSide;
-          const oldFloor=ownVul?10:8;
-          const floor=ownVul?12:11;
-          if(HL>=floor && legal(target))
-            return out(target,'instance-d-wave2-d13-vulnerability-one-level-overcall',`WAVE2 D13 : ${target} naturel, couleur 5e et ${HL} HL ; seuil PONS FIXED ${floor} HL (${ownVul?'vulnérable':'non vulnérable'})`,{suits:{[s]:{min:5,max:5}},points:{min:floor,max:11},vulnerabilitySensitive:true});
-          if(HL<floor && legal('PASS')){
-            const source=HL>=oldFloor?'r7-fixed-mb02-d13-tighten-vulnerability-one-level-overcall':'instance-d-wave2-d13-vulnerability-one-level-overcall';
-            return out('PASS',source,`R7 FIXED MB02 D13 : ${HL} HL sous le seuil ${floor} HL ${ownVul?'vulnérable':'non vulnérable'} => Passe`,{natural:false,points:{min:8,max:floor-1},vulnerabilitySensitive:true});
-          }
-          """
-          if s.count(old)!=1:
-              raise SystemExit(f'D13 exact block count={s.count(old)}')
-          p.write_text(s.replace(old,new,1))
-          PY
+          (
+            cd work
+            patch --batch --forward mb02/pons-critic.js < ../tools/MB01_TO_MB02_D13.patch
+          )
           test "$(sha256sum work/mb02/pons-critic.js | awk '{print $1}')" = "$MB02_CRITIC_SHA"
           node --check work/mb02/pons-critic.js
           BASE_RUNTIME="$(dirname "$(find work/base -type f -path '*/play/pons-critic.js' | head -1)")"
