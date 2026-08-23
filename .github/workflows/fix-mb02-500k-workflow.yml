@@ -16,6 +16,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Sync main before editing
+        run: git pull --rebase origin main
+
       - name: Replace embedded D13 reconstruction with validated patch command
         shell: bash
         run: |
@@ -62,6 +65,5 @@ jobs:
             echo "No target workflow change required"
             exit 0
           fi
-          git pull --rebase origin main
           git commit -m "Fix MB02 500K reconstruction after preflight"
           git push origin HEAD:main
