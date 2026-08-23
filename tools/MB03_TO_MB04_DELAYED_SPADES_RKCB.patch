@@ -1,0 +1,20 @@
+--- mb03/pons-critic.js
++++ mb04/pons-critic.js
+@@ -11011,6 +11011,17 @@
+     const legal=(c)=>!ctx.isLegal||ctx.isLegal(history,c,seat);
+     const out=(c,reason,convention='sef2024-reference',extra={})=>legal(c)?{call:c,reason,semantic:{natural:!['X','XX'].includes(c),source:'sef2024-benchmark-v03-reference',forcing:'unknown',publishWhenNative:true,convention,...extra}}:null;
+ 
++    // R7 FIXED MB04 — strong delayed four-card Spade fit after opener's direct 3S.
++    if(raw==='4S' && relHistory.length===6 && relHistory[0]?.call==='1S' && relHistory[1]?.call==='PASS' &&
++       ['2C','2D'].includes(relHistory[2]?.call) && relHistory[3]?.call==='PASS' && relHistory[4]?.call==='3S' && relHistory[5]?.call==='PASS'){
++      const hld4=chailleyFitHld(ctx.deal,seat,'S',5), ownAces=SUITS.reduce((n,su)=>n+(String(hand[su]||'').includes('A')?1:0),0), ownKeys=ownAces+(String(hand.S||'').includes('K')?1:0);
++      const sideSuit=relHistory[2].call.slice(1);
++      if((L.S||0)===4 && (L[sideSuit]||0)>=3 && hld4>=17 && ownKeys>=2 && legal('4NT')) return {
++        call:'4NT',changed:true,reason:`R7 FIXED MB04 : fit Pique 4e différé + 3P, ${hld4} HLD et ${ownKeys} clés => RKCB`,
++        semantic:{natural:false,source:'r7-fixed-mb04-delayed-spade-fit-rkcb-after-opener-3S',forcing:'one_round_if_uncontested',publishWhenNative:true,convention:'blackwood-5keys-30-41',trump:'S',semanticRole:'rkcb-ask',artificialType:'rkcb-ask'}
++      };
++    }
++
+     // INSTANCE K6 — ouverture naturelle des 6-5 : anticiper le coût de la redemande.
+     // K1 avait généralisé à tort "la plus longue d'abord" à toutes les 6-5.
+     // Le SEF/Chailley distingue deux zones :
