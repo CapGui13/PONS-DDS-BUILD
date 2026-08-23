@@ -1,0 +1,65 @@
+{
+  "baseline": "R7_FIXED_MB03_D9_D13_BRANCHK_GREEN",
+  "candidate": "R7_FIXED_MB04_DELAYED_SPADES_RKCB_AFTER_OPENER_3S",
+  "changed": 8,
+  "collateral": 0,
+  "deals": 100000,
+  "exact_mb04": 8,
+  "mb03_critic_sha256": "7f8c10371be03ed35729f7ca0adbd8a374ebd01afed90aa987fc94ae4e02d35a",
+  "mb04_critic_sha256": "0838c8bba44bea70a7faf719d180683de45c7d5a8c5753483eed5bbdd68c7e8c",
+  "mb04_patch_sha256": "562f2f40e6730c081c7189373ab8c8f5acd2ad29e2d2733db1389c6ad52b41d3",
+  "same": 99992,
+  "shards": [
+    {
+      "changed": 1,
+      "collateral": 0,
+      "collateral_examples": [],
+      "deals": 20000,
+      "exact_mb04": 1,
+      "same": 19999,
+      "shard": "S1",
+      "status": "SHARD_PASS"
+    },
+    {
+      "changed": 2,
+      "collateral": 0,
+      "collateral_examples": [],
+      "deals": 20000,
+      "exact_mb04": 2,
+      "same": 19998,
+      "shard": "S2",
+      "status": "SHARD_PASS"
+    },
+    {
+      "changed": 3,
+      "collateral": 0,
+      "collateral_examples": [],
+      "deals": 20000,
+      "exact_mb04": 3,
+      "same": 19997,
+      "shard": "S3",
+      "status": "SHARD_PASS"
+    },
+    {
+      "changed": 1,
+      "collateral": 0,
+      "collateral_examples": [],
+      "deals": 20000,
+      "exact_mb04": 1,
+      "same": 19999,
+      "shard": "S4",
+      "status": "SHARD_PASS"
+    },
+    {
+      "changed": 1,
+      "collateral": 0,
+      "collateral_examples": [],
+      "deals": 20000,
+      "exact_mb04": 1,
+      "same": 19999,
+      "shard": "S5",
+      "status": "SHARD_PASS"
+    }
+  ],
+  "status": "FINAL_GATE_PASS"
+}
