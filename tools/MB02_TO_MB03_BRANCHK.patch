@@ -1,0 +1,21 @@
+--- mb02/pons-critic.js
++++ mb03/pons-critic.js
+@@ -11119,13 +11119,13 @@
+             if(simple && repeat && legal(simple) && legal(repeat)){
+               const economic=bidRank(simple)<bidRank(repeat);
+               let target=null, zone=null, forcing='nonforcing';
+-              if(economic && HL>=13 && HL<=19){
+-                target=simple; zone='economic-simple';
+-              }else if(economic && HL>=20 && HL<=23){
++              // R7 FIXED MB03: rollback of the two over-broad K zones found
++              // harmful by the fresh 500K true-DDS audit. Keep the economic jump
++              // and the understrength repeat closure; leave simple/reverse to the
++              // underlying runtime and downstream critic logic.
++              if(economic && HL>=20 && HL<=23){
+                 const sb=parseBid(simple), jump=sb&&sb.level<7?`${sb.level+1}${second}`:null;
+                 if(jump && legal(jump)){ target=jump; zone='economic-jump'; forcing='game_if_uncontested'; }
+-              }else if(!economic && HL>=18 && HL<=23){
+-                target=simple; zone='reverse'; forcing='one_round_if_uncontested';
+               }else if(!economic && HL>=13 && HL<18){
+                 target=repeat; zone='reverse-understrength';
+               }
