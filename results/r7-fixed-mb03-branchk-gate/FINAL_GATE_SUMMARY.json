@@ -1,0 +1,89 @@
+{
+  "baseline": "R7_FIXED_MB02_D9_D13",
+  "candidate": "R7_FIXED_MB03_BRANCHK_ROLLBACK",
+  "changed": 601,
+  "collateral": 0,
+  "deals": 50000,
+  "exact_mb03": 601,
+  "mb02_critic_sha256": "6f236dcb597ec5502b44e7e66cd79515051be5268de9f9d010fd621dea8b0511",
+  "mb03_critic_sha256": "7f8c10371be03ed35729f7ca0adbd8a374ebd01afed90aa987fc94ae4e02d35a",
+  "mb03_patch_sha256": "697fae933ce44104fb4824f2aa8f35aa64d3a78797f9eb28eb04fe877819c9f1",
+  "same": 49399,
+  "shards": [
+    {
+      "artifact": "mb03-branchk-S1",
+      "changed": 109,
+      "collateral": 0,
+      "collateral_examples": [],
+      "deals": 10000,
+      "exact_mb03": 109,
+      "same": 9891,
+      "status": "SHARD_PASS",
+      "zones": {
+        "economic-simple": 76,
+        "reverse": 33
+      }
+    },
+    {
+      "artifact": "mb03-branchk-S2",
+      "changed": 137,
+      "collateral": 0,
+      "collateral_examples": [],
+      "deals": 10000,
+      "exact_mb03": 137,
+      "same": 9863,
+      "status": "SHARD_PASS",
+      "zones": {
+        "economic-simple": 100,
+        "reverse": 37
+      }
+    },
+    {
+      "artifact": "mb03-branchk-S3",
+      "changed": 109,
+      "collateral": 0,
+      "collateral_examples": [],
+      "deals": 10000,
+      "exact_mb03": 109,
+      "same": 9891,
+      "status": "SHARD_PASS",
+      "zones": {
+        "economic-simple": 82,
+        "reverse": 27
+      }
+    },
+    {
+      "artifact": "mb03-branchk-S4",
+      "changed": 121,
+      "collateral": 0,
+      "collateral_examples": [],
+      "deals": 10000,
+      "exact_mb03": 121,
+      "same": 9879,
+      "status": "SHARD_PASS",
+      "zones": {
+        "economic-simple": 88,
+        "reverse": 33
+      }
+    },
+    {
+      "artifact": "mb03-branchk-S5",
+      "changed": 125,
+      "collateral": 0,
+      "collateral_examples": [],
+      "deals": 10000,
+      "exact_mb03": 125,
+      "same": 9875,
+      "status": "SHARD_PASS",
+      "zones": {
+        "economic-simple": 93,
+        "reverse": 32
+      }
+    }
+  ],
+  "status": "FINAL_GATE_PASS",
+  "zones": {
+    "economic-simple": 439,
+    "reverse": 162
+  }
+}
