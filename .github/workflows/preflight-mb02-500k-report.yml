@@ -1,10 +1,7 @@
 name: Preflight MB02 500K isolated
 
 on:
-  push:
-    branches: [ "main" ]
-    paths:
-      - ".github/workflows/preflight-mb02-500k-report.yml"
+  workflow_dispatch:
 
 permissions:
   contents: read
