@@ -1,0 +1,75 @@
+{
+  "baseline": "R7_FIXED_MB05_D9_D13_BRANCHK_DELAYED_SPADES_DELAYED_HEARTS_GREEN",
+  "candidate": "R7_FIXED_MB06_O2_SIXCARD_WEAK_JUMP_ROLLBACK",
+  "changed": 401,
+  "collateral": 0,
+  "deals": 100000,
+  "exact_mb06": 401,
+  "historical_o2_replay": {
+    "dealer_par_gap_improvement": 44320,
+    "mb06_vs_mb05_better": 803,
+    "mb06_vs_mb05_equivalent": 828,
+    "mb06_vs_mb05_worse": 630,
+    "root_cases": 3318,
+    "root_gap_after": 2240,
+    "root_gap_before": 46560,
+    "six_card_changes": 2261
+  },
+  "mb05_critic_sha256": "cd3ff1ef67e4848b14f526cf0de0c929f9b3df856e0d847b7a37002cf1898468",
+  "mb06_critic_sha256": "6f74d0d55ecf63e8679c21b5f46fc50a48545f9d41cdcc4f26cc51dec4db701c",
+  "mb06_patch_sha256": "39832c8bd153a3ec19360fc47e46c79633f685b178f85567477fb35279e6fa48",
+  "same": 99599,
+  "shards": [
+    {
+      "changed": 72,
+      "collateral": 0,
+      "collateral_examples": [],
+      "deals": 20000,
+      "exact_mb06": 72,
+      "same": 19928,
+      "shard": "S1",
+      "status": "SHARD_PASS"
+    },
+    {
+      "changed": 72,
+      "collateral": 0,
+      "collateral_examples": [],
+      "deals": 20000,
+      "exact_mb06": 72,
+      "same": 19928,
+      "shard": "S2",
+      "status": "SHARD_PASS"
+    },
+    {
+      "changed": 84,
+      "collateral": 0,
+      "collateral_examples": [],
+      "deals": 20000,
+      "exact_mb06": 84,
+      "same": 19916,
+      "shard": "S3",
+      "status": "SHARD_PASS"
+    },
+    {
+      "changed": 86,
+      "collateral": 0,
+      "collateral_examples": [],
+      "deals": 20000,
+      "exact_mb06": 86,
+      "same": 19914,
+      "shard": "S4",
+      "status": "SHARD_PASS"
+    },
+    {
+      "changed": 87,
+      "collateral": 0,
+      "collateral_examples": [],
+      "deals": 20000,
+      "exact_mb06": 87,
+      "same": 19913,
+      "shard": "S5",
+      "status": "SHARD_PASS"
+    }
+  ],
+  "status": "FINAL_GATE_PASS"
+}
