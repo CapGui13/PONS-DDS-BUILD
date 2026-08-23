@@ -1,0 +1,109 @@
+name: Preflight MB02 500K isolated
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - ".github/workflows/preflight-mb02-500k-report.yml"
+
+permissions:
+  contents: read
+  issues: write
+
+env:
+  PACKAGE: PONS_R7_FIXED_MB01_D9_GATE_PACKAGE.zip
+  R7_CRITIC_SHA: f1991fba7f818668aa55ab1776c63afd6b4f52b3b8a9565b599bc44ec236ca85
+  MB01_CRITIC_SHA: 52d548cdd5c41206e89c1d970e12c663850b0955f6157da03bd938dae0df59c8
+  MB02_CRITIC_SHA: 6f236dcb597ec5502b44e7e66cd79515051be5268de9f9d010fd621dea8b0511
+  SEED: "998100000001"
+
+jobs:
+  preflight:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Reconstruct exact MB02 with proven patch
+        id: reconstruct
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf work && mkdir -p work/pkg work/r7zip work/mb01 work/mb02
+          unzip -q "$PACKAGE" -d work/pkg
+          (cd work/pkg && sha256sum -c SHA256SUMS.txt)
+          unzip -q work/pkg/R7_GREEN.zip -d work/r7zip
+          R7_RUNTIME="$(dirname "$(find work/r7zip -type f -name pons-critic.js | head -1)")"
+          test -n "$R7_RUNTIME"
+          test "$(sha256sum "$R7_RUNTIME/pons-critic.js" | awk '{print $1}')" = "$R7_CRITIC_SHA"
+          cp -a "$R7_RUNTIME"/. work/mb01/
+          cp work/pkg/MB01_pons-critic.js work/mb01/pons-critic.js
+          test "$(sha256sum work/mb01/pons-critic.js | awk '{print $1}')" = "$MB01_CRITIC_SHA"
+          cp -a work/mb01/. work/mb02/
+          (cd work && patch --batch --forward -p0 < ../tools/MB01_TO_MB02_D13.patch)
+          node --check work/mb02/pons-critic.js
+          test "$(sha256sum work/mb02/pons-critic.js | awk '{print $1}')" = "$MB02_CRITIC_SHA"
+          echo "MB01_RUNTIME=$(realpath work/mb01)" >> "$GITHUB_ENV"
+          echo "MB02_RUNTIME=$(realpath work/mb02)" >> "$GITHUB_ENV"
+          echo "PKG=$(realpath work/pkg)" >> "$GITHUB_ENV"
+
+      - name: Generate 1K fresh deals
+        id: generate
+        run: |
+          python3 "$PKG/GENERATOR.py" work/deals.jsonl 1000 "$SEED"
+          test "$(wc -l < work/deals.jsonl)" -eq 1000
+
+      - name: Run MB01 and MB02
+        id: engines
+        run: |
+          node "$PKG/GATE_RUNNER_FIXED.mjs" "$MB01_RUNTIME" work/deals.jsonl work/mb01.jsonl
+          node "$PKG/GATE_RUNNER_FIXED.mjs" "$MB02_RUNTIME" work/deals.jsonl work/mb02.jsonl
+          test "$(wc -l < work/mb01.jsonl)" -eq 1000
+          test "$(wc -l < work/mb02.jsonl)" -eq 1000
+
+      - name: Verify exact D13-only changes
+        id: verify
+        run: |
+          python3 - <<'PY'
+          import json
+          def load(p):
+              d={}
+              with open(p) as f:
+                  for line in f:
+                      x=json.loads(line); d[(int(x['index_global']),int(x['seed']))]=x
+              return d
+          A=load('work/mb01.jsonl'); B=load('work/mb02.jsonl')
+          assert A.keys()==B.keys() and len(A)==1000
+          changed=exact=0; bad=[]
+          for k,a in A.items():
+              b=B[k]
+              if a['auction']==b['auction']: continue
+              changed+=1
+              n=min(len(a['auction']),len(b['auction']))
+              i=next((j for j in range(n) if a['auction'][j]!=b['auction'][j]),n)
+              am=next((m for m in a.get('marks',[]) if m.get('i')==i),None)
+              bm=next((m for m in b.get('marks',[]) if m.get('i')==i),None)
+              ok=(i<n and am and am.get('reviewedSource')=='instance-d-wave2-d13-vulnerability-one-level-overcall'
+                  and a['auction'][i] in ('1D','1H','1S') and b['auction'][i]=='PASS'
+                  and bm and bm.get('reviewedSource')=='r7-fixed-mb02-d13-tighten-vulnerability-one-level-overcall')
+              if ok: exact+=1
+              else: bad.append((k,i,am,bm))
+          assert changed>0, 'no MB02 D13 changes observed'
+          assert exact==changed and not bad, bad[:5]
+          print(f'PREFLIGHT_PASS deals=1000 changed={changed} exact_d13={exact} collateral=0')
+          PY
+
+      - name: Report preflight outcome
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RECONSTRUCT: ${{ steps.reconstruct.outcome }}
+          GENERATE: ${{ steps.generate.outcome }}
+          ENGINES: ${{ steps.engines.outcome }}
+          VERIFY: ${{ steps.verify.outcome }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          if [ "$RECONSTRUCT" = success ] && [ "$GENERATE" = success ] && [ "$ENGINES" = success ] && [ "$VERIFY" = success ]; then STATUS=PREFLIGHT_PASS; else STATUS=PREFLIGHT_FAIL; fi
+          BODY="status=$STATUS\nrun_id=$RUN_ID\nreconstruct=$RECONSTRUCT\ngenerate=$GENERATE\nengines=$ENGINES\nverify=$VERIFY\nmb02_sha=$MB02_CRITIC_SHA\nseed=$SEED"
+          gh issue create --title "MB02 isolated preflight $STATUS run $RUN_ID" --body "$BODY"
