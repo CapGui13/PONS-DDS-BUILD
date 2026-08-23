@@ -40,7 +40,7 @@ jobs:
           cp work/pkg/MB01_pons-critic.js work/mb01/pons-critic.js
           test "$(sha256sum work/mb01/pons-critic.js | awk '{print $1}')" = "$MB01_CRITIC_SHA"
           cp -a work/mb01/. work/mb02/
-          (cd work && patch --batch --forward -p0 < ../tools/MB01_TO_MB02_D13.patch)
+          (cd work && patch --batch --forward mb02/pons-critic.js < ../tools/MB01_TO_MB02_D13.patch)
           node --check work/mb02/pons-critic.js
           test "$(sha256sum work/mb02/pons-critic.js | awk '{print $1}')" = "$MB02_CRITIC_SHA"
           echo "MB01_RUNTIME=$(realpath work/mb01)" >> "$GITHUB_ENV"
