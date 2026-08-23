@@ -61,11 +61,11 @@ def load(p):
   for line in f:
    x=json.loads(line); d[(int(x['index_global']),int(x['seed']))]=x
  return d
-A=load('work/mb05.jsonl'); B=load('work/mb06.jsonl')
-assert A.keys()==B.keys() and len(A)==20000
+D=load('work/deals.jsonl'); A=load('work/mb05.jsonl'); B=load('work/mb06.jsonl')
+assert A.keys()==B.keys()==D.keys() and len(A)==20000
 changed=exact=collateral=0; examples=[]
 for k,a in A.items():
- b=B[k]
+ b=B[k]; deal=D[k]
  if a['auction']==b['auction']: continue
  changed+=1
  n=min(len(a['auction']),len(b['auction']))
@@ -74,7 +74,7 @@ for k,a in A.items():
  seat=seats[(seats.index(a['dealer'])+i)%4]
  call=a['auction'][i] if i<len(a['auction']) else None
  suit=call[-1] if call in ('2H','2S') else None
- length=len(a.get('hands',{}).get(seat,{}).get(suit,'')) if suit else -1
+ length=len(deal.get('hands',{}).get(seat,{}).get(suit,'')) if suit else -1
  ok=(i<n and call in ('2H','2S') and am and am.get('reviewedSource')=='instance-o2-direct-weak-jump-major' and length==6 and b['auction'][i]!=call)
  if ok: exact+=1
  else:
