@@ -1,0 +1,83 @@
+{
+  "BETTER": 31827,
+  "EQUIVALENT": 42158,
+  "WORSE": 28937,
+  "baseline": "PONS_v2.61_ORIGINAL",
+  "better_minus_worse": 2890,
+  "campaign": "PONS_CMP500K_V261_VS_R7_FIXED_MB02_D9_D13_FRESH",
+  "candidate": "R7_FIXED_MB02_D9_D13",
+  "candidate_critic_sha256": "6f236dcb597ec5502b44e7e66cd79515051be5268de9f9d010fd621dea8b0511",
+  "changed_auctions": 102922,
+  "changed_final_contract": 71683,
+  "cumulative_candidate_minus_baseline_abs_dealer_par_gap": -756800,
+  "dds_coverage": 71683,
+  "dds_runtime_sha256": "e5c7bcdcf96d3ed24b14b2840303a0d0936b05419de463809f68982c565c7f4c",
+  "deals": 500000,
+  "mean_gap_delta_per_changed_contract": -10.557593850703793,
+  "same_auctions": 397078,
+  "same_final_contract": 31239,
+  "shards": [
+    {
+      "auction_only_same_contract": 6312,
+      "baseline": "PONS_v2.61_ORIGINAL",
+      "candidate": "R7_FIXED_MB02_D9_D13",
+      "candidate_critic_sha256": "6f236dcb597ec5502b44e7e66cd79515051be5268de9f9d010fd621dea8b0511",
+      "contract_changed": 14348,
+      "deals": 100000,
+      "differences": 20660,
+      "master_seed": 997000000001,
+      "same": 79340,
+      "shard": "S1"
+    },
+    {
+      "auction_only_same_contract": 6158,
+      "baseline": "PONS_v2.61_ORIGINAL",
+      "candidate": "R7_FIXED_MB02_D9_D13",
+      "candidate_critic_sha256": "6f236dcb597ec5502b44e7e66cd79515051be5268de9f9d010fd621dea8b0511",
+      "contract_changed": 14361,
+      "deals": 100000,
+      "differences": 20519,
+      "master_seed": 997100000001,
+      "same": 79481,
+      "shard": "S2"
+    },
+    {
+      "auction_only_same_contract": 6222,
+      "baseline": "PONS_v2.61_ORIGINAL",
+      "candidate": "R7_FIXED_MB02_D9_D13",
+      "candidate_critic_sha256": "6f236dcb597ec5502b44e7e66cd79515051be5268de9f9d010fd621dea8b0511",
+      "contract_changed": 14354,
+      "deals": 100000,
+      "differences": 20576,
+      "master_seed": 997200000001,
+      "same": 79424,
+      "shard": "S3"
+    },
+    {
+      "auction_only_same_contract": 6227,
+      "baseline": "PONS_v2.61_ORIGINAL",
+      "candidate": "R7_FIXED_MB02_D9_D13",
+      "candidate_critic_sha256": "6f236dcb597ec5502b44e7e66cd79515051be5268de9f9d010fd621dea8b0511",
+      "contract_changed": 14382,
+      "deals": 100000,
+      "differences": 20609,
+      "master_seed": 997300000001,
+      "same": 79391,
+      "shard": "S4"
+    },
+    {
+      "auction_only_same_contract": 6320,
+      "baseline": "PONS_v2.61_ORIGINAL",
+      "candidate": "R7_FIXED_MB02_D9_D13",
+      "candidate_critic_sha256": "6f236dcb597ec5502b44e7e66cd79515051be5268de9f9d010fd621dea8b0511",
+      "contract_changed": 14238,
+      "deals": 100000,
+      "differences": 20558,
+      "master_seed": 997400000001,
+      "same": 79442,
+      "shard": "S5"
+    }
+  ],
+  "status": "COMPLETE_TRUE_DDS_500K",
+  "verdict": "DEMONSTRATED_SUPERIOR"
+}

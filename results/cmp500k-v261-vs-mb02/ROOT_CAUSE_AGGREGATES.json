@@ -1,0 +1,3306 @@
+{
+  "11deals-pass3-deal10-6c5h-longest-opening": {
+    "BETTER": 20,
+    "EQUIVALENT": 33,
+    "WORSE": 30,
+    "differences": 83,
+    "net_dds_impact": 2180
+  },
+  "11deals-pass4-deal1-third-forcing-invite-signoff": {
+    "BETTER": 13,
+    "EQUIVALENT": 0,
+    "WORSE": 8,
+    "differences": 21,
+    "net_dds_impact": 880
+  },
+  "11deals-pass4-deal4-advancer-three-card-fit": {
+    "BETTER": 2,
+    "EQUIVALENT": 3,
+    "WORSE": 4,
+    "differences": 9,
+    "net_dds_impact": 80
+  },
+  "11deals-pass5-deal8-no-unproven-spade-recompete": {
+    "BETTER": 1,
+    "EQUIVALENT": 5,
+    "WORSE": 0,
+    "differences": 6,
+    "net_dds_impact": -10
+  },
+  "UNMARKED": {
+    "BETTER": 33,
+    "EQUIVALENT": 6,
+    "WORSE": 36,
+    "differences": 75,
+    "net_dds_impact": -510
+  },
+  "V1R08324": {
+    "BETTER": 3,
+    "EQUIVALENT": 21,
+    "WORSE": 3,
+    "differences": 27,
+    "net_dds_impact": -270
+  },
+  "basic-diff-cp11-f2a01-11hl-3nt": {
+    "BETTER": 1,
+    "EQUIVALENT": 0,
+    "WORSE": 1,
+    "differences": 2,
+    "net_dds_impact": 740
+  },
+  "basic-diff-e-p0-02-six-major-correction-after-3NT": {
+    "BETTER": 65,
+    "EQUIVALENT": 2,
+    "WORSE": 74,
+    "differences": 141,
+    "net_dds_impact": -7160
+  },
+  "basic-diff-f2-d06-sandwich-opener-pass": {
+    "BETTER": 1,
+    "EQUIVALENT": 0,
+    "WORSE": 3,
+    "differences": 4,
+    "net_dds_impact": 3960
+  },
+  "basic-diff-f2a01-weak-1d1s3c-3d": {
+    "BETTER": 1,
+    "EQUIVALENT": 10,
+    "WORSE": 1,
+    "differences": 12,
+    "net_dds_impact": 10
+  },
+  "basic-diff-f2a01-weak-1d1s3c-3h": {
+    "BETTER": 3,
+    "EQUIVALENT": 6,
+    "WORSE": 3,
+    "differences": 12,
+    "net_dds_impact": -90
+  },
+  "basic-diff-f2a01-weak-1d1s3c-3nt": {
+    "BETTER": 2,
+    "EQUIVALENT": 0,
+    "WORSE": 0,
+    "differences": 2,
+    "net_dds_impact": -510
+  },
+  "basic-diff-fb02-1NT-2NT-minor5422-invite": {
+    "BETTER": 2,
+    "EQUIVALENT": 1,
+    "WORSE": 3,
+    "differences": 6,
+    "net_dds_impact": 910
+  },
+  "basic-diff-fb02-opener-15-decline": {
+    "BETTER": 653,
+    "EQUIVALENT": 1,
+    "WORSE": 255,
+    "differences": 909,
+    "net_dds_impact": -18640
+  },
+  "basic-diff-fb02-opener-16-resolution": {
+    "BETTER": 382,
+    "EQUIVALENT": 55,
+    "WORSE": 334,
+    "differences": 771,
+    "net_dds_impact": 48590
+  },
+  "basic-diff-fb02-opener-17-accept": {
+    "BETTER": 1,
+    "EQUIVALENT": 594,
+    "WORSE": 0,
+    "differences": 595,
+    "net_dds_impact": -260
+  },
+  "bc-merge-invalid-michaels-guard": {
+    "BETTER": 2,
+    "EQUIVALENT": 2,
+    "WORSE": 3,
+    "differences": 7,
+    "net_dds_impact": 490
+  },
+  "bfc-f3-1h1nt3d-heart-game-close": {
+    "BETTER": 2,
+    "EQUIVALENT": 0,
+    "WORSE": 5,
+    "differences": 7,
+    "net_dds_impact": 130
+  },
+  "bfc-multi-texas-hearts-game-close": {
+    "BETTER": 5,
+    "EQUIVALENT": 0,
+    "WORSE": 0,
+    "differences": 5,
+    "net_dds_impact": -2050
+  },
+  "bfc-multi-texas-spades-game-close": {
+    "BETTER": 7,
+    "EQUIVALENT": 0,
+    "WORSE": 5,
+    "differences": 12,
+    "net_dds_impact": -1200
+  },
+  "br01-w10-opener-2h-ordinary": {
+    "BETTER": 20,
+    "EQUIVALENT": 43,
+    "WORSE": 25,
+    "differences": 88,
+    "net_dds_impact": 2430
+  },
+  "br01-w10-opener-2nt-game-try": {
+    "BETTER": 9,
+    "EQUIVALENT": 10,
+    "WORSE": 5,
+    "differences": 24,
+    "net_dds_impact": -600
+  },
+  "br01-w10-opener-2s-heart-singleton": {
+    "BETTER": 2,
+    "EQUIVALENT": 9,
+    "WORSE": 7,
+    "differences": 18,
+    "net_dds_impact": 1620
+  },
+  "br01-w10-opener-3d-precaution": {
+    "BETTER": 5,
+    "EQUIVALENT": 35,
+    "WORSE": 9,
+    "differences": 49,
+    "net_dds_impact": 80
+  },
+  "branch-a-roudi-six-major-game-after-no-fit": {
+    "BETTER": 40,
+    "EQUIVALENT": 0,
+    "WORSE": 9,
+    "differences": 49,
+    "net_dds_impact": -12890
+  },
+  "branch-a2-1D1NT-opener-diamond-rebid": {
+    "BETTER": 102,
+    "EQUIVALENT": 20,
+    "WORSE": 121,
+    "differences": 243,
+    "net_dds_impact": 4490
+  },
+  "branch-a2-1D1NT-opener-economic-clubs": {
+    "BETTER": 6,
+    "EQUIVALENT": 1,
+    "WORSE": 10,
+    "differences": 17,
+    "net_dds_impact": 560
+  },
+  "branch-a2-1D1NT-opener-semi-balanced-2NT": {
+    "BETTER": 20,
+    "EQUIVALENT": 34,
+    "WORSE": 42,
+    "differences": 96,
+    "net_dds_impact": -950
+  },
+  "branch-a2-1H1S-opener-false-economic-rebid": {
+    "BETTER": 58,
+    "EQUIVALENT": 71,
+    "WORSE": 70,
+    "differences": 199,
+    "net_dds_impact": -1500
+  },
+  "branch-a2-forcing-1NT-bivalent-2D-five-hearts-after-1S2C": {
+    "BETTER": 104,
+    "EQUIVALENT": 124,
+    "WORSE": 129,
+    "differences": 357,
+    "net_dds_impact": 7680
+  },
+  "branch-a2-forcing-1NT-club-preference-after-1S2C": {
+    "BETTER": 64,
+    "EQUIVALENT": 20,
+    "WORSE": 47,
+    "differences": 131,
+    "net_dds_impact": -6350
+  },
+  "branch-a2-forcing-1NT-club-preference-after-catchall": {
+    "BETTER": 9,
+    "EQUIVALENT": 2,
+    "WORSE": 4,
+    "differences": 15,
+    "net_dds_impact": -690
+  },
+  "branch-a2-forcing-1NT-constructive-club-raise-after-1S2C": {
+    "BETTER": 15,
+    "EQUIVALENT": 12,
+    "WORSE": 30,
+    "differences": 57,
+    "net_dds_impact": 3520
+  },
+  "branch-a2-forcing-1NT-constructive-club-raise-after-catchall": {
+    "BETTER": 107,
+    "EQUIVALENT": 69,
+    "WORSE": 57,
+    "differences": 233,
+    "net_dds_impact": -5700
+  },
+  "branch-a2-forcing-1NT-five-heart-game-after-1S2H": {
+    "BETTER": 23,
+    "EQUIVALENT": 0,
+    "WORSE": 3,
+    "differences": 26,
+    "net_dds_impact": -7050
+  },
+  "branch-a2-forcing-1NT-heart-invite-after-1S2H": {
+    "BETTER": 6,
+    "EQUIVALENT": 1,
+    "WORSE": 5,
+    "differences": 12,
+    "net_dds_impact": -1050
+  },
+  "branch-a2-forcing-1NT-no-fictitious-red-suit-after-catchall": {
+    "BETTER": 4,
+    "EQUIVALENT": 5,
+    "WORSE": 8,
+    "differences": 17,
+    "net_dds_impact": 1240
+  },
+  "branch-a2-forcing-1NT-opener-minimum-heart-rectification-after-bivalent-2D": {
+    "BETTER": 1,
+    "EQUIVALENT": 0,
+    "WORSE": 0,
+    "differences": 1,
+    "net_dds_impact": -40
+  },
+  "branch-a2-forcing-1NT-responder-passes-precaution-3D-with-diamonds": {
+    "BETTER": 1,
+    "EQUIVALENT": 0,
+    "WORSE": 2,
+    "differences": 3,
+    "net_dds_impact": 280
+  },
+  "branch-a2-forcing-1NT-spade-preference-after-1S2C": {
+    "BETTER": 58,
+    "EQUIVALENT": 15,
+    "WORSE": 15,
+    "differences": 88,
+    "net_dds_impact": -2090
+  },
+  "branch-a2-preempt-opener-respects-4M-signoff": {
+    "BETTER": 14,
+    "EQUIVALENT": 0,
+    "WORSE": 13,
+    "differences": 27,
+    "net_dds_impact": -1650
+  },
+  "branch-a2-responder-1NT-after-economic-rebid": {
+    "BETTER": 991,
+    "EQUIVALENT": 158,
+    "WORSE": 454,
+    "differences": 1603,
+    "net_dds_impact": -119510
+  },
+  "branch-a2-responder-preference-after-economic-rebid": {
+    "BETTER": 20,
+    "EQUIVALENT": 4,
+    "WORSE": 22,
+    "differences": 46,
+    "net_dds_impact": -1090
+  },
+  "branch-a3-balanced-18-19-open-one": {
+    "BETTER": 216,
+    "EQUIVALENT": 386,
+    "WORSE": 222,
+    "differences": 824,
+    "net_dds_impact": 24090
+  },
+  "branch-a3-balanced-20-21-2NT": {
+    "BETTER": 327,
+    "EQUIVALENT": 340,
+    "WORSE": 231,
+    "differences": 898,
+    "net_dds_impact": -37590
+  },
+  "branch-a3-balanced-24plus-2D": {
+    "BETTER": 274,
+    "EQUIVALENT": 265,
+    "WORSE": 198,
+    "differences": 737,
+    "net_dds_impact": -22890
+  },
+  "branch-a4-drury-responder-respects-4M-signoff": {
+    "BETTER": 85,
+    "EQUIVALENT": 0,
+    "WORSE": 8,
+    "differences": 93,
+    "net_dds_impact": -40800
+  },
+  "branch-a4-forcing-1NT-opener-effort-after-2S-preference": {
+    "BETTER": 16,
+    "EQUIVALENT": 1,
+    "WORSE": 9,
+    "differences": 26,
+    "net_dds_impact": -1040
+  },
+  "branch-a4-opener-accepts-natural-2NT-invite": {
+    "BETTER": 122,
+    "EQUIVALENT": 0,
+    "WORSE": 97,
+    "differences": 219,
+    "net_dds_impact": -23320
+  },
+  "branch-a4-roudi-no-fit-quantitative-capitanat": {
+    "BETTER": 28,
+    "EQUIVALENT": 9,
+    "WORSE": 6,
+    "differences": 43,
+    "net_dds_impact": -7360
+  },
+  "branch-a4-simple-major-fit-respects-game-signoff": {
+    "BETTER": 20,
+    "EQUIVALENT": 0,
+    "WORSE": 28,
+    "differences": 48,
+    "net_dds_impact": 5690
+  },
+  "branch-a5-1d-2nt-balanced-opener-accepts-game": {
+    "BETTER": 39,
+    "EQUIVALENT": 0,
+    "WORSE": 43,
+    "differences": 82,
+    "net_dds_impact": -5850
+  },
+  "branch-a5-1d-2nt-opener-five-diamonds-four-clubs": {
+    "BETTER": 18,
+    "EQUIVALENT": 0,
+    "WORSE": 26,
+    "differences": 44,
+    "net_dds_impact": -830
+  },
+  "branch-a5-1d-2nt-opener-heart-force-problem-spades": {
+    "BETTER": 5,
+    "EQUIVALENT": 0,
+    "WORSE": 21,
+    "differences": 26,
+    "net_dds_impact": 1630
+  },
+  "branch-a5-1d-2nt-opener-spade-force-problem-hearts": {
+    "BETTER": 13,
+    "EQUIVALENT": 1,
+    "WORSE": 21,
+    "differences": 35,
+    "net_dds_impact": -1860
+  },
+  "branch-a5-1d-response-four-spades-5hl": {
+    "BETTER": 107,
+    "EQUIVALENT": 58,
+    "WORSE": 102,
+    "differences": 267,
+    "net_dds_impact": -2130
+  },
+  "branch-a5-course30-2D-2NT-texas-game-stop": {
+    "BETTER": 20,
+    "EQUIVALENT": 0,
+    "WORSE": 5,
+    "differences": 25,
+    "net_dds_impact": -13550
+  },
+  "branch-a5-economic-bicolor-five-good-spades-exception": {
+    "BETTER": 4,
+    "EQUIVALENT": 0,
+    "WORSE": 6,
+    "differences": 10,
+    "net_dds_impact": 10
+  },
+  "branch-a5-minor-response-hl-not-hcp": {
+    "BETTER": 270,
+    "EQUIVALENT": 146,
+    "WORSE": 227,
+    "differences": 643,
+    "net_dds_impact": -8670
+  },
+  "branch-a5-responder-accepts-jump-major-raise": {
+    "BETTER": 148,
+    "EQUIVALENT": 0,
+    "WORSE": 54,
+    "differences": 202,
+    "net_dds_impact": -38440
+  },
+  "branch-a5-strong-six-major-direct-slam-try-after-1NT": {
+    "BETTER": 45,
+    "EQUIVALENT": 30,
+    "WORSE": 30,
+    "differences": 105,
+    "net_dds_impact": -3530
+  },
+  "branch-b-major-fit-fitted-2nt": {
+    "BETTER": 367,
+    "EQUIVALENT": 801,
+    "WORSE": 485,
+    "differences": 1653,
+    "net_dds_impact": 46630
+  },
+  "branch-b-major-fit-four-invite": {
+    "BETTER": 99,
+    "EQUIVALENT": 227,
+    "WORSE": 128,
+    "differences": 454,
+    "net_dds_impact": -1080
+  },
+  "branch-b-major-fit-simple": {
+    "BETTER": 494,
+    "EQUIVALENT": 698,
+    "WORSE": 416,
+    "differences": 1608,
+    "net_dds_impact": -15630
+  },
+  "branch-b-major-fit-weak-five-barrage": {
+    "BETTER": 291,
+    "EQUIVALENT": 278,
+    "WORSE": 223,
+    "differences": 792,
+    "net_dds_impact": -17400
+  },
+  "branch-b2-direct-1nt-priority": {
+    "BETTER": 76,
+    "EQUIVALENT": 66,
+    "WORSE": 88,
+    "differences": 230,
+    "net_dds_impact": 3090
+  },
+  "branch-b3-takeout-response-44-majors": {
+    "BETTER": 13,
+    "EQUIVALENT": 15,
+    "WORSE": 20,
+    "differences": 48,
+    "net_dds_impact": 950
+  },
+  "branch-b5-advancer-two-level-fit-after-major-raise": {
+    "BETTER": 156,
+    "EQUIVALENT": 290,
+    "WORSE": 241,
+    "differences": 687,
+    "net_dds_impact": 32440
+  },
+  "branch-b5-fitted-2nt-after-opener-decline": {
+    "BETTER": 56,
+    "EQUIVALENT": 15,
+    "WORSE": 51,
+    "differences": 122,
+    "net_dds_impact": -2680
+  },
+  "branch-b6-b5-followup-law": {
+    "BETTER": 1,
+    "EQUIVALENT": 0,
+    "WORSE": 0,
+    "differences": 1,
+    "net_dds_impact": -200
+  },
+  "branch-e-2D-negative-2NT-3NT-signoff-fence": {
+    "BETTER": 26,
+    "EQUIVALENT": 1,
+    "WORSE": 4,
+    "differences": 31,
+    "net_dds_impact": -10030
+  },
+  "branch-e-pass3-course29-responder-transfer-after-both-majors": {
+    "BETTER": 1,
+    "EQUIVALENT": 2,
+    "WORSE": 4,
+    "differences": 7,
+    "net_dds_impact": 2240
+  },
+  "branch-e-pass3-opener-after-stayman-quantitative-4NT": {
+    "BETTER": 30,
+    "EQUIVALENT": 1,
+    "WORSE": 4,
+    "differences": 35,
+    "net_dds_impact": -7230
+  },
+  "branch-e-pass3-responder-after-opener-jump-fit": {
+    "BETTER": 89,
+    "EQUIVALENT": 322,
+    "WORSE": 60,
+    "differences": 471,
+    "net_dds_impact": -17380
+  },
+  "branch-e-pass3-strong2C-opener-after-direct-quantitative-4NT": {
+    "BETTER": 54,
+    "EQUIVALENT": 0,
+    "WORSE": 10,
+    "differences": 64,
+    "net_dds_impact": -26580
+  },
+  "branch-e-pass4-1NT-texas-2NT-full-resolution": {
+    "BETTER": 279,
+    "EQUIVALENT": 135,
+    "WORSE": 160,
+    "differences": 574,
+    "net_dds_impact": -68960
+  },
+  "branch-e-pass4-1S-direct-splinter-hld": {
+    "BETTER": 68,
+    "EQUIVALENT": 131,
+    "WORSE": 82,
+    "differences": 281,
+    "net_dds_impact": 6310
+  },
+  "branch-e-pass4-1S-four-fit-3NT": {
+    "BETTER": 59,
+    "EQUIVALENT": 611,
+    "WORSE": 85,
+    "differences": 755,
+    "net_dds_impact": 13700
+  },
+  "branch-e-pass4-1S-four-fit-delayed-2over1": {
+    "BETTER": 203,
+    "EQUIVALENT": 1194,
+    "WORSE": 377,
+    "differences": 1774,
+    "net_dds_impact": 97190
+  },
+  "branch-e-pass4-1S-four-fit-jump-raise": {
+    "BETTER": 239,
+    "EQUIVALENT": 338,
+    "WORSE": 213,
+    "differences": 790,
+    "net_dds_impact": -8170
+  },
+  "branch-e-pass5-1H-direct-splinter-hld": {
+    "BETTER": 19,
+    "EQUIVALENT": 75,
+    "WORSE": 30,
+    "differences": 124,
+    "net_dds_impact": 6230
+  },
+  "branch-e-pass5-1H-four-fit-3NT": {
+    "BETTER": 52,
+    "EQUIVALENT": 493,
+    "WORSE": 63,
+    "differences": 608,
+    "net_dds_impact": 7040
+  },
+  "branch-e-pass5-1H-four-fit-delayed": {
+    "BETTER": 203,
+    "EQUIVALENT": 902,
+    "WORSE": 297,
+    "differences": 1402,
+    "net_dds_impact": 62120
+  },
+  "branch-e-pass5-1H-four-fit-direct-game": {
+    "BETTER": 53,
+    "EQUIVALENT": 148,
+    "WORSE": 33,
+    "differences": 234,
+    "net_dds_impact": -6860
+  },
+  "branch-e-pass5-1H-four-fit-jump-raise": {
+    "BETTER": 148,
+    "EQUIVALENT": 306,
+    "WORSE": 160,
+    "differences": 614,
+    "net_dds_impact": 1350
+  },
+  "branch-e-pass5-delayed-heart-fit-after-interference": {
+    "BETTER": 5,
+    "EQUIVALENT": 0,
+    "WORSE": 2,
+    "differences": 7,
+    "net_dds_impact": -940
+  },
+  "branch-e-pass6-advancer-natural-minor-2over1": {
+    "BETTER": 164,
+    "EQUIVALENT": 158,
+    "WORSE": 146,
+    "differences": 468,
+    "net_dds_impact": -16510
+  },
+  "branch-e-pass6-overcaller-after-mixed-raise": {
+    "BETTER": 2,
+    "EQUIVALENT": 1,
+    "WORSE": 0,
+    "differences": 3,
+    "net_dds_impact": -500
+  },
+  "branch-e-pass6-overcaller-weak-after-advancer-cuebid": {
+    "BETTER": 13,
+    "EQUIVALENT": 27,
+    "WORSE": 6,
+    "differences": 46,
+    "net_dds_impact": -970
+  },
+  "branch-e-pass6-sef2024-mixed-raise": {
+    "BETTER": 438,
+    "EQUIVALENT": 494,
+    "WORSE": 470,
+    "differences": 1402,
+    "net_dds_impact": -3510
+  },
+  "branch-e-pass7-advancer-1over1-8hl": {
+    "BETTER": 2,
+    "EQUIVALENT": 11,
+    "WORSE": 20,
+    "differences": 33,
+    "net_dds_impact": 3570
+  },
+  "branch-e-pass7-advancer-after-responder-1nt-clubs": {
+    "BETTER": 2,
+    "EQUIVALENT": 1,
+    "WORSE": 3,
+    "differences": 6,
+    "net_dds_impact": 10
+  },
+  "branch-e-pass7-advancer-after-responder-1nt-fourfit": {
+    "BETTER": 1,
+    "EQUIVALENT": 3,
+    "WORSE": 4,
+    "differences": 8,
+    "net_dds_impact": 40
+  },
+  "branch-e-pass7-advancer-after-responder-1nt-limit-fit-cue": {
+    "BETTER": 2,
+    "EQUIVALENT": 3,
+    "WORSE": 7,
+    "differences": 12,
+    "net_dds_impact": 2560
+  },
+  "branch-e-pass7-advancer-after-responder-1nt-spades": {
+    "BETTER": 2,
+    "EQUIVALENT": 0,
+    "WORSE": 1,
+    "differences": 3,
+    "net_dds_impact": -460
+  },
+  "branch-e-pass7-advancer-after-responder-1nt-strong-fit": {
+    "BETTER": 4,
+    "EQUIVALENT": 3,
+    "WORSE": 1,
+    "differences": 8,
+    "net_dds_impact": -830
+  },
+  "branch-e-pass7-advancer-after-responder-1nt-takeout": {
+    "BETTER": 13,
+    "EQUIVALENT": 23,
+    "WORSE": 11,
+    "differences": 47,
+    "net_dds_impact": -250
+  },
+  "branch-f3-1h1nt-3d": {
+    "BETTER": 4,
+    "EQUIVALENT": 7,
+    "WORSE": 3,
+    "differences": 14,
+    "net_dds_impact": -770
+  },
+  "branch-f3-1h1nt-4h": {
+    "BETTER": 8,
+    "EQUIVALENT": 3,
+    "WORSE": 7,
+    "differences": 18,
+    "net_dds_impact": -1200
+  },
+  "branch-f3-1s1nt-3d": {
+    "BETTER": 7,
+    "EQUIVALENT": 35,
+    "WORSE": 20,
+    "differences": 62,
+    "net_dds_impact": 4970
+  },
+  "branch-f3-1s1nt-3nt": {
+    "BETTER": 0,
+    "EQUIVALENT": 2,
+    "WORSE": 0,
+    "differences": 2,
+    "net_dds_impact": 0
+  },
+  "branch-f3-1s1nt2h-2nt": {
+    "BETTER": 16,
+    "EQUIVALENT": 3,
+    "WORSE": 19,
+    "differences": 38,
+    "net_dds_impact": -770
+  },
+  "branch-f3-1s1nt2h-2s": {
+    "BETTER": 9,
+    "EQUIVALENT": 3,
+    "WORSE": 3,
+    "differences": 15,
+    "net_dds_impact": -800
+  },
+  "branch-f3-1s1nt2h-3h": {
+    "BETTER": 73,
+    "EQUIVALENT": 44,
+    "WORSE": 46,
+    "differences": 163,
+    "net_dds_impact": -12250
+  },
+  "branch-f3-1s1nt2h-3nt": {
+    "BETTER": 0,
+    "EQUIVALENT": 0,
+    "WORSE": 2,
+    "differences": 2,
+    "net_dds_impact": 520
+  },
+  "branch-f3-1s1nt2h-3s": {
+    "BETTER": 9,
+    "EQUIVALENT": 4,
+    "WORSE": 6,
+    "differences": 19,
+    "net_dds_impact": -1860
+  },
+  "branch-f3-1s1nt2h-pass": {
+    "BETTER": 10,
+    "EQUIVALENT": 2,
+    "WORSE": 2,
+    "differences": 14,
+    "net_dds_impact": -890
+  },
+  "branch-h-complete-transfer": {
+    "BETTER": 5,
+    "EQUIVALENT": 26,
+    "WORSE": 25,
+    "differences": 56,
+    "net_dds_impact": 7040
+  },
+  "branch-h-landy-direct-3nt": {
+    "BETTER": 103,
+    "EQUIVALENT": 50,
+    "WORSE": 57,
+    "differences": 210,
+    "net_dds_impact": -15910
+  },
+  "branch-h-landy-eight-diamond-transfer": {
+    "BETTER": 2,
+    "EQUIVALENT": 2,
+    "WORSE": 3,
+    "differences": 7,
+    "net_dds_impact": 10
+  },
+  "branch-h-landy-five-card-major-relay": {
+    "BETTER": 39,
+    "EQUIVALENT": 36,
+    "WORSE": 35,
+    "differences": 110,
+    "net_dds_impact": -11680
+  },
+  "branch-h-landy-game-3nt": {
+    "BETTER": 2,
+    "EQUIVALENT": 2,
+    "WORSE": 0,
+    "differences": 4,
+    "net_dds_impact": -560
+  },
+  "branch-h-landy-minor55-void-heart": {
+    "BETTER": 0,
+    "EQUIVALENT": 1,
+    "WORSE": 0,
+    "differences": 1,
+    "net_dds_impact": 0
+  },
+  "branch-h-landy-minor55-void-spade": {
+    "BETTER": 0,
+    "EQUIVALENT": 1,
+    "WORSE": 0,
+    "differences": 1,
+    "net_dds_impact": 0
+  },
+  "branch-h-landy-minorbicolor-opener-3nt": {
+    "BETTER": 3,
+    "EQUIVALENT": 3,
+    "WORSE": 0,
+    "differences": 6,
+    "net_dds_impact": -710
+  },
+  "branch-h-landy-minors-short-heart": {
+    "BETTER": 9,
+    "EQUIVALENT": 34,
+    "WORSE": 3,
+    "differences": 46,
+    "net_dds_impact": -2670
+  },
+  "branch-h-landy-minors-short-spade": {
+    "BETTER": 3,
+    "EQUIVALENT": 38,
+    "WORSE": 12,
+    "differences": 53,
+    "net_dds_impact": 6540
+  },
+  "branch-h-landy-pass": {
+    "BETTER": 132,
+    "EQUIVALENT": 27,
+    "WORSE": 76,
+    "differences": 235,
+    "net_dds_impact": -41760
+  },
+  "branch-h-landy-texas-clubs": {
+    "BETTER": 214,
+    "EQUIVALENT": 43,
+    "WORSE": 217,
+    "differences": 474,
+    "net_dds_impact": -6560
+  },
+  "branch-h-landy-values-double": {
+    "BETTER": 50,
+    "EQUIVALENT": 66,
+    "WORSE": 126,
+    "differences": 242,
+    "net_dds_impact": 61150
+  },
+  "branch-h-minor-transfer-interrupted-pass": {
+    "BETTER": 18,
+    "EQUIVALENT": 1,
+    "WORSE": 9,
+    "differences": 28,
+    "net_dds_impact": -2080
+  },
+  "branch-h-multi-direct-3nt": {
+    "BETTER": 40,
+    "EQUIVALENT": 3,
+    "WORSE": 7,
+    "differences": 50,
+    "net_dds_impact": -23090
+  },
+  "branch-h-multi-four-major-double": {
+    "BETTER": 39,
+    "EQUIVALENT": 9,
+    "WORSE": 56,
+    "differences": 104,
+    "net_dds_impact": 13110
+  },
+  "branch-h-multi-pass-wait": {
+    "BETTER": 37,
+    "EQUIVALENT": 7,
+    "WORSE": 36,
+    "differences": 80,
+    "net_dds_impact": -5860
+  },
+  "branch-h-multi-texas-hearts": {
+    "BETTER": 4,
+    "EQUIVALENT": 1,
+    "WORSE": 1,
+    "differences": 6,
+    "net_dds_impact": -620
+  },
+  "branch-h-multi-texas-spades": {
+    "BETTER": 5,
+    "EQUIVALENT": 1,
+    "WORSE": 1,
+    "differences": 7,
+    "net_dds_impact": -2540
+  },
+  "branch-h-rub-2h-impossible-stayman": {
+    "BETTER": 1,
+    "EQUIVALENT": 19,
+    "WORSE": 7,
+    "differences": 27,
+    "net_dds_impact": 1640
+  },
+  "branch-h-rub-2s-impossible-stayman": {
+    "BETTER": 3,
+    "EQUIVALENT": 24,
+    "WORSE": 3,
+    "differences": 30,
+    "net_dds_impact": 40
+  },
+  "branch-h-rub-H-stopper-ask": {
+    "BETTER": 2,
+    "EQUIVALENT": 10,
+    "WORSE": 3,
+    "differences": 15,
+    "net_dds_impact": 230
+  },
+  "branch-h-rub-H-texas-clubs": {
+    "BETTER": 13,
+    "EQUIVALENT": 4,
+    "WORSE": 2,
+    "differences": 19,
+    "net_dds_impact": -1220
+  },
+  "branch-h-rub-H-texas-clubs-long6-priority": {
+    "BETTER": 4,
+    "EQUIVALENT": 1,
+    "WORSE": 5,
+    "differences": 10,
+    "net_dds_impact": -120
+  },
+  "branch-h-rub-H-texas-diamonds": {
+    "BETTER": 14,
+    "EQUIVALENT": 1,
+    "WORSE": 10,
+    "differences": 25,
+    "net_dds_impact": -220
+  },
+  "branch-h-rub-H-texas-diamonds-long6-priority": {
+    "BETTER": 3,
+    "EQUIVALENT": 0,
+    "WORSE": 2,
+    "differences": 5,
+    "net_dds_impact": 80
+  },
+  "branch-h-rub-S-pass": {
+    "BETTER": 42,
+    "EQUIVALENT": 7,
+    "WORSE": 40,
+    "differences": 89,
+    "net_dds_impact": 40
+  },
+  "branch-h-rub-S-positive-double": {
+    "BETTER": 26,
+    "EQUIVALENT": 25,
+    "WORSE": 23,
+    "differences": 74,
+    "net_dds_impact": -2510
+  },
+  "branch-h-rub-S-stopper-ask": {
+    "BETTER": 3,
+    "EQUIVALENT": 7,
+    "WORSE": 5,
+    "differences": 15,
+    "net_dds_impact": -710
+  },
+  "branch-h-rub-S-texas-clubs": {
+    "BETTER": 10,
+    "EQUIVALENT": 12,
+    "WORSE": 10,
+    "differences": 32,
+    "net_dds_impact": -200
+  },
+  "branch-h-rub-S-texas-clubs-long6-priority": {
+    "BETTER": 3,
+    "EQUIVALENT": 2,
+    "WORSE": 5,
+    "differences": 10,
+    "net_dds_impact": 210
+  },
+  "branch-h-rub-S-texas-diamonds": {
+    "BETTER": 11,
+    "EQUIVALENT": 5,
+    "WORSE": 18,
+    "differences": 34,
+    "net_dds_impact": 130
+  },
+  "branch-h-rub-S-texas-diamonds-long6-priority": {
+    "BETTER": 2,
+    "EQUIVALENT": 1,
+    "WORSE": 7,
+    "differences": 10,
+    "net_dds_impact": 820
+  },
+  "branch-h-stopper-ask-no-stop-refuge": {
+    "BETTER": 1,
+    "EQUIVALENT": 1,
+    "WORSE": 0,
+    "differences": 2,
+    "net_dds_impact": -150
+  },
+  "branch-h-w2b-interrupted-gf-major-transfer-fit9": {
+    "BETTER": 0,
+    "EQUIVALENT": 3,
+    "WORSE": 0,
+    "differences": 3,
+    "net_dds_impact": 0
+  },
+  "branch-h-x-complete-diamonds": {
+    "BETTER": 4,
+    "EQUIVALENT": 3,
+    "WORSE": 8,
+    "differences": 15,
+    "net_dds_impact": 380
+  },
+  "branch-h-x-redouble-invite": {
+    "BETTER": 43,
+    "EQUIVALENT": 32,
+    "WORSE": 50,
+    "differences": 125,
+    "net_dds_impact": 680
+  },
+  "branch-h-x-stayman-54": {
+    "BETTER": 32,
+    "EQUIVALENT": 32,
+    "WORSE": 46,
+    "differences": 110,
+    "net_dds_impact": 6220
+  },
+  "branch-h-x-texas-clubs": {
+    "BETTER": 52,
+    "EQUIVALENT": 26,
+    "WORSE": 47,
+    "differences": 125,
+    "net_dds_impact": -930
+  },
+  "branch-h-x-texas-diamonds": {
+    "BETTER": 34,
+    "EQUIVALENT": 32,
+    "WORSE": 43,
+    "differences": 109,
+    "net_dds_impact": 3310
+  },
+  "branch-h-x-weak-pass": {
+    "BETTER": 74,
+    "EQUIVALENT": 21,
+    "WORSE": 106,
+    "differences": 201,
+    "net_dds_impact": 10090
+  },
+  "branch-i-1h1nt-4531-no-light-reverse": {
+    "BETTER": 136,
+    "EQUIVALENT": 196,
+    "WORSE": 64,
+    "differences": 396,
+    "net_dds_impact": -6980
+  },
+  "branch-i-1h1nt2s-responder-no-43-spade-game": {
+    "BETTER": 38,
+    "EQUIVALENT": 16,
+    "WORSE": 23,
+    "differences": 77,
+    "net_dds_impact": -6940
+  },
+  "branch-i-1h2c-opener-no-light-reverse": {
+    "BETTER": 36,
+    "EQUIVALENT": 339,
+    "WORSE": 35,
+    "differences": 410,
+    "net_dds_impact": 5850
+  },
+  "branch-i-1h2c2h-responder-3nt": {
+    "BETTER": 2,
+    "EQUIVALENT": 3,
+    "WORSE": 4,
+    "differences": 9,
+    "net_dds_impact": 660
+  },
+  "branch-i-1h2c2h-responder-forcing-fallback": {
+    "BETTER": 4,
+    "EQUIVALENT": 1,
+    "WORSE": 2,
+    "differences": 7,
+    "net_dds_impact": -740
+  },
+  "branch-i-1h2c2h-responder-game-fit": {
+    "BETTER": 1,
+    "EQUIVALENT": 24,
+    "WORSE": 6,
+    "differences": 31,
+    "net_dds_impact": 3030
+  },
+  "branch-i-1h2c2h-responder-strong-delayed-fit": {
+    "BETTER": 22,
+    "EQUIVALENT": 69,
+    "WORSE": 15,
+    "differences": 106,
+    "net_dds_impact": -2690
+  },
+  "branch-i-1h2c2h-responder-third-suit-diamond": {
+    "BETTER": 26,
+    "EQUIVALENT": 41,
+    "WORSE": 7,
+    "differences": 74,
+    "net_dds_impact": -6370
+  },
+  "branch-i-1h2c2h-responder-third-suit-spade-search": {
+    "BETTER": 11,
+    "EQUIVALENT": 8,
+    "WORSE": 3,
+    "differences": 22,
+    "net_dds_impact": -610
+  },
+  "branch-i-1h2c2h3h4h-min-slam-try-stop": {
+    "BETTER": 2,
+    "EQUIVALENT": 0,
+    "WORSE": 2,
+    "differences": 4,
+    "net_dds_impact": 0
+  },
+  "branch-i-1h2c2h4h-nf-min-opener-stop": {
+    "BETTER": 6,
+    "EQUIVALENT": 0,
+    "WORSE": 1,
+    "differences": 7,
+    "net_dds_impact": -2440
+  },
+  "branch-i-1h2d-opener-18-19-balanced-3nt": {
+    "BETTER": 4,
+    "EQUIVALENT": 3,
+    "WORSE": 7,
+    "differences": 14,
+    "net_dds_impact": 2510
+  },
+  "branch-i-1h2d-opener-eight-heart-game": {
+    "BETTER": 0,
+    "EQUIVALENT": 2,
+    "WORSE": 2,
+    "differences": 4,
+    "net_dds_impact": 1250
+  },
+  "branch-i-1h2d-opener-low-5332-no-2nt": {
+    "BETTER": 3,
+    "EQUIVALENT": 173,
+    "WORSE": 7,
+    "differences": 183,
+    "net_dds_impact": 890
+  },
+  "branch-i-1h2d-opener-no-light-spade-reverse": {
+    "BETTER": 16,
+    "EQUIVALENT": 197,
+    "WORSE": 31,
+    "differences": 244,
+    "net_dds_impact": 7340
+  },
+  "branch-i-1h2d-opener-strong-diamond-fit": {
+    "BETTER": 4,
+    "EQUIVALENT": 1,
+    "WORSE": 10,
+    "differences": 15,
+    "net_dds_impact": 2800
+  },
+  "branch-i-1h2d-opener-strong-spade-reverse": {
+    "BETTER": 0,
+    "EQUIVALENT": 4,
+    "WORSE": 0,
+    "differences": 4,
+    "net_dds_impact": 0
+  },
+  "branch-i-1h2d2h-responder-third-suit-spade": {
+    "BETTER": 6,
+    "EQUIVALENT": 6,
+    "WORSE": 7,
+    "differences": 19,
+    "net_dds_impact": 240
+  },
+  "branch-i-1s1nt2h2s-opener-min-stop": {
+    "BETTER": 3,
+    "EQUIVALENT": 1,
+    "WORSE": 4,
+    "differences": 8,
+    "net_dds_impact": 850
+  },
+  "branch-i-1s1nt2h2s-opener-strong-5422": {
+    "BETTER": 4,
+    "EQUIVALENT": 0,
+    "WORSE": 6,
+    "differences": 10,
+    "net_dds_impact": 1810
+  },
+  "branch-i-1s1nt2h2s-opener-strong-club-fragment": {
+    "BETTER": 1,
+    "EQUIVALENT": 0,
+    "WORSE": 1,
+    "differences": 2,
+    "net_dds_impact": 290
+  },
+  "branch-i-1s1nt2h2s-opener-strong-diamond-fragment": {
+    "BETTER": 1,
+    "EQUIVALENT": 0,
+    "WORSE": 3,
+    "differences": 4,
+    "net_dds_impact": 940
+  },
+  "branch-i-2nt-relay-no-short-major-game": {
+    "BETTER": 14,
+    "EQUIVALENT": 6,
+    "WORSE": 23,
+    "differences": 43,
+    "net_dds_impact": 350
+  },
+  "branch-i-forcing-1nt-5332-use-three-card-diamond": {
+    "BETTER": 13,
+    "EQUIVALENT": 97,
+    "WORSE": 17,
+    "differences": 127,
+    "net_dds_impact": 630
+  },
+  "branch-i-forcing-1nt-long-suit-strain-rescue": {
+    "BETTER": 257,
+    "EQUIVALENT": 82,
+    "WORSE": 245,
+    "differences": 584,
+    "net_dds_impact": -8270
+  },
+  "branch-i-forcing-1nt-no-low-jump-shift": {
+    "BETTER": 208,
+    "EQUIVALENT": 340,
+    "WORSE": 187,
+    "differences": 735,
+    "net_dds_impact": 6300
+  },
+  "branch-i-forcing-1nt-seven-major-over-3nt": {
+    "BETTER": 15,
+    "EQUIVALENT": 0,
+    "WORSE": 8,
+    "differences": 23,
+    "net_dds_impact": -4590
+  },
+  "branch-j-course29-positive-suit-3nt-slam-fence": {
+    "BETTER": 33,
+    "EQUIVALENT": 0,
+    "WORSE": 40,
+    "differences": 73,
+    "net_dds_impact": 5300
+  },
+  "branch-j-course29-positive-suit-major-slam-fence": {
+    "BETTER": 60,
+    "EQUIVALENT": 1,
+    "WORSE": 38,
+    "differences": 99,
+    "net_dds_impact": -11200
+  },
+  "branch-j2-course29-responder-game-after-side-four": {
+    "BETTER": 8,
+    "EQUIVALENT": 1,
+    "WORSE": 13,
+    "differences": 22,
+    "net_dds_impact": 3300
+  },
+  "branch-j2-course29-stayman-no-fit-direct-slam": {
+    "BETTER": 14,
+    "EQUIVALENT": 1,
+    "WORSE": 0,
+    "differences": 15,
+    "net_dds_impact": -6780
+  },
+  "branch-j3-course28-rkcb-response": {
+    "BETTER": 14,
+    "EQUIVALENT": 31,
+    "WORSE": 76,
+    "differences": 121,
+    "net_dds_impact": 11740
+  },
+  "branch-j3-course28-rkcb-signoff": {
+    "BETTER": 1,
+    "EQUIVALENT": 0,
+    "WORSE": 2,
+    "differences": 3,
+    "net_dds_impact": 1400
+  },
+  "branch-j4-course29-responder-respects-major-signoff": {
+    "BETTER": 23,
+    "EQUIVALENT": 0,
+    "WORSE": 23,
+    "differences": 46,
+    "net_dds_impact": -790
+  },
+  "branch-j4-course29-responder-stops-after-nf-major-repeat": {
+    "BETTER": 9,
+    "EQUIVALENT": 0,
+    "WORSE": 10,
+    "differences": 19,
+    "net_dds_impact": 740
+  },
+  "branch-j4-course29-texas-no-fit-game": {
+    "BETTER": 27,
+    "EQUIVALENT": 0,
+    "WORSE": 24,
+    "differences": 51,
+    "net_dds_impact": -1570
+  },
+  "branch-j4-course29-texas-no-fit-quantitative": {
+    "BETTER": 3,
+    "EQUIVALENT": 8,
+    "WORSE": 4,
+    "differences": 15,
+    "net_dds_impact": 470
+  },
+  "branch-j5-course29-opener-control-after-heart-fit": {
+    "BETTER": 7,
+    "EQUIVALENT": 8,
+    "WORSE": 17,
+    "differences": 32,
+    "net_dds_impact": 4860
+  },
+  "branch-j7-course29-opener-4C-club-control-no-spade": {
+    "BETTER": 9,
+    "EQUIVALENT": 6,
+    "WORSE": 5,
+    "differences": 20,
+    "net_dds_impact": -1300
+  },
+  "branch-j8-strong-minor-3nt-quantitative": {
+    "BETTER": 12,
+    "EQUIVALENT": 2,
+    "WORSE": 11,
+    "differences": 25,
+    "net_dds_impact": 3730
+  },
+  "branch-j9-course28-chasse-no-fit-quantitative": {
+    "BETTER": 0,
+    "EQUIVALENT": 1,
+    "WORSE": 1,
+    "differences": 2,
+    "net_dds_impact": 500
+  },
+  "branch-j9-course28-texas-no-fit-quantitative": {
+    "BETTER": 5,
+    "EQUIVALENT": 0,
+    "WORSE": 8,
+    "differences": 13,
+    "net_dds_impact": 1860
+  },
+  "branch-j9-course29-responder-nt-stop-after-nf-major-repeat": {
+    "BETTER": 3,
+    "EQUIVALENT": 0,
+    "WORSE": 2,
+    "differences": 5,
+    "net_dds_impact": -460
+  },
+  "branch-k-natural-distribution-multiturn": {
+    "BETTER": 3,
+    "EQUIVALENT": 17,
+    "WORSE": 1,
+    "differences": 21,
+    "net_dds_impact": -480
+  },
+  "branch-k-natural-distribution-root": {
+    "BETTER": 1309,
+    "EQUIVALENT": 3678,
+    "WORSE": 1582,
+    "differences": 6569,
+    "net_dds_impact": 156830
+  },
+  "branch-k-reverse-2nt-moderator": {
+    "BETTER": 50,
+    "EQUIVALENT": 93,
+    "WORSE": 55,
+    "differences": 198,
+    "net_dds_impact": 970
+  },
+  "branch-k-reverse-forcing-continuation": {
+    "BETTER": 21,
+    "EQUIVALENT": 35,
+    "WORSE": 49,
+    "differences": 105,
+    "net_dds_impact": 9640
+  },
+  "branch-k2-minor-1nt-natural-distribution": {
+    "BETTER": 494,
+    "EQUIVALENT": 448,
+    "WORSE": 512,
+    "differences": 1454,
+    "net_dds_impact": 14860
+  },
+  "branch-k2-reverse-after-responder-repeat": {
+    "BETTER": 9,
+    "EQUIVALENT": 3,
+    "WORSE": 28,
+    "differences": 40,
+    "net_dds_impact": 11320
+  },
+  "branch-k2-reverse-opener-after-moderator": {
+    "BETTER": 23,
+    "EQUIVALENT": 16,
+    "WORSE": 17,
+    "differences": 56,
+    "net_dds_impact": -1220
+  },
+  "branch-k3-opener-respects-low-level-preference": {
+    "BETTER": 55,
+    "EQUIVALENT": 37,
+    "WORSE": 56,
+    "differences": 148,
+    "net_dds_impact": -1690
+  },
+  "branch-k3-responder-lowlevel-notrump-or-force": {
+    "BETTER": 114,
+    "EQUIVALENT": 947,
+    "WORSE": 168,
+    "differences": 1229,
+    "net_dds_impact": 19950
+  },
+  "branch-k3-responder-lowlevel-second-suit-fit": {
+    "BETTER": 122,
+    "EQUIVALENT": 408,
+    "WORSE": 140,
+    "differences": 670,
+    "net_dds_impact": 5040
+  },
+  "branch-k3-responder-lowlevel-six-card-repeat": {
+    "BETTER": 73,
+    "EQUIVALENT": 131,
+    "WORSE": 99,
+    "differences": 303,
+    "net_dds_impact": 12030
+  },
+  "branch-k3-responder-reject-strong-false-preference": {
+    "BETTER": 33,
+    "EQUIVALENT": 229,
+    "WORSE": 41,
+    "differences": 303,
+    "net_dds_impact": 1520
+  },
+  "branch-k6-65-opening-rebid-cost": {
+    "BETTER": 166,
+    "EQUIVALENT": 256,
+    "WORSE": 265,
+    "differences": 687,
+    "net_dds_impact": 27800
+  },
+  "branch-k6-65-weak-rebid-closure": {
+    "BETTER": 2,
+    "EQUIVALENT": 10,
+    "WORSE": 1,
+    "differences": 13,
+    "net_dds_impact": -260
+  },
+  "branch-k6-extreme-longest-opening-preserve-k1": {
+    "BETTER": 30,
+    "EQUIVALENT": 30,
+    "WORSE": 42,
+    "differences": 102,
+    "net_dds_impact": 8510
+  },
+  "branch-k7-5440-economic-clubs-after-1D1S": {
+    "BETTER": 31,
+    "EQUIVALENT": 35,
+    "WORSE": 40,
+    "differences": 106,
+    "net_dds_impact": 1500
+  },
+  "branch-k8-1c1h1s1nt-64-strong": {
+    "BETTER": 4,
+    "EQUIVALENT": 1,
+    "WORSE": 5,
+    "differences": 10,
+    "net_dds_impact": 1420
+  },
+  "branch-k8-1c1h1s1nt-clubs-spades-limited": {
+    "BETTER": 30,
+    "EQUIVALENT": 19,
+    "WORSE": 29,
+    "differences": 78,
+    "net_dds_impact": -1210
+  },
+  "branch-k8-1c1h1s1nt-irregular-2nt": {
+    "BETTER": 5,
+    "EQUIVALENT": 0,
+    "WORSE": 1,
+    "differences": 6,
+    "net_dds_impact": -460
+  },
+  "branch-l-advancer-1nt-balanced-top-with-3fit": {
+    "BETTER": 39,
+    "EQUIVALENT": 52,
+    "WORSE": 63,
+    "differences": 154,
+    "net_dds_impact": 4830
+  },
+  "branch-l-advancer-seven-spade-game-preserve": {
+    "BETTER": 0,
+    "EQUIVALENT": 8,
+    "WORSE": 1,
+    "differences": 9,
+    "net_dds_impact": 500
+  },
+  "branch-l-pass11-advancer-1nt-8-12": {
+    "BETTER": 175,
+    "EQUIVALENT": 182,
+    "WORSE": 165,
+    "differences": 522,
+    "net_dds_impact": -8630
+  },
+  "branch-l-pass6-advancer-natural-2NT": {
+    "BETTER": 7,
+    "EQUIVALENT": 4,
+    "WORSE": 5,
+    "differences": 16,
+    "net_dds_impact": -1550
+  },
+  "branch-l-pass6-advancer-new-suit-forcing": {
+    "BETTER": 44,
+    "EQUIVALENT": 70,
+    "WORSE": 60,
+    "differences": 174,
+    "net_dds_impact": 2680
+  },
+  "branch-l-pass6-advancer-strong-fit-cuebid": {
+    "BETTER": 178,
+    "EQUIVALENT": 296,
+    "WORSE": 129,
+    "differences": 603,
+    "net_dds_impact": -20210
+  },
+  "branch-l-pass6-advancer-very-strong-fit-game": {
+    "BETTER": 7,
+    "EQUIVALENT": 113,
+    "WORSE": 5,
+    "differences": 125,
+    "net_dds_impact": -2410
+  },
+  "branch-l-pass8-advancer-meeting-bid-general": {
+    "BETTER": 25,
+    "EQUIVALENT": 74,
+    "WORSE": 22,
+    "differences": 121,
+    "net_dds_impact": 1540
+  },
+  "branch-l-pass8-advancer-splinter": {
+    "BETTER": 4,
+    "EQUIVALENT": 9,
+    "WORSE": 4,
+    "differences": 17,
+    "net_dds_impact": -320
+  },
+  "branch-l10-chailley-1d1s-3nt-preserve": {
+    "BETTER": 10,
+    "EQUIVALENT": 1,
+    "WORSE": 7,
+    "differences": 18,
+    "net_dds_impact": -3160
+  },
+  "branch-l10-chailley-1d1s-club-barrage": {
+    "BETTER": 2,
+    "EQUIVALENT": 0,
+    "WORSE": 1,
+    "differences": 3,
+    "net_dds_impact": -200
+  },
+  "branch-l10-chailley-1d1s-heart-game": {
+    "BETTER": 0,
+    "EQUIVALENT": 2,
+    "WORSE": 0,
+    "differences": 2,
+    "net_dds_impact": 0
+  },
+  "branch-l10-chailley-1d1s-weak-after-cuebid": {
+    "BETTER": 3,
+    "EQUIVALENT": 13,
+    "WORSE": 4,
+    "differences": 20,
+    "net_dds_impact": 590
+  },
+  "branch-l2-advancer-2nt-13-14": {
+    "BETTER": 8,
+    "EQUIVALENT": 0,
+    "WORSE": 5,
+    "differences": 13,
+    "net_dds_impact": 350
+  },
+  "branch-l2-advancer-3nt-15-18": {
+    "BETTER": 1,
+    "EQUIVALENT": 0,
+    "WORSE": 2,
+    "differences": 3,
+    "net_dds_impact": 1120
+  },
+  "branch-l2-advancer-after-responder-1nt-cuebid-five-spades": {
+    "BETTER": 4,
+    "EQUIVALENT": 3,
+    "WORSE": 1,
+    "differences": 8,
+    "net_dds_impact": -310
+  },
+  "branch-l2-advancer-after-responder-1nt-threefit": {
+    "BETTER": 4,
+    "EQUIVALENT": 9,
+    "WORSE": 2,
+    "differences": 15,
+    "net_dds_impact": -420
+  },
+  "branch-l2-advancer-autonomous-side-major-game": {
+    "BETTER": 1,
+    "EQUIVALENT": 3,
+    "WORSE": 0,
+    "differences": 4,
+    "net_dds_impact": -400
+  },
+  "branch-l2-advancer-five-card-raise": {
+    "BETTER": 16,
+    "EQUIVALENT": 8,
+    "WORSE": 13,
+    "differences": 37,
+    "net_dds_impact": -1880
+  },
+  "branch-l2-advancer-four-card-raise": {
+    "BETTER": 41,
+    "EQUIVALENT": 76,
+    "WORSE": 42,
+    "differences": 159,
+    "net_dds_impact": -940
+  },
+  "branch-l2-advancer-limit-fit-jump-cuebid": {
+    "BETTER": 62,
+    "EQUIVALENT": 48,
+    "WORSE": 54,
+    "differences": 164,
+    "net_dds_impact": -6430
+  },
+  "branch-l2-advancer-meeting-bid": {
+    "BETTER": 47,
+    "EQUIVALENT": 98,
+    "WORSE": 28,
+    "differences": 173,
+    "net_dds_impact": -7530
+  },
+  "branch-l2-meeting-bid-continuation": {
+    "BETTER": 1,
+    "EQUIVALENT": 0,
+    "WORSE": 0,
+    "differences": 1,
+    "net_dds_impact": -50
+  },
+  "branch-l3-overcaller-after-forcing-1s-fallback": {
+    "BETTER": 0,
+    "EQUIVALENT": 0,
+    "WORSE": 1,
+    "differences": 1,
+    "net_dds_impact": 130
+  },
+  "branch-l4-chailley-2026-cuebid-diamond-heart-two-suiter-unzoned": {
+    "BETTER": 1,
+    "EQUIVALENT": 5,
+    "WORSE": 3,
+    "differences": 9,
+    "net_dds_impact": 630
+  },
+  "branch-l4-chailley-2026-cuebid-opening-natural-2nt": {
+    "BETTER": 0,
+    "EQUIVALENT": 1,
+    "WORSE": 1,
+    "differences": 2,
+    "net_dds_impact": 450
+  },
+  "branch-l4-chailley-2026-cuebid-opening-values-four-spades": {
+    "BETTER": 2,
+    "EQUIVALENT": 1,
+    "WORSE": 2,
+    "differences": 5,
+    "net_dds_impact": 30
+  },
+  "branch-l4-chailley-2026-cuebid-strong-heart-rebid": {
+    "BETTER": 1,
+    "EQUIVALENT": 2,
+    "WORSE": 0,
+    "differences": 3,
+    "net_dds_impact": -450
+  },
+  "branch-l4-chailley-2026-cuebid-weak-heart-rebid": {
+    "BETTER": 2,
+    "EQUIVALENT": 5,
+    "WORSE": 2,
+    "differences": 9,
+    "net_dds_impact": 80
+  },
+  "branch-l5-advancer-own-cuebid-fit-memory": {
+    "BETTER": 3,
+    "EQUIVALENT": 0,
+    "WORSE": 1,
+    "differences": 4,
+    "net_dds_impact": -160
+  },
+  "branch-l8-meeting-bid-continuation-general": {
+    "BETTER": 1,
+    "EQUIVALENT": 0,
+    "WORSE": 0,
+    "differences": 1,
+    "net_dds_impact": -100
+  },
+  "branch-n-invalid-advancer-cuebid-guard": {
+    "BETTER": 11,
+    "EQUIVALENT": 28,
+    "WORSE": 21,
+    "differences": 60,
+    "net_dds_impact": 4330
+  },
+  "branch-n-invalid-michaels-1S-guard": {
+    "BETTER": 48,
+    "EQUIVALENT": 46,
+    "WORSE": 38,
+    "differences": 132,
+    "net_dds_impact": -2230
+  },
+  "branch-n-support-double-exact-three-hearts": {
+    "BETTER": 77,
+    "EQUIVALENT": 95,
+    "WORSE": 118,
+    "differences": 290,
+    "net_dds_impact": 7230
+  },
+  "branch-p:S-P-1K-Q-corr-1.json": {
+    "BETTER": 212,
+    "EQUIVALENT": 175,
+    "WORSE": 203,
+    "differences": 590,
+    "net_dds_impact": 5270
+  },
+  "branch-p:S-P-1T-Q-corr-2.json": {
+    "BETTER": 342,
+    "EQUIVALENT": 252,
+    "WORSE": 330,
+    "differences": 924,
+    "net_dds_impact": -2580
+  },
+  "central-b02-c10-drury-x-a1-2D-bicolor": {
+    "BETTER": 1,
+    "EQUIVALENT": 1,
+    "WORSE": 0,
+    "differences": 2,
+    "net_dds_impact": -660
+  },
+  "central-b02-c10-drury-x-a1-2M": {
+    "BETTER": 1,
+    "EQUIVALENT": 7,
+    "WORSE": 0,
+    "differences": 8,
+    "net_dds_impact": -30
+  },
+  "central-b02-c10-drury-x-a1-redouble": {
+    "BETTER": 0,
+    "EQUIVALENT": 6,
+    "WORSE": 1,
+    "differences": 7,
+    "net_dds_impact": 250
+  },
+  "central-b03-c11-passed-hand-truscott": {
+    "BETTER": 92,
+    "EQUIVALENT": 39,
+    "WORSE": 63,
+    "differences": 194,
+    "net_dds_impact": -12890
+  },
+  "central-b07-c26-texas-invite-refusal-consumer": {
+    "BETTER": 101,
+    "EQUIVALENT": 5,
+    "WORSE": 115,
+    "differences": 221,
+    "net_dds_impact": 13800
+  },
+  "central-basicdiff-c-sp1-course24-3s-spoutnik": {
+    "BETTER": 42,
+    "EQUIVALENT": 30,
+    "WORSE": 40,
+    "differences": 112,
+    "net_dds_impact": 700
+  },
+  "central-basicdiff-drury-shortness-decline": {
+    "BETTER": 9,
+    "EQUIVALENT": 9,
+    "WORSE": 1,
+    "differences": 19,
+    "net_dds_impact": -2970
+  },
+  "central-basicdiff-drury-shortness-positive-game": {
+    "BETTER": 14,
+    "EQUIVALENT": 54,
+    "WORSE": 17,
+    "differences": 85,
+    "net_dds_impact": -690
+  },
+  "central-basicdiff-drury-shortness-space-game": {
+    "BETTER": 1,
+    "EQUIVALENT": 0,
+    "WORSE": 0,
+    "differences": 1,
+    "net_dds_impact": -100
+  },
+  "central-bonif-sc05-fitted3nt-spade-noslam-4s": {
+    "BETTER": 5,
+    "EQUIVALENT": 4,
+    "WORSE": 7,
+    "differences": 16,
+    "net_dds_impact": 210
+  },
+  "central-cfz007a-diamond-transfer-singleton-heart-gamezone": {
+    "BETTER": 5,
+    "EQUIVALENT": 15,
+    "WORSE": 6,
+    "differences": 26,
+    "net_dds_impact": 2070
+  },
+  "central-p8-w10-opener-good-spade-club-bicolor": {
+    "BETTER": 20,
+    "EQUIVALENT": 9,
+    "WORSE": 11,
+    "differences": 40,
+    "net_dds_impact": -270
+  },
+  "central-q12-michaels-1c2d-advancer-major-choice": {
+    "BETTER": 355,
+    "EQUIVALENT": 90,
+    "WORSE": 132,
+    "differences": 577,
+    "net_dds_impact": -146770
+  },
+  "central-r045-roudi-quantitative-4nt-decline": {
+    "BETTER": 17,
+    "EQUIVALENT": 0,
+    "WORSE": 9,
+    "differences": 26,
+    "net_dds_impact": 1070
+  },
+  "central-r047-michaels-opener-rejects-postgame-new-suit-in-own-major": {
+    "BETTER": 1,
+    "EQUIVALENT": 3,
+    "WORSE": 2,
+    "differences": 6,
+    "net_dds_impact": 520
+  },
+  "central-rt5-t001-long-minor-after-weak2-double": {
+    "BETTER": 69,
+    "EQUIVALENT": 42,
+    "WORSE": 111,
+    "differences": 222,
+    "net_dds_impact": 21720
+  },
+  "central-rt5-t002-opener-respects-negative-double": {
+    "BETTER": 105,
+    "EQUIVALENT": 18,
+    "WORSE": 37,
+    "differences": 160,
+    "net_dds_impact": -17130
+  },
+  "central-rt5-t003-respect-natural-4nt-after-ace-response": {
+    "BETTER": 8,
+    "EQUIVALENT": 0,
+    "WORSE": 0,
+    "differences": 8,
+    "net_dds_impact": -2500
+  },
+  "central-rt5-t005-major-fit-priority-after-michaels-fit-jump": {
+    "BETTER": 3,
+    "EQUIVALENT": 2,
+    "WORSE": 2,
+    "differences": 7,
+    "net_dds_impact": -350
+  },
+  "central-rt5-t036-opener-respects-strong-natural-2d": {
+    "BETTER": 20,
+    "EQUIVALENT": 0,
+    "WORSE": 5,
+    "differences": 25,
+    "net_dds_impact": -7330
+  },
+  "central-rt5-t036-strong-natural-2x-after-1m1M1NT": {
+    "BETTER": 37,
+    "EQUIVALENT": 440,
+    "WORSE": 23,
+    "differences": 500,
+    "net_dds_impact": -9570
+  },
+  "central-rt7-t012-rkcb-before-direct-slam": {
+    "BETTER": 0,
+    "EQUIVALENT": 1,
+    "WORSE": 0,
+    "differences": 1,
+    "net_dds_impact": 0
+  },
+  "central-s10-multilandy-game-try-refusal-consumed": {
+    "BETTER": 13,
+    "EQUIVALENT": 0,
+    "WORSE": 1,
+    "differences": 14,
+    "net_dds_impact": -3650
+  },
+  "central-s10-truscott-responder-respects-decline": {
+    "BETTER": 4,
+    "EQUIVALENT": 2,
+    "WORSE": 7,
+    "differences": 13,
+    "net_dds_impact": 1170
+  },
+  "central-t-slam-sanity-rkcb": {
+    "BETTER": 15,
+    "EQUIVALENT": 4,
+    "WORSE": 13,
+    "differences": 32,
+    "net_dds_impact": 900
+  },
+  "central-t005-keep-forcing-encounter-in-spades": {
+    "BETTER": 9,
+    "EQUIVALENT": 1,
+    "WORSE": 2,
+    "differences": 12,
+    "net_dds_impact": -1320
+  },
+  "central-u-shape-direct-1nt-no-5422-quantitative": {
+    "BETTER": 79,
+    "EQUIVALENT": 13,
+    "WORSE": 77,
+    "differences": 169,
+    "net_dds_impact": 240
+  },
+  "central-v-l05-advancer-six-card-minor": {
+    "BETTER": 15,
+    "EQUIVALENT": 27,
+    "WORSE": 12,
+    "differences": 54,
+    "net_dds_impact": -720
+  },
+  "central-v-l07-lower-overcall-natural-major": {
+    "BETTER": 8,
+    "EQUIVALENT": 6,
+    "WORSE": 8,
+    "differences": 22,
+    "net_dds_impact": -240
+  },
+  "central-v-l07-natural-side-suit-after-negative-double": {
+    "BETTER": 59,
+    "EQUIVALENT": 52,
+    "WORSE": 66,
+    "differences": 177,
+    "net_dds_impact": 2390
+  },
+  "central-v-l07-three-card-spade-support-after-negative-double": {
+    "BETTER": 229,
+    "EQUIVALENT": 267,
+    "WORSE": 248,
+    "differences": 744,
+    "net_dds_impact": 4320
+  },
+  "central-v-n04-five-card-minor-after-major-raise": {
+    "BETTER": 54,
+    "EQUIVALENT": 88,
+    "WORSE": 43,
+    "differences": 185,
+    "net_dds_impact": -1980
+  },
+  "central-v-n04-heart-frame-five-card-minor-after-raise": {
+    "BETTER": 18,
+    "EQUIVALENT": 31,
+    "WORSE": 12,
+    "differences": 61,
+    "net_dds_impact": -3760
+  },
+  "central-v-o02-good-six-minor-over-weak2h": {
+    "BETTER": 196,
+    "EQUIVALENT": 135,
+    "WORSE": 196,
+    "differences": 527,
+    "net_dds_impact": -10340
+  },
+  "central-w8-three-card-major-fit-delayed-route": {
+    "BETTER": 65,
+    "EQUIVALENT": 372,
+    "WORSE": 72,
+    "differences": 509,
+    "net_dds_impact": 1750
+  },
+  "central-w8-three-card-major-fit-fitted-2nt": {
+    "BETTER": 73,
+    "EQUIVALENT": 242,
+    "WORSE": 91,
+    "differences": 406,
+    "net_dds_impact": 6190
+  },
+  "central-w9-fitted3nt-heart-absolute-stop": {
+    "BETTER": 4,
+    "EQUIVALENT": 3,
+    "WORSE": 7,
+    "differences": 14,
+    "net_dds_impact": 690
+  },
+  "central-w9-fitted3nt-heart-cheapest-control": {
+    "BETTER": 1,
+    "EQUIVALENT": 0,
+    "WORSE": 0,
+    "differences": 1,
+    "net_dds_impact": -20
+  },
+  "central-w9-fitted3nt-heart-diamond-control-no-club": {
+    "BETTER": 1,
+    "EQUIVALENT": 0,
+    "WORSE": 2,
+    "differences": 3,
+    "net_dds_impact": 350
+  },
+  "central-y-i09-natural-two-over-one-diamond": {
+    "BETTER": 264,
+    "EQUIVALENT": 1219,
+    "WORSE": 283,
+    "differences": 1766,
+    "net_dds_impact": 70
+  },
+  "central-y-i09-natural-two-over-one-heart": {
+    "BETTER": 292,
+    "EQUIVALENT": 801,
+    "WORSE": 257,
+    "differences": 1350,
+    "net_dds_impact": -31650
+  },
+  "central-z-p0-04-texas-rkcb-before-slam": {
+    "BETTER": 37,
+    "EQUIVALENT": 206,
+    "WORSE": 41,
+    "differences": 284,
+    "net_dds_impact": 2860
+  },
+  "cfz-003-stayman-postfit-hld-priority": {
+    "BETTER": 307,
+    "EQUIVALENT": 1268,
+    "WORSE": 319,
+    "differences": 1894,
+    "net_dds_impact": 48870
+  },
+  "cfz-005a-course17-responder-3nt-after-strong-diamond-support": {
+    "BETTER": 2,
+    "EQUIVALENT": 0,
+    "WORSE": 2,
+    "differences": 4,
+    "net_dds_impact": -170
+  },
+  "cmp-b3-cr07-positive-direct-slam": {
+    "BETTER": 11,
+    "EQUIVALENT": 0,
+    "WORSE": 0,
+    "differences": 11,
+    "net_dds_impact": -7250
+  },
+  "cmp-b3-cr07-positive-quantitative-4nt": {
+    "BETTER": 3,
+    "EQUIVALENT": 3,
+    "WORSE": 0,
+    "differences": 6,
+    "net_dds_impact": -2000
+  },
+  "cmp-b3-cr12-fitted2nt-heart-anchor-game": {
+    "BETTER": 1,
+    "EQUIVALENT": 2,
+    "WORSE": 0,
+    "differences": 3,
+    "net_dds_impact": -550
+  },
+  "cmp-b3-cr15-direct-3m-rejection-terminal": {
+    "BETTER": 1,
+    "EQUIVALENT": 0,
+    "WORSE": 1,
+    "differences": 2,
+    "net_dds_impact": 230
+  },
+  "cmp-b3-cr19-drury-slamtry-rejection-terminal": {
+    "BETTER": 242,
+    "EQUIVALENT": 67,
+    "WORSE": 134,
+    "differences": 443,
+    "net_dds_impact": -53210
+  },
+  "cmp-b4-cr24-fitted3nt-spade-club-control": {
+    "BETTER": 0,
+    "EQUIVALENT": 0,
+    "WORSE": 2,
+    "differences": 2,
+    "net_dds_impact": 520
+  },
+  "cmp-b4-cr24-fitted3nt-spade-diamond-control": {
+    "BETTER": 1,
+    "EQUIVALENT": 0,
+    "WORSE": 1,
+    "differences": 2,
+    "net_dds_impact": 430
+  },
+  "cmp-b4-cr24-fitted3nt-spade-heart-control": {
+    "BETTER": 0,
+    "EQUIVALENT": 0,
+    "WORSE": 1,
+    "differences": 1,
+    "net_dds_impact": 10
+  },
+  "course13-jump-repeat-six": {
+    "BETTER": 1,
+    "EQUIVALENT": 1,
+    "WORSE": 0,
+    "differences": 2,
+    "net_dds_impact": -440
+  },
+  "course13-simple-repeat-six": {
+    "BETTER": 19,
+    "EQUIVALENT": 0,
+    "WORSE": 2,
+    "differences": 21,
+    "net_dds_impact": -3950
+  },
+  "course16-fourth-forcing-before-strong-repeat": {
+    "BETTER": 1,
+    "EQUIVALENT": 3,
+    "WORSE": 0,
+    "differences": 4,
+    "net_dds_impact": -60
+  },
+  "course17-opener-completes-six-major-after-third": {
+    "BETTER": 39,
+    "EQUIVALENT": 2,
+    "WORSE": 5,
+    "differences": 46,
+    "net_dds_impact": -17110
+  },
+  "course17-opener-minor-game-with-void-major-after-third": {
+    "BETTER": 3,
+    "EQUIVALENT": 3,
+    "WORSE": 7,
+    "differences": 13,
+    "net_dds_impact": 1030
+  },
+  "course17-opener-seven-trump-major-game-after-third": {
+    "BETTER": 55,
+    "EQUIVALENT": 3,
+    "WORSE": 13,
+    "differences": 71,
+    "net_dds_impact": -21900
+  },
+  "course18-major-partscore-stop-after-1NT": {
+    "BETTER": 80,
+    "EQUIVALENT": 47,
+    "WORSE": 61,
+    "differences": 188,
+    "net_dds_impact": -1290
+  },
+  "course19-opener-continues-side-minor-game-force": {
+    "BETTER": 122,
+    "EQUIVALENT": 22,
+    "WORSE": 20,
+    "differences": 164,
+    "net_dds_impact": -40220
+  },
+  "course24-1D-2C-opener-infer-spades-after-3D": {
+    "BETTER": 2,
+    "EQUIVALENT": 1,
+    "WORSE": 1,
+    "differences": 4,
+    "net_dds_impact": 120
+  },
+  "course24-opener-repeat-after-stopper-double-competition": {
+    "BETTER": 1,
+    "EQUIVALENT": 0,
+    "WORSE": 0,
+    "differences": 1,
+    "net_dds_impact": -100
+  },
+  "course28-responder-transfer-after-both-majors": {
+    "BETTER": 0,
+    "EQUIVALENT": 5,
+    "WORSE": 2,
+    "differences": 7,
+    "net_dds_impact": 1510
+  },
+  "course29-2C-rebid-2NT": {
+    "BETTER": 29,
+    "EQUIVALENT": 35,
+    "WORSE": 34,
+    "differences": 98,
+    "net_dds_impact": 5120
+  },
+  "course29-responder-game-after-major-bicolor": {
+    "BETTER": 23,
+    "EQUIVALENT": 1,
+    "WORSE": 8,
+    "differences": 32,
+    "net_dds_impact": -9860
+  },
+  "course29-seven-major-slam-collision-guard": {
+    "BETTER": 120,
+    "EQUIVALENT": 11,
+    "WORSE": 87,
+    "differences": 218,
+    "net_dds_impact": -17390
+  },
+  "course30-responder-nt-strength-after-opener-major-level3": {
+    "BETTER": 17,
+    "EQUIVALENT": 0,
+    "WORSE": 8,
+    "differences": 25,
+    "net_dds_impact": -3240
+  },
+  "critic-known-free-bid-cheapest": {
+    "BETTER": 0,
+    "EQUIVALENT": 0,
+    "WORSE": 1,
+    "differences": 1,
+    "net_dds_impact": 60
+  },
+  "critic-known-free-bid-cheapest-c-judgment": {
+    "BETTER": 4,
+    "EQUIVALENT": 2,
+    "WORSE": 4,
+    "differences": 10,
+    "net_dds_impact": 560
+  },
+  "instance-c-course30-respect-natural-no-fit-nt": {
+    "BETTER": 26,
+    "EQUIVALENT": 3,
+    "WORSE": 7,
+    "differences": 36,
+    "net_dds_impact": -9580
+  },
+  "instance-c-fitted-2nt-opener-consumer": {
+    "BETTER": 94,
+    "EQUIVALENT": 15,
+    "WORSE": 46,
+    "differences": 155,
+    "net_dds_impact": -15880
+  },
+  "instance-d-d1-natural-major-over-2d": {
+    "BETTER": 72,
+    "EQUIVALENT": 74,
+    "WORSE": 77,
+    "differences": 223,
+    "net_dds_impact": 920
+  },
+  "instance-d-d2-penalty-double-18-19hld": {
+    "BETTER": 7,
+    "EQUIVALENT": 2,
+    "WORSE": 24,
+    "differences": 33,
+    "net_dds_impact": 8670
+  },
+  "instance-d-d3-three-card-competitive-raise": {
+    "BETTER": 11,
+    "EQUIVALENT": 31,
+    "WORSE": 11,
+    "differences": 53,
+    "net_dds_impact": -520
+  },
+  "instance-d-d4-weak-four-card-raise": {
+    "BETTER": 13,
+    "EQUIVALENT": 37,
+    "WORSE": 18,
+    "differences": 68,
+    "net_dds_impact": 4050
+  },
+  "instance-d-d6-responsive-after-3h": {
+    "BETTER": 9,
+    "EQUIVALENT": 0,
+    "WORSE": 9,
+    "differences": 18,
+    "net_dds_impact": -1670
+  },
+  "instance-d-d7-natural-six-minor-after-raise": {
+    "BETTER": 17,
+    "EQUIVALENT": 44,
+    "WORSE": 27,
+    "differences": 88,
+    "net_dds_impact": 3620
+  },
+  "instance-d-d8-natural-long-suit-before-diamond-raise": {
+    "BETTER": 21,
+    "EQUIVALENT": 27,
+    "WORSE": 21,
+    "differences": 69,
+    "net_dds_impact": 110
+  },
+  "instance-d-wave2-d10-side-suit-after-redouble": {
+    "BETTER": 1,
+    "EQUIVALENT": 4,
+    "WORSE": 0,
+    "differences": 5,
+    "net_dds_impact": -490
+  },
+  "instance-d-wave2-d11-known-fit-new-opponent-suit-double": {
+    "BETTER": 3,
+    "EQUIVALENT": 3,
+    "WORSE": 1,
+    "differences": 7,
+    "net_dds_impact": -640
+  },
+  "instance-d-wave2-d13-vulnerability-one-level-overcall": {
+    "BETTER": 963,
+    "EQUIVALENT": 863,
+    "WORSE": 968,
+    "differences": 2794,
+    "net_dds_impact": 10330
+  },
+  "instance-f-5440-reverse-understrength": {
+    "BETTER": 0,
+    "EQUIVALENT": 4,
+    "WORSE": 5,
+    "differences": 9,
+    "net_dds_impact": 1590
+  },
+  "instance-f-5440-reverse-zone-normalization": {
+    "BETTER": 2,
+    "EQUIVALENT": 15,
+    "WORSE": 4,
+    "differences": 21,
+    "net_dds_impact": 530
+  },
+  "instance-f-5440-simple-level-normalization": {
+    "BETTER": 13,
+    "EQUIVALENT": 16,
+    "WORSE": 17,
+    "differences": 46,
+    "net_dds_impact": 2540
+  },
+  "instance-g-wave2-drury-2nt-game": {
+    "BETTER": 343,
+    "EQUIVALENT": 72,
+    "WORSE": 19,
+    "differences": 434,
+    "net_dds_impact": -152340
+  },
+  "instance-k-dg64-weak2-max-6322-4s": {
+    "BETTER": 2,
+    "EQUIVALENT": 1,
+    "WORSE": 2,
+    "differences": 5,
+    "net_dds_impact": -410
+  },
+  "instance-k-dg64-weak2-top-heart-3nt": {
+    "BETTER": 1,
+    "EQUIVALENT": 1,
+    "WORSE": 1,
+    "differences": 3,
+    "net_dds_impact": -180
+  },
+  "instance-k-dg72-weak2-max-atmost2s-2nt": {
+    "BETTER": 17,
+    "EQUIVALENT": 9,
+    "WORSE": 5,
+    "differences": 31,
+    "net_dds_impact": -4180
+  },
+  "instance-m-1C-1S-1NT-reopen-2D": {
+    "BETTER": 2,
+    "EQUIVALENT": 0,
+    "WORSE": 6,
+    "differences": 8,
+    "net_dds_impact": 410
+  },
+  "instance-m-1C-1S-1NT-reopen-penalty-double": {
+    "BETTER": 6,
+    "EQUIVALENT": 2,
+    "WORSE": 4,
+    "differences": 12,
+    "net_dds_impact": -520
+  },
+  "instance-m-1D-1S-1NT-reopen-2C": {
+    "BETTER": 2,
+    "EQUIVALENT": 0,
+    "WORSE": 0,
+    "differences": 2,
+    "net_dds_impact": -80
+  },
+  "instance-m-1D-1S-1NT-reopen-penalty-double": {
+    "BETTER": 1,
+    "EQUIVALENT": 1,
+    "WORSE": 5,
+    "differences": 7,
+    "net_dds_impact": -300
+  },
+  "instance-m-overcaller-after-1H-2C-reopening-X-2D": {
+    "BETTER": 1,
+    "EQUIVALENT": 0,
+    "WORSE": 0,
+    "differences": 1,
+    "net_dds_impact": -50
+  },
+  "instance-m-overcaller-after-1H-2C-reopening-X-2NT": {
+    "BETTER": 3,
+    "EQUIVALENT": 0,
+    "WORSE": 0,
+    "differences": 3,
+    "net_dds_impact": -340
+  },
+  "instance-m-overcaller-after-1H-2C-reopening-X-2S": {
+    "BETTER": 3,
+    "EQUIVALENT": 1,
+    "WORSE": 2,
+    "differences": 6,
+    "net_dds_impact": -450
+  },
+  "instance-m-overcaller-after-1H-2C-reopening-X-3C": {
+    "BETTER": 3,
+    "EQUIVALENT": 1,
+    "WORSE": 1,
+    "differences": 5,
+    "net_dds_impact": -460
+  },
+  "instance-m-overcaller-after-1H-2C-reopening-X-cuebid": {
+    "BETTER": 3,
+    "EQUIVALENT": 1,
+    "WORSE": 0,
+    "differences": 4,
+    "net_dds_impact": -480
+  },
+  "instance-m-overcaller-after-1H-2C-reopening-X-redouble": {
+    "BETTER": 6,
+    "EQUIVALENT": 8,
+    "WORSE": 8,
+    "differences": 22,
+    "net_dds_impact": 530
+  },
+  "instance-m-overcaller-after-1H-2C-reopening-X-weak-pass": {
+    "BETTER": 1,
+    "EQUIVALENT": 0,
+    "WORSE": 0,
+    "differences": 1,
+    "net_dds_impact": -20
+  },
+  "instance-m-responder-after-1H-2C-reopening-X-2NT": {
+    "BETTER": 5,
+    "EQUIVALENT": 1,
+    "WORSE": 4,
+    "differences": 10,
+    "net_dds_impact": -130
+  },
+  "instance-m-responder-after-1H-2C-reopening-X-weak-escape": {
+    "BETTER": 42,
+    "EQUIVALENT": 3,
+    "WORSE": 15,
+    "differences": 60,
+    "net_dds_impact": -6430
+  },
+  "instance-m-sandwich-1C-1H-1NT": {
+    "BETTER": 20,
+    "EQUIVALENT": 14,
+    "WORSE": 14,
+    "differences": 48,
+    "net_dds_impact": -1730
+  },
+  "instance-m-sandwich-1C-1S-1NT": {
+    "BETTER": 12,
+    "EQUIVALENT": 6,
+    "WORSE": 14,
+    "differences": 32,
+    "net_dds_impact": -670
+  },
+  "instance-m-sandwich-1D-1S-1NT": {
+    "BETTER": 8,
+    "EQUIVALENT": 8,
+    "WORSE": 7,
+    "differences": 23,
+    "net_dds_impact": -290
+  },
+  "instance-m-sandwich-1S-2C-double-5D4H": {
+    "BETTER": 2,
+    "EQUIVALENT": 5,
+    "WORSE": 3,
+    "differences": 10,
+    "net_dds_impact": -700
+  },
+  "instance-m-sandwich-1S-2C-natural-2H": {
+    "BETTER": 1,
+    "EQUIVALENT": 1,
+    "WORSE": 0,
+    "differences": 2,
+    "net_dds_impact": -530
+  },
+  "instance-m2-delayed-1C-1H-2C-double": {
+    "BETTER": 2,
+    "EQUIVALENT": 2,
+    "WORSE": 2,
+    "differences": 6,
+    "net_dds_impact": 570
+  },
+  "instance-m2-delayed-natural-after-1H-2H-3D": {
+    "BETTER": 1,
+    "EQUIVALENT": 1,
+    "WORSE": 2,
+    "differences": 4,
+    "net_dds_impact": 400
+  },
+  "instance-m2-overcaller-after-2D-reopening-X-2NT": {
+    "BETTER": 4,
+    "EQUIVALENT": 1,
+    "WORSE": 2,
+    "differences": 7,
+    "net_dds_impact": -580
+  },
+  "instance-m2-overcaller-after-2D-reopening-X-3D": {
+    "BETTER": 2,
+    "EQUIVALENT": 0,
+    "WORSE": 0,
+    "differences": 2,
+    "net_dds_impact": -340
+  },
+  "instance-m2-overcaller-after-2D-reopening-X-redouble": {
+    "BETTER": 22,
+    "EQUIVALENT": 28,
+    "WORSE": 19,
+    "differences": 69,
+    "net_dds_impact": -2060
+  },
+  "instance-m2-responder-after-2D-reopening-X-2NT": {
+    "BETTER": 17,
+    "EQUIVALENT": 0,
+    "WORSE": 0,
+    "differences": 17,
+    "net_dds_impact": -5210
+  },
+  "instance-m2-responder-after-2D-reopening-X-weak-major-preference": {
+    "BETTER": 6,
+    "EQUIVALENT": 1,
+    "WORSE": 1,
+    "differences": 8,
+    "net_dds_impact": -1040
+  },
+  "instance-m3-1C-1NT-X-doubler-major-choice": {
+    "BETTER": 3,
+    "EQUIVALENT": 1,
+    "WORSE": 1,
+    "differences": 5,
+    "net_dds_impact": 30
+  },
+  "instance-m3-1C-1NT-X-opener-3C": {
+    "BETTER": 1,
+    "EQUIVALENT": 1,
+    "WORSE": 0,
+    "differences": 2,
+    "net_dds_impact": -200
+  },
+  "instance-m3-1C-1NT-X-opener-pass": {
+    "BETTER": 2,
+    "EQUIVALENT": 0,
+    "WORSE": 0,
+    "differences": 2,
+    "net_dds_impact": -720
+  },
+  "instance-m3-1C-1NT-X-opener-redouble": {
+    "BETTER": 1,
+    "EQUIVALENT": 3,
+    "WORSE": 3,
+    "differences": 7,
+    "net_dds_impact": 350
+  },
+  "instance-m3-1C-1NT-X-partner-2C-both-majors": {
+    "BETTER": 0,
+    "EQUIVALENT": 5,
+    "WORSE": 0,
+    "differences": 5,
+    "net_dds_impact": 0
+  },
+  "instance-m4-sandwich-double-advancer-strong-pass": {
+    "BETTER": 0,
+    "EQUIVALENT": 0,
+    "WORSE": 1,
+    "differences": 1,
+    "net_dds_impact": 130
+  },
+  "instance-m5-1C-1S-2C-inverse-red-55": {
+    "BETTER": 127,
+    "EQUIVALENT": 79,
+    "WORSE": 96,
+    "differences": 302,
+    "net_dds_impact": -6960
+  },
+  "instance-m6-1C-1H-2C-diamond-spade-55": {
+    "BETTER": 108,
+    "EQUIVALENT": 80,
+    "WORSE": 111,
+    "differences": 299,
+    "net_dds_impact": 5320
+  },
+  "instance-m6-1C-1H-3C-natural-preempt": {
+    "BETTER": 0,
+    "EQUIVALENT": 0,
+    "WORSE": 1,
+    "differences": 1,
+    "net_dds_impact": 350
+  },
+  "instance-m6-advancer-after-2C-3C-gameforce": {
+    "BETTER": 0,
+    "EQUIVALENT": 0,
+    "WORSE": 1,
+    "differences": 1,
+    "net_dds_impact": 330
+  },
+  "instance-m6-advancer-after-2C-5D-barrage": {
+    "BETTER": 0,
+    "EQUIVALENT": 0,
+    "WORSE": 1,
+    "differences": 1,
+    "net_dds_impact": 660
+  },
+  "instance-m7-1D-1S-natural-2H": {
+    "BETTER": 39,
+    "EQUIVALENT": 40,
+    "WORSE": 38,
+    "differences": 117,
+    "net_dds_impact": -2340
+  },
+  "instance-m7-advancer-2S-cuebid": {
+    "BETTER": 1,
+    "EQUIVALENT": 1,
+    "WORSE": 2,
+    "differences": 4,
+    "net_dds_impact": 610
+  },
+  "instance-m7-advancer-3C-natural": {
+    "BETTER": 7,
+    "EQUIVALENT": 6,
+    "WORSE": 9,
+    "differences": 22,
+    "net_dds_impact": 2610
+  },
+  "instance-m7-advancer-3D-cuebid": {
+    "BETTER": 0,
+    "EQUIVALENT": 0,
+    "WORSE": 1,
+    "differences": 1,
+    "net_dds_impact": 90
+  },
+  "instance-m7-advancer-3H-support": {
+    "BETTER": 24,
+    "EQUIVALENT": 31,
+    "WORSE": 20,
+    "differences": 75,
+    "net_dds_impact": -240
+  },
+  "instance-m8-1D-1H-natural-2C": {
+    "BETTER": 24,
+    "EQUIVALENT": 38,
+    "WORSE": 45,
+    "differences": 107,
+    "net_dds_impact": 6050
+  },
+  "instance-m8-1D-1S-natural-2C": {
+    "BETTER": 26,
+    "EQUIVALENT": 25,
+    "WORSE": 39,
+    "differences": 90,
+    "net_dds_impact": 5240
+  },
+  "instance-m8-advancer-after-natural-2C-2D-cue": {
+    "BETTER": 1,
+    "EQUIVALENT": 3,
+    "WORSE": 2,
+    "differences": 6,
+    "net_dds_impact": 300
+  },
+  "instance-m8-advancer-after-natural-2C-2H": {
+    "BETTER": 4,
+    "EQUIVALENT": 0,
+    "WORSE": 5,
+    "differences": 9,
+    "net_dds_impact": 1110
+  },
+  "instance-m8-advancer-after-natural-2C-2NT": {
+    "BETTER": 0,
+    "EQUIVALENT": 0,
+    "WORSE": 1,
+    "differences": 1,
+    "net_dds_impact": 290
+  },
+  "instance-m8-advancer-after-natural-2C-2S": {
+    "BETTER": 6,
+    "EQUIVALENT": 6,
+    "WORSE": 2,
+    "differences": 14,
+    "net_dds_impact": -100
+  },
+  "instance-m8-advancer-after-natural-2C-2S-cue": {
+    "BETTER": 5,
+    "EQUIVALENT": 2,
+    "WORSE": 1,
+    "differences": 8,
+    "net_dds_impact": -640
+  },
+  "instance-m8-advancer-after-natural-2C-3C": {
+    "BETTER": 24,
+    "EQUIVALENT": 38,
+    "WORSE": 21,
+    "differences": 83,
+    "net_dds_impact": -1130
+  },
+  "instance-m8-advancer-after-natural-2C-3NT": {
+    "BETTER": 0,
+    "EQUIVALENT": 0,
+    "WORSE": 1,
+    "differences": 1,
+    "net_dds_impact": 100
+  },
+  "instance-m9-1D-1H-pass-trap": {
+    "BETTER": 17,
+    "EQUIVALENT": 11,
+    "WORSE": 25,
+    "differences": 53,
+    "net_dds_impact": 460
+  },
+  "instance-m9-1D-1S-pass-trap": {
+    "BETTER": 13,
+    "EQUIVALENT": 9,
+    "WORSE": 12,
+    "differences": 34,
+    "net_dds_impact": -610
+  },
+  "instance-m9-advancer-after-defensive-2NT-preference": {
+    "BETTER": 3,
+    "EQUIVALENT": 2,
+    "WORSE": 4,
+    "differences": 9,
+    "net_dds_impact": -580
+  },
+  "instance-o-exact-eight-major-preempt": {
+    "BETTER": 107,
+    "EQUIVALENT": 62,
+    "WORSE": 103,
+    "differences": 272,
+    "net_dds_impact": 1540
+  },
+  "instance-o-preempt-prolongation-stop": {
+    "BETTER": 117,
+    "EQUIVALENT": 0,
+    "WORSE": 148,
+    "differences": 265,
+    "net_dds_impact": 4970
+  },
+  "instance-o-weak2-unfavorable-vulnerability": {
+    "BETTER": 53,
+    "EQUIVALENT": 25,
+    "WORSE": 49,
+    "differences": 127,
+    "net_dds_impact": 1100
+  },
+  "instance-o2-direct-weak-jump-major": {
+    "BETTER": 985,
+    "EQUIVALENT": 1175,
+    "WORSE": 1158,
+    "differences": 3318,
+    "net_dds_impact": 46560
+  },
+  "instance-o2-preempt3-invalid-cuebid-to-takeout": {
+    "BETTER": 0,
+    "EQUIVALENT": 1,
+    "WORSE": 2,
+    "differences": 3,
+    "net_dds_impact": 970
+  },
+  "instance-o2-preempt3-takeout-weak-natural": {
+    "BETTER": 47,
+    "EQUIVALENT": 31,
+    "WORSE": 46,
+    "differences": 124,
+    "net_dds_impact": -2590
+  },
+  "instance-o3-preempt-major-partner-compete-fourfit": {
+    "BETTER": 1,
+    "EQUIVALENT": 0,
+    "WORSE": 0,
+    "differences": 1,
+    "net_dds_impact": -250
+  },
+  "instance-o3-preempt3-takeout-medium-natural": {
+    "BETTER": 28,
+    "EQUIVALENT": 9,
+    "WORSE": 17,
+    "differences": 54,
+    "net_dds_impact": -3950
+  },
+  "instance-o4-exact-eight-minor-preempt": {
+    "BETTER": 93,
+    "EQUIVALENT": 66,
+    "WORSE": 116,
+    "differences": 275,
+    "net_dds_impact": 7210
+  },
+  "instance-o4-preempt-new-suit-forcing-minimum-return": {
+    "BETTER": 54,
+    "EQUIVALENT": 22,
+    "WORSE": 111,
+    "differences": 187,
+    "net_dds_impact": 12700
+  },
+  "instance-o6-preempt3H-favorable-fivelevel-extension": {
+    "BETTER": 0,
+    "EQUIVALENT": 1,
+    "WORSE": 0,
+    "differences": 1,
+    "net_dds_impact": 0
+  },
+  "instance-o7-direct-weak-jump-minor": {
+    "BETTER": 293,
+    "EQUIVALENT": 376,
+    "WORSE": 384,
+    "differences": 1053,
+    "net_dds_impact": 38680
+  },
+  "instance-p-pass6-drury-third-seat-four-heart": {
+    "BETTER": 161,
+    "EQUIVALENT": 47,
+    "WORSE": 197,
+    "differences": 405,
+    "net_dds_impact": 9350
+  },
+  "pass2-course17-responder-2NT-after-artificial-2S": {
+    "BETTER": 15,
+    "EQUIVALENT": 1,
+    "WORSE": 8,
+    "differences": 24,
+    "net_dds_impact": -2610
+  },
+  "pass2-course17-responder-d-stop-after-artificial-2S": {
+    "BETTER": 8,
+    "EQUIVALENT": 3,
+    "WORSE": 5,
+    "differences": 16,
+    "net_dds_impact": 0
+  },
+  "pass2-course17-responder-repeat-hearts-after-artificial-2S": {
+    "BETTER": 5,
+    "EQUIVALENT": 0,
+    "WORSE": 3,
+    "differences": 8,
+    "net_dds_impact": -300
+  },
+  "pass2-course18-roudi-limit-hl-after-fit": {
+    "BETTER": 312,
+    "EQUIVALENT": 19,
+    "WORSE": 34,
+    "differences": 365,
+    "net_dds_impact": -63120
+  },
+  "post-bd-spoutnik-1nt-responder-12h-3nt": {
+    "BETTER": 0,
+    "EQUIVALENT": 1,
+    "WORSE": 0,
+    "differences": 1,
+    "net_dds_impact": 0
+  },
+  "r7-fixed-mb01-d9-suppress-weak-six-card-two-level-overcall": {
+    "BETTER": 427,
+    "EQUIVALENT": 470,
+    "WORSE": 409,
+    "differences": 1306,
+    "net_dds_impact": -8800
+  },
+  "r7-fixed-mb02-d13-tighten-vulnerability-one-level-overcall": {
+    "BETTER": 2738,
+    "EQUIVALENT": 2533,
+    "WORSE": 2539,
+    "differences": 7810,
+    "net_dds_impact": -119200
+  },
+  "rt10-t009-2nt-gf-default-relay": {
+    "BETTER": 30,
+    "EQUIVALENT": 215,
+    "WORSE": 21,
+    "differences": 266,
+    "net_dds_impact": -5250
+  },
+  "rt10-t010-double-stayman-m44-max": {
+    "BETTER": 10,
+    "EQUIVALENT": 200,
+    "WORSE": 11,
+    "differences": 221,
+    "net_dds_impact": -1340
+  },
+  "rt10-t011-minor55-club-transfer": {
+    "BETTER": 2,
+    "EQUIVALENT": 9,
+    "WORSE": 3,
+    "differences": 14,
+    "net_dds_impact": 300
+  },
+  "rt10.10-y-n42-preserve-natural-2D-over-1H": {
+    "BETTER": 88,
+    "EQUIVALENT": 23,
+    "WORSE": 43,
+    "differences": 154,
+    "net_dds_impact": -9030
+  },
+  "rt10.9-course29-responder-after-stayman-major": {
+    "BETTER": 158,
+    "EQUIVALENT": 8,
+    "WORSE": 29,
+    "differences": 195,
+    "net_dds_impact": -50660
+  },
+  "rt1011-t008-responder-four-hearts": {
+    "BETTER": 19,
+    "EQUIVALENT": 170,
+    "WORSE": 21,
+    "differences": 210,
+    "net_dds_impact": -970
+  },
+  "rt1011-w5-six-diamonds-after-1d1h2nt": {
+    "BETTER": 1,
+    "EQUIVALENT": 5,
+    "WORSE": 0,
+    "differences": 6,
+    "net_dds_impact": -40
+  },
+  "rt108-reopening-double-simple-heart-response": {
+    "BETTER": 0,
+    "EQUIVALENT": 1,
+    "WORSE": 0,
+    "differences": 1,
+    "net_dds_impact": 0
+  },
+  "rt108-texas-diamond-singleton-spade-3nt": {
+    "BETTER": 3,
+    "EQUIVALENT": 0,
+    "WORSE": 3,
+    "differences": 6,
+    "net_dds_impact": -220
+  },
+  "rt108-texas-diamond-singleton-spade-return-trump": {
+    "BETTER": 0,
+    "EQUIVALENT": 0,
+    "WORSE": 4,
+    "differences": 4,
+    "net_dds_impact": 1000
+  },
+  "rt4-v-l08-direct-advancer-invitational-cuebid": {
+    "BETTER": 46,
+    "EQUIVALENT": 33,
+    "WORSE": 57,
+    "differences": 136,
+    "net_dds_impact": 4290
+  },
+  "rt4-v-n06-1c-x-p-3d": {
+    "BETTER": 20,
+    "EQUIVALENT": 25,
+    "WORSE": 31,
+    "differences": 76,
+    "net_dds_impact": 4350
+  },
+  "rt4-v-n06-1d-x-p-3c": {
+    "BETTER": 18,
+    "EQUIVALENT": 18,
+    "WORSE": 10,
+    "differences": 46,
+    "net_dds_impact": -3530
+  },
+  "rt9-sample-d5-diamond-transfer-singleton-spade": {
+    "BETTER": 1,
+    "EQUIVALENT": 12,
+    "WORSE": 3,
+    "differences": 16,
+    "net_dds_impact": 2090
+  },
+  "rt9-sample-d5-landy-diamond-transfer": {
+    "BETTER": 15,
+    "EQUIVALENT": 15,
+    "WORSE": 12,
+    "differences": 42,
+    "net_dds_impact": 1650
+  },
+  "rt9-sample-d6-diamond-problem-heart-stopper": {
+    "BETTER": 15,
+    "EQUIVALENT": 21,
+    "WORSE": 8,
+    "differences": 44,
+    "net_dds_impact": -2610
+  },
+  "rt9-sample-d7-natural-one-spade-over-heart": {
+    "BETTER": 329,
+    "EQUIVALENT": 198,
+    "WORSE": 276,
+    "differences": 803,
+    "net_dds_impact": 600
+  },
+  "rt9-sample-d8-negative-doubler-reopens-diamonds": {
+    "BETTER": 3,
+    "EQUIVALENT": 1,
+    "WORSE": 3,
+    "differences": 7,
+    "net_dds_impact": -240
+  },
+  "rt9-sample-d9-opener-describes-six-clubs-after-double": {
+    "BETTER": 0,
+    "EQUIVALENT": 0,
+    "WORSE": 1,
+    "differences": 1,
+    "net_dds_impact": 450
+  },
+  "sc16-1S-X-XX-2H-forcing-pass": {
+    "BETTER": 15,
+    "EQUIVALENT": 36,
+    "WORSE": 19,
+    "differences": 70,
+    "net_dds_impact": 2930
+  },
+  "sef2024-benchmark-v03-reference": {
+    "BETTER": 3201,
+    "EQUIVALENT": 4429,
+    "WORSE": 2972,
+    "differences": 10602,
+    "net_dds_impact": -66950
+  },
+  "sef2024-drury-fitted": {
+    "BETTER": 116,
+    "EQUIVALENT": 612,
+    "WORSE": 174,
+    "differences": 902,
+    "net_dds_impact": 17640
+  },
+  "sef2024-drury-four-fit-shortness": {
+    "BETTER": 38,
+    "EQUIVALENT": 192,
+    "WORSE": 44,
+    "differences": 274,
+    "net_dds_impact": 1770
+  },
+  "sef2024-drury-opener-slam-try": {
+    "BETTER": 13,
+    "EQUIVALENT": 329,
+    "WORSE": 2,
+    "differences": 344,
+    "net_dds_impact": -4400
+  },
+  "user-forcing-1NT-responder-four-card-escape-after-catchall": {
+    "BETTER": 11,
+    "EQUIVALENT": 0,
+    "WORSE": 0,
+    "differences": 11,
+    "net_dds_impact": -1680
+  },
+  "user-forcing-1NT-responder-long-suit-after-catchall": {
+    "BETTER": 3,
+    "EQUIVALENT": 8,
+    "WORSE": 8,
+    "differences": 19,
+    "net_dds_impact": 850
+  },
+  "user-forcing-1NT-responder-major-preference-after-catchall": {
+    "BETTER": 16,
+    "EQUIVALENT": 16,
+    "WORSE": 4,
+    "differences": 36,
+    "net_dds_impact": -1080
+  },
+  "user-multilandy-major-minor": {
+    "BETTER": 434,
+    "EQUIVALENT": 201,
+    "WORSE": 284,
+    "differences": 919,
+    "net_dds_impact": -59520
+  },
+  "user-multilandy-suppress-native-incompatible": {
+    "BETTER": 382,
+    "EQUIVALENT": 194,
+    "WORSE": 157,
+    "differences": 733,
+    "net_dds_impact": -86590
+  },
+  "user-rubensohl-responder-respects-declined-invite": {
+    "BETTER": 4,
+    "EQUIVALENT": 1,
+    "WORSE": 4,
+    "differences": 9,
+    "net_dds_impact": -130
+  },
+  "v1r02821-michaels-1S-hearts-diamonds": {
+    "BETTER": 155,
+    "EQUIVALENT": 291,
+    "WORSE": 182,
+    "differences": 628,
+    "net_dds_impact": 6520
+  },
+  "v237-1m1M1NT-strong-game": {
+    "BETTER": 54,
+    "EQUIVALENT": 120,
+    "WORSE": 14,
+    "differences": 188,
+    "net_dds_impact": -20920
+  },
+  "v237-1m1M1NT-strong-roudi": {
+    "BETTER": 22,
+    "EQUIVALENT": 131,
+    "WORSE": 30,
+    "differences": 183,
+    "net_dds_impact": -1060
+  },
+  "v237-course28-stayman-slam-path": {
+    "BETTER": 13,
+    "EQUIVALENT": 2,
+    "WORSE": 21,
+    "differences": 36,
+    "net_dds_impact": 8930
+  },
+  "v246-advancer-competitive-fit": {
+    "BETTER": 190,
+    "EQUIVALENT": 294,
+    "WORSE": 161,
+    "differences": 645,
+    "net_dds_impact": -4850
+  },
+  "v246-advancer-weak-fit-pass": {
+    "BETTER": 0,
+    "EQUIVALENT": 0,
+    "WORSE": 1,
+    "differences": 1,
+    "net_dds_impact": 210
+  },
+  "v246-overcall-quality-veto": {
+    "BETTER": 31,
+    "EQUIVALENT": 35,
+    "WORSE": 23,
+    "differences": 89,
+    "net_dds_impact": -3660
+  },
+  "v249-2NT-try-positive": {
+    "BETTER": 40,
+    "EQUIVALENT": 81,
+    "WORSE": 6,
+    "differences": 127,
+    "net_dds_impact": -11200
+  },
+  "w2-b11-sc11-third-forcing-artificial-fit-consumer": {
+    "BETTER": 54,
+    "EQUIVALENT": 19,
+    "WORSE": 22,
+    "differences": 95,
+    "net_dds_impact": -6540
+  },
+  "w2-b13-sc13-strong2c-public-opening": {
+    "BETTER": 135,
+    "EQUIVALENT": 128,
+    "WORSE": 81,
+    "differences": 344,
+    "net_dds_impact": -29450
+  },
+  "w2b-rubensohl-responder-no-stopper-continuation": {
+    "BETTER": 4,
+    "EQUIVALENT": 1,
+    "WORSE": 1,
+    "differences": 6,
+    "net_dds_impact": -630
+  },
+  "w2b-rubensohl-responder-supplies-stopper": {
+    "BETTER": 2,
+    "EQUIVALENT": 0,
+    "WORSE": 0,
+    "differences": 2,
+    "net_dds_impact": -1000
+  },
+  "w2p3-k-l06-responder-2D-signoff": {
+    "BETTER": 21,
+    "EQUIVALENT": 1,
+    "WORSE": 7,
+    "differences": 29,
+    "net_dds_impact": -1610
+  },
+  "w2p3-k-l06-responder-2H-force": {
+    "BETTER": 12,
+    "EQUIVALENT": 155,
+    "WORSE": 21,
+    "differences": 188,
+    "net_dds_impact": 3810
+  },
+  "w2p3-k-l06-responder-2NT-limit": {
+    "BETTER": 0,
+    "EQUIVALENT": 43,
+    "WORSE": 0,
+    "differences": 43,
+    "net_dds_impact": 0
+  },
+  "w2p3-k-l06-responder-2S-force": {
+    "BETTER": 3,
+    "EQUIVALENT": 47,
+    "WORSE": 7,
+    "differences": 57,
+    "net_dds_impact": 2730
+  },
+  "w2p3-k-l06-responder-pass-1NT": {
+    "BETTER": 18,
+    "EQUIVALENT": 14,
+    "WORSE": 18,
+    "differences": 50,
+    "net_dds_impact": 530
+  },
+  "w4-c27d-responder-spade-control": {
+    "BETTER": 0,
+    "EQUIVALENT": 1,
+    "WORSE": 1,
+    "differences": 2,
+    "net_dds_impact": 100
+  },
+  "wave2-f1-preserve-genuine-minor-preference-before-nt": {
+    "BETTER": 3,
+    "EQUIVALENT": 3,
+    "WORSE": 0,
+    "differences": 6,
+    "net_dds_impact": -770
+  },
+  "wave2c-course28-diamond-texas-4nt-refusal-terminal": {
+    "BETTER": 22,
+    "EQUIVALENT": 1,
+    "WORSE": 4,
+    "differences": 27,
+    "net_dds_impact": -11460
+  },
+  "wave2c-course30-ace-symbol-no-heart-revival": {
+    "BETTER": 3,
+    "EQUIVALENT": 0,
+    "WORSE": 1,
+    "differences": 4,
+    "net_dds_impact": -150
+  },
+  "wave2c-course30-stayman-3nt-terminal": {
+    "BETTER": 8,
+    "EQUIVALENT": 2,
+    "WORSE": 2,
+    "differences": 12,
+    "net_dds_impact": -2770
+  },
+  "wave2c-fourth-suit-game-force-minor-terminal": {
+    "BETTER": 1,
+    "EQUIVALENT": 0,
+    "WORSE": 0,
+    "differences": 1,
+    "net_dds_impact": -250
+  },
+  "wave2c-k3-game-force-fit-terminal": {
+    "BETTER": 2,
+    "EQUIVALENT": 0,
+    "WORSE": 1,
+    "differences": 3,
+    "net_dds_impact": -1050
+  },
+  "wave2c-rkcb-captain-king-ask": {
+    "BETTER": 6,
+    "EQUIVALENT": 90,
+    "WORSE": 2,
+    "differences": 98,
+    "net_dds_impact": -3230
+  },
+  "wave2c-rkcb-captain-public-signoff": {
+    "BETTER": 67,
+    "EQUIVALENT": 1,
+    "WORSE": 77,
+    "differences": 145,
+    "net_dds_impact": 11840
+  },
+  "wave2c-rkcb-captain-queen-ask": {
+    "BETTER": 0,
+    "EQUIVALENT": 1,
+    "WORSE": 0,
+    "differences": 1,
+    "net_dds_impact": 0
+  },
+  "wave2c-rkcb-deferred-spade-response-producer": {
+    "BETTER": 59,
+    "EQUIVALENT": 182,
+    "WORSE": 83,
+    "differences": 324,
+    "net_dds_impact": 26210
+  },
+  "wave2c-rkcb-ledger-king-show": {
+    "BETTER": 0,
+    "EQUIVALENT": 0,
+    "WORSE": 1,
+    "differences": 1,
+    "net_dds_impact": 750
+  },
+  "wave2c-rkcb-ledger-no-side-king": {
+    "BETTER": 0,
+    "EQUIVALENT": 5,
+    "WORSE": 1,
+    "differences": 6,
+    "net_dds_impact": 750
+  },
+  "wave2c-rkcb-ledger-response-through-pass": {
+    "BETTER": 203,
+    "EQUIVALENT": 418,
+    "WORSE": 306,
+    "differences": 927,
+    "net_dds_impact": 80230
+  },
+  "wave2c-rkcb-ledger-signoff-terminal": {
+    "BETTER": 12,
+    "EQUIVALENT": 0,
+    "WORSE": 14,
+    "differences": 26,
+    "net_dds_impact": 1800
+  },
+  "wave2c-rkcb-ledger-void-even": {
+    "BETTER": 4,
+    "EQUIVALENT": 2,
+    "WORSE": 1,
+    "differences": 7,
+    "net_dds_impact": -2710
+  },
+  "wave2c-rkcb-ledger-void-odd": {
+    "BETTER": 4,
+    "EQUIVALENT": 23,
+    "WORSE": 3,
+    "differences": 30,
+    "net_dds_impact": -1020
+  },
+  "wave2c-roudi-no-artificial-heart-revival": {
+    "BETTER": 1,
+    "EQUIVALENT": 3,
+    "WORSE": 1,
+    "differences": 5,
+    "net_dds_impact": 1430
+  }
+}
