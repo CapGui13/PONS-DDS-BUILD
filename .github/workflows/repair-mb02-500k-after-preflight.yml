@@ -1,0 +1,77 @@
+name: Repair MB02 500K after preflight
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - ".github/workflows/repair-mb02-500k-after-preflight.yml"
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Sync main
+        id: sync
+        run: git pull --rebase origin main
+
+      - name: Repair target workflow
+        id: edit
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('.github/workflows/compare-v261-mb02-500k-dds.yml')
+          s=p.read_text()
+          good="patch --batch --forward mb02/pons-critic.js < ../tools/MB01_TO_MB02_D13.patch"
+          if good in s:
+              print('already repaired')
+              Path('/tmp/already').write_text('1')
+              raise SystemExit(0)
+          marker="          python3 - <<'PY'\n          from pathlib import Path\n          p=Path('work/mb02/pons-critic.js')\n"
+          start=s.index(marker)
+          end=s.index('          test "$(sha256sum work/mb02/pons-critic.js', start)
+          replacement=(
+              "          (\n"
+              "            cd work\n"
+              "            patch --batch --forward mb02/pons-critic.js < ../tools/MB01_TO_MB02_D13.patch\n"
+              "          )\n"
+          )
+          out=s[:start]+replacement+s[end:]
+          assert good in out
+          p.write_text(out)
+          PY
+          grep -q "patch --batch --forward mb02/pons-critic.js < ../tools/MB01_TO_MB02_D13.patch" .github/workflows/compare-v261-mb02-500k-dds.yml
+
+      - name: Commit repaired target
+        id: push
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .github/workflows/compare-v261-mb02-500k-dds.yml
+          if git diff --cached --quiet; then
+            echo "target already repaired"
+            exit 0
+          fi
+          git commit -m "Fix MB02 500K reconstruction after passed preflight"
+          git push origin HEAD:main
+
+      - name: Report repair outcome
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SYNC: ${{ steps.sync.outcome }}
+          EDIT: ${{ steps.edit.outcome }}
+          PUSH: ${{ steps.push.outcome }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          if [ "$SYNC" = success ] && [ "$EDIT" = success ] && [ "$PUSH" = success ]; then STATUS=REPAIR_PASS; else STATUS=REPAIR_FAIL; fi
+          gh issue create --title "MB02 one-shot repair $STATUS run $RUN_ID" --body "status=$STATUS\nrun_id=$RUN_ID\nsync=$SYNC\nedit=$EDIT\npush=$PUSH"
