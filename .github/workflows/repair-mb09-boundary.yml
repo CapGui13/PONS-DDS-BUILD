@@ -1,0 +1,118 @@
+name: Repair MB09 payload boundary corruption
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/repair-mb09-boundary.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Search one-character corruption near transfer boundaries
+        env:
+          TARGET_B64_SHA: 15a8fbaa147906bf197f168a49764fb3cd7fd4b98c75dd2d470b35a9c9ce602d
+          TARGET_XZ_SHA: 1ae3d77b89e862d95fa771cd2e3fe648fbf6c20e282a84c1eb1f4532ddc6c56e
+          TARGET_BIN_SHA: 8981d03e6eeca8f843cf7a526b5e8dcb2757e6eab147c7fc00df82c3d0bae68b
+        run: |
+          set -euo pipefail
+          mkdir -p results/mb09-500k-dds
+          python3 - <<'PY'
+          import hashlib, os, subprocess, pathlib
+          files=[
+            pathlib.Path('inputs/mb09_dds_v2_b64/part_00'),
+            pathlib.Path('inputs/mb09_indices_b64/part_01'),
+            pathlib.Path('inputs/mb09_indices_b64/part_02'),
+            pathlib.Path('inputs/mb09_indices_b64/part_03'),
+            pathlib.Path('inputs/mb09_indices_b64/part_04'),
+          ]
+          raw=[p.read_bytes().replace(b'\r',b'').replace(b'\n',b'') for p in files]
+          sizes=[len(x) for x in raw]
+          s=bytearray(b''.join(raw))
+          target=os.environ['TARGET_B64_SHA']
+          alpha=b'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
+          bounds=[]; acc=0
+          for n in sizes[:-1]: acc+=n; bounds.append(acc)
+          radius=1024
+          pos=set()
+          centers=[0,*bounds,len(s)]
+          for c in centers:
+            lo=max(0,c-radius); hi=min(len(s),c+radius+1)
+            pos.update(range(lo,hi))
+          report=[]
+          report.append(f'bytes={len(s)} current_b64_sha={hashlib.sha256(s).hexdigest()} target={target}')
+          report.append(f'sizes={sizes} boundaries={bounds} positions_scanned={len(pos)} radius={radius}')
+          found=None
+          for k,p in enumerate(sorted(pos),1):
+            orig=s[p]
+            prefix=hashlib.sha256(memoryview(s)[:p])
+            suffix=memoryview(s)[p+1:]
+            for c in alpha:
+              if c==orig: continue
+              h=prefix.copy(); h.update(bytes((c,))); h.update(suffix)
+              if h.hexdigest()==target:
+                found=(p,orig,c); break
+            if found: break
+          if not found:
+            report.append('FOUND=NO')
+            pathlib.Path('results/mb09-500k-dds/REPAIR_SCAN.txt').write_text('\n'.join(report)+'\n')
+            print('\n'.join(report))
+            raise SystemExit(0)
+          p,orig,c=found
+          report.append(f'FOUND=YES global_offset={p} old={chr(orig)} new={chr(c)}')
+          s[p]=c
+          assert hashlib.sha256(s).hexdigest()==target
+          xz=subprocess.check_output(['base64','-d'],input=bytes(s))
+          xzsha=hashlib.sha256(xz).hexdigest(); report.append(f'xz_sha={xzsha}')
+          assert xzsha==os.environ['TARGET_XZ_SHA']
+          pathlib.Path('/tmp/fixed.xz').write_bytes(xz)
+          subprocess.run(['xz','-t','/tmp/fixed.xz'],check=True)
+          binary=subprocess.check_output(['xz','-dc','/tmp/fixed.xz'])
+          binsha=hashlib.sha256(binary).hexdigest(); report.append(f'bin_sha={binsha}')
+          assert binsha==os.environ['TARGET_BIN_SHA']
+          # Rewrite only the affected fragment, preserving exact no-newline fragment style.
+          acc=0
+          for fp,n in zip(files,sizes):
+            if acc <= p < acc+n:
+              local=p-acc
+              frag=bytearray(fp.read_bytes().replace(b'\r',b'').replace(b'\n',b''))
+              frag[local]=c
+              fp.write_bytes(bytes(frag))
+              report.append(f'fixed_file={fp} local_offset={local}')
+              break
+            acc += n
+          pathlib.Path('results/mb09-500k-dds/REPAIR_SCAN.txt').write_text('\n'.join(report)+'\n')
+          print('\n'.join(report))
+          PY
+      - name: Commit proven repair if found
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git pull --rebase origin main
+          git add inputs/mb09_dds_v2_b64/part_00 inputs/mb09_indices_b64/part_01 inputs/mb09_indices_b64/part_02 inputs/mb09_indices_b64/part_03 inputs/mb09_indices_b64/part_04 results/mb09-500k-dds/REPAIR_SCAN.txt
+          if git diff --cached --quiet; then
+            echo 'No changes to commit'
+          else
+            git commit -m 'Repair MB09 DDS index payload by exact hashes'
+            git push
+          fi
+      - name: Dispatch final solve only after proven repair
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if grep -q '^FOUND=YES' results/mb09-500k-dds/REPAIR_SCAN.txt; then
+            gh workflow run solve-mb09-500k-dds.yml --repo CapGui13/PONS-DDS-BUILD --ref main
+            echo 'Final solve dispatched'
+          else
+            echo 'No exact boundary repair found; solve not dispatched'
+          fi
