@@ -1,4 +1,4 @@
-name: Recover MB08 DDS compact F1 payload
+name: Diagnose MB08 DDS compact F1 payload
 
 on:
   push:
@@ -11,55 +11,55 @@ permissions:
   contents: write
 
 jobs:
-  recover:
+  diagnose:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-      - name: Recover one missing trailing base64 character
+      - name: Diagnose missing base64 character
         run: |
-          set -euo pipefail
+          set -u
           cat inputs/mb08_f1_xz_b64/f1_00 inputs/mb08_f1_xz_b64/f1_01 inputs/mb08_f1_xz_b64/f1_02 | tr -d '\r\n' > f1.bad.b64
-          test "$(wc -c < f1.bad.b64)" = 59999
           alphabet='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
           : > matches.txt
           for ((i=0;i<${#alphabet};i++)); do
             c=${alphabet:i:1}
             { cat f1.bad.b64; printf '%s' "$c"; } > candidate.b64
-            if base64 -d candidate.b64 > candidate.xz 2>/dev/null && xz -t candidate.xz 2>/dev/null; then
-              printf '%s\n' "$c" >> matches.txt
-            fi
+            base64 -d candidate.b64 > candidate.xz 2>/dev/null || continue
+            xz -t candidate.xz 2>/dev/null && printf '%s\n' "$c" >> matches.txt
           done
           MATCHES=$(wc -l < matches.txt)
-          echo "valid_candidates=$MATCHES"
-          cat matches.txt
-          test "$MATCHES" = 1
-          C=$(cat matches.txt)
-          { cat f1.bad.b64; printf '%s' "$C"; } > F1_COMPLETE.b64
-          base64 -d F1_COMPLETE.b64 > F1_COMPLETE.xz
-          xz -t F1_COMPLETE.xz
-          xz -dc F1_COMPLETE.xz > F1_COMPLETE.bin
           {
-            echo "recovered_char=$C"
-            echo "b64_bytes=$(wc -c < F1_COMPLETE.b64)"
-            echo "xz_bytes=$(wc -c < F1_COMPLETE.xz)"
-            echo "xz_sha256=$(sha256sum F1_COMPLETE.xz | awk '{print $1}')"
-            echo "decoded_bytes=$(wc -c < F1_COMPLETE.bin)"
-            echo "decoded_sha256=$(sha256sum F1_COMPLETE.bin | awk '{print $1}')"
-            echo "decoded_lines=$(wc -l < F1_COMPLETE.bin)"
-            echo "decoded_file=$(file -b F1_COMPLETE.bin)"
-            echo '--- first 512 bytes hex ---'
-            xxd -g1 -l512 F1_COMPLETE.bin
-            echo '--- first 50 strings ---'
-            strings F1_COMPLETE.bin | head -50 || true
+            echo "original_b64_bytes=$(wc -c < f1.bad.b64)"
+            echo "valid_trailing_char_candidates=$MATCHES"
+            echo "candidates=$(tr '\n' ' ' < matches.txt)"
+            echo "part_sizes=$(wc -c inputs/mb08_f1_xz_b64/f1_* | tr '\n' ';')"
           } | tee RECOVER_F1_REPORT.txt
-      - name: Persist recovered character and report
+          if [ "$MATCHES" = 1 ]; then
+            C=$(cat matches.txt)
+            { cat f1.bad.b64; printf '%s' "$C"; } > F1_COMPLETE.b64
+            base64 -d F1_COMPLETE.b64 > F1_COMPLETE.xz
+            xz -dc F1_COMPLETE.xz > F1_COMPLETE.bin
+            {
+              echo "recovered_char=$C"
+              echo "xz_bytes=$(wc -c < F1_COMPLETE.xz)"
+              echo "xz_sha256=$(sha256sum F1_COMPLETE.xz | awk '{print $1}')"
+              echo "decoded_bytes=$(wc -c < F1_COMPLETE.bin)"
+              echo "decoded_sha256=$(sha256sum F1_COMPLETE.bin | awk '{print $1}')"
+              echo "decoded_lines=$(wc -l < F1_COMPLETE.bin)"
+              echo "decoded_file=$(file -b F1_COMPLETE.bin)"
+              echo '--- first 256 bytes hex ---'
+              xxd -g1 -l256 F1_COMPLETE.bin
+              echo '--- first 30 strings ---'
+              strings F1_COMPLETE.bin | head -30 || true
+            } | tee -a RECOVER_F1_REPORT.txt
+          fi
+      - name: Persist diagnostic
         run: |
           set -euo pipefail
           mkdir -p results/mb08-dds-inspect
           cp RECOVER_F1_REPORT.txt results/mb08-dds-inspect/RECOVER_F1_REPORT.txt
-          cat matches.txt > results/mb08-dds-inspect/F1_MISSING_CHAR.txt
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add results/mb08-dds-inspect/RECOVER_F1_REPORT.txt results/mb08-dds-inspect/F1_MISSING_CHAR.txt
-          git diff --cached --quiet || git commit -m 'Recover MB08 DDS F1 payload'
+          git add results/mb08-dds-inspect/RECOVER_F1_REPORT.txt
+          git diff --cached --quiet || git commit -m 'Diagnose MB08 DDS F1 payload'
           git push
