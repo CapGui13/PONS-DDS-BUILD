@@ -1,0 +1,60 @@
+name: Inspect MB08 DDS staged input
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/inspect-mb08-dds-input.yml'
+      - 'inputs/mb08_changed_b64/**'
+
+permissions:
+  contents: write
+
+jobs:
+  inspect:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Reconstruct staged payload
+        run: |
+          set -euo pipefail
+          : > payload.b64
+          for i in 00 01 02 03 04 05 06 07 08 09; do cat "inputs/mb08_changed_b64/part_${i}" >> payload.b64; done
+          cat inputs/mb08_changed_b64/part_10_16 >> payload.b64
+          tr -d '\r\n' < payload.b64 > payload.clean.b64
+          base64 -d payload.clean.b64 > payload.bin
+          {
+            echo "b64_bytes=$(wc -c < payload.clean.b64)"
+            echo "bin_bytes=$(wc -c < payload.bin)"
+            echo "bin_sha256=$(sha256sum payload.bin | awk '{print $1}')"
+            echo "file=$(file -b payload.bin)"
+          } > INSPECT_MB08_INPUT.txt
+          if xz -t payload.bin 2>/dev/null; then
+            echo 'compression=xz' >> INSPECT_MB08_INPUT.txt
+            xz -dc payload.bin > payload.dec
+          elif gzip -t payload.bin 2>/dev/null; then
+            echo 'compression=gzip' >> INSPECT_MB08_INPUT.txt
+            gzip -dc payload.bin > payload.dec
+          else
+            echo 'compression=none_or_unknown' >> INSPECT_MB08_INPUT.txt
+            cp payload.bin payload.dec
+          fi
+          {
+            echo "decoded_bytes=$(wc -c < payload.dec)"
+            echo "decoded_sha256=$(sha256sum payload.dec | awk '{print $1}')"
+            echo "decoded_lines=$(wc -l < payload.dec)"
+            echo '--- first 3 lines / strings ---'
+            head -3 payload.dec 2>/dev/null || true
+            strings payload.dec | head -10 || true
+          } >> INSPECT_MB08_INPUT.txt
+          cat INSPECT_MB08_INPUT.txt
+      - name: Commit inspection report
+        run: |
+          set -euo pipefail
+          mkdir -p results/mb08-dds-inspect
+          cp INSPECT_MB08_INPUT.txt results/mb08-dds-inspect/INSPECT_MB08_INPUT.txt
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add results/mb08-dds-inspect/INSPECT_MB08_INPUT.txt
+          git diff --cached --quiet || git commit -m 'Add MB08 DDS staged-input inspection'
+          git push
