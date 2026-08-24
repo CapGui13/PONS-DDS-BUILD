@@ -1,0 +1,22 @@
+name: Snapshot MB09 RC03
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/snapshot-mb09-rc03.yml']
+permissions:
+  actions: read
+  contents: write
+jobs:
+  s:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - env: {GH_TOKEN: '${{ github.token }}'}
+        run: |
+          set -euo pipefail
+          mkdir -p results/mb09-rc03
+          gh api 'repos/CapGui13/PONS-DDS-BUILD/actions/workflows/gate-mb09-rc03-fresh20k-dds.yml/runs?per_page=1' > /tmp/r
+          R=$(jq -r '.workflow_runs[0].id' /tmp/r)
+          gh api "repos/CapGui13/PONS-DDS-BUILD/actions/runs/$R/jobs?per_page=100" > /tmp/j
+          jq --argjson run "$R" '{run_id:$run,jobs:[.jobs[]|{id,name,status,conclusion,failed_steps:[.steps[]?|select(.conclusion=="failure")|.name]}]}' /tmp/j > results/mb09-rc03/RUN_STATUS.json
+          git config user.name 'github-actions[bot]';git config user.email '41898282+github-actions[bot]@users.noreply.github.com';git pull --rebase origin main;git add results/mb09-rc03/RUN_STATUS.json;git diff --cached --quiet||git commit -m 'Record MB09 RC03 run status';git push
