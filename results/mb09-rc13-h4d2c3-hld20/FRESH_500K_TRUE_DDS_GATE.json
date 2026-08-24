@@ -1,0 +1,60 @@
+{
+  "status": "REJECTED",
+  "scope": "MB09-RC13 exact S4-H4-D2-C3 / 20 HLD -> direct fitted 2NT",
+  "fresh_deals": 500000,
+  "fresh_master_seed": 1008000000001,
+  "target_occurrences": 5,
+  "changed_contracts": 4,
+  "same_contract_changes": 1,
+  "BETTER": 0,
+  "WORSE": 3,
+  "EQUIVALENT": 2,
+  "net_dds_gap_delta": 1970,
+  "historical_500k_targeted": 9,
+  "historical_verdicts_before_patch": {
+    "BETTER": 0,
+    "WORSE": 3,
+    "EQUIVALENT": 6
+  },
+  "historical_old_gap_delta": 1750,
+  "candidate_critic_sha256": "89630222f594a50e935b4ab2e05fa002a416c629db8259dd9a327b2cca1a3dd0",
+  "dds_runtime_sha256": "e5c7bcdcf96d3ed24b14b2840303a0d0936b05419de463809f68982c565c7f4c",
+  "rows": [
+    {
+      "index": 167019,
+      "dds_tricks": 10,
+      "baseline_ns_score": 620,
+      "candidate_ns_score": -100,
+      "dealer_par_ns_score": 620,
+      "gap_delta": 720,
+      "verdict": "WORSE"
+    },
+    {
+      "index": 349061,
+      "dds_tricks": 13,
+      "baseline_ns_score": -1460,
+      "candidate_ns_score": -710,
+      "dealer_par_ns_score": -2210,
+      "gap_delta": 750,
+      "verdict": "WORSE"
+    },
+    {
+      "index": 354587,
+      "dds_tricks": 12,
+      "baseline_ns_score": -980,
+      "candidate_ns_score": -480,
+      "dealer_par_ns_score": -990,
+      "gap_delta": 500,
+      "verdict": "WORSE"
+    },
+    {
+      "index": 479286,
+      "dds_tricks": 13,
+      "baseline_ns_score": -710,
+      "candidate_ns_score": -710,
+      "dealer_par_ns_score": -2210,
+      "gap_delta": 0,
+      "verdict": "EQUIVALENT"
+    }
+  ]
+}
