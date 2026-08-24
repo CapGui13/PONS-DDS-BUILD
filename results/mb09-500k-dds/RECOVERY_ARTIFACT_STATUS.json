@@ -1,0 +1,13 @@
+{
+  "run_id": 32719237182,
+  "status": "completed",
+  "conclusion": "success",
+  "artifacts": [
+    {
+      "id": 9517094774,
+      "name": "mb09-dds-final-recovered",
+      "size_in_bytes": 1136668,
+      "expired": false
+    }
+  ]
+}
