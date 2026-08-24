@@ -1,0 +1,38 @@
+name: Extract MB09 RC23 stable zero-WORSE slices
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/extract-mb09-rc23-stable-slices.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  extract:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Extract stable public slices
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          x=json.load(open('results/mb09-rc23-qj-spade-hl8/PUBLIC_SLICE_ANALYSIS.json'))
+          allowed={'shape','variant','openerSuit','openerLen'}
+          z=[]
+          for r in x['zero_worse_slices_n3plus']:
+            dims=set(r['dimensions'].split('+'))
+            if dims <= allowed:
+              z.append(r)
+          z=sorted(z,key=lambda r:(r['net'],-r['BETTER'],-r['n']))
+          json.dump(z,open('results/mb09-rc23-qj-spade-hl8/STABLE_ZERO_SLICES.json','w'),indent=2)
+          print(json.dumps(z,indent=2))
+          PY
+          git config user.name 'github-actions[bot]'; git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git pull --rebase origin main
+          git add results/mb09-rc23-qj-spade-hl8/STABLE_ZERO_SLICES.json
+          git diff --cached --quiet || git commit -m 'Extract MB09 RC23 stable zero-WORSE slices'
+          git push
