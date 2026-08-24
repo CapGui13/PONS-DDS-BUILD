@@ -22,3 +22,4 @@ jobs:
           set -euo pipefail
           gh workflow run solve-mb09-500k-dds.yml --repo CapGui13/PONS-DDS-BUILD --ref main
           echo 'Dispatched solve-mb09-500k-dds.yml on main'
+          echo 'Payload restored from exact 500K central source.'
