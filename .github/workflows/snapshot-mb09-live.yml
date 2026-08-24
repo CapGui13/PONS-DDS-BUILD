@@ -1,0 +1,41 @@
+name: Snapshot MB09 live status
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/snapshot-mb09-live.yml'
+
+permissions:
+  actions: read
+  contents: write
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Snapshot latest solve run
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p results/mb09-500k-dds
+          gh api 'repos/CapGui13/PONS-DDS-BUILD/actions/workflows/solve-mb09-500k-dds.yml/runs?event=workflow_dispatch&per_page=5' > /tmp/runs.json
+          RUN_ID=$(jq -r '.workflow_runs[0].id' /tmp/runs.json)
+          STATUS=$(jq -r '.workflow_runs[0].status' /tmp/runs.json)
+          CONCLUSION=$(jq -r '.workflow_runs[0].conclusion // ""' /tmp/runs.json)
+          URL=$(jq -r '.workflow_runs[0].html_url' /tmp/runs.json)
+          CREATED=$(jq -r '.workflow_runs[0].created_at' /tmp/runs.json)
+          gh api "repos/CapGui13/PONS-DDS-BUILD/actions/runs/$RUN_ID/jobs?per_page=100" > /tmp/jobs.json
+          jq --arg run_id "$RUN_ID" --arg status "$STATUS" --arg conclusion "$CONCLUSION" --arg url "$URL" --arg created "$CREATED" '{run_id:($run_id|tonumber),status:$status,conclusion:$conclusion,html_url:$url,created_at:$created,jobs:[.jobs[]|{id,name,status,conclusion,started_at,completed_at,steps:[.steps[]?|{name,status,conclusion}]}]}' /tmp/jobs.json > results/mb09-500k-dds/LIVE_STATUS.json
+          cat results/mb09-500k-dds/LIVE_STATUS.json
+      - name: Persist snapshot
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git pull --rebase origin main
+          git add results/mb09-500k-dds/LIVE_STATUS.json
+          git diff --cached --quiet || git commit -m 'Snapshot MB09 live DDS status'
+          git push
