@@ -1,0 +1,44 @@
+name: Monitor MB09 RC03 2NT gate
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/monitor-mb09-rc03-2nt.yml'
+
+permissions:
+  actions: read
+  contents: write
+
+jobs:
+  monitor:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Wait for gate and persist status
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p results/mb09-rc03-2nt
+          for i in $(seq 1 100); do
+            gh api 'repos/CapGui13/PONS-DDS-BUILD/actions/workflows/gate-mb09-rc03-2nt-fresh20k-dds.yml/runs?per_page=1' > /tmp/r.json
+            RUN=$(jq -r '.workflow_runs[0].id' /tmp/r.json)
+            STATUS=$(jq -r '.workflow_runs[0].status' /tmp/r.json)
+            CONCLUSION=$(jq -r '.workflow_runs[0].conclusion // ""' /tmp/r.json)
+            if [ "$STATUS" = completed ]; then
+              gh api "repos/CapGui13/PONS-DDS-BUILD/actions/runs/$RUN/jobs?per_page=100" > /tmp/j.json
+              jq --arg run "$RUN" --arg status "$STATUS" --arg conclusion "$CONCLUSION" '{run_id:($run|tonumber),status:$status,conclusion:$conclusion,jobs:[.jobs[]|{id,name,status,conclusion,failed_steps:[.steps[]?|select(.conclusion=="failure")|.name]}]}' /tmp/j.json > results/mb09-rc03-2nt/RUN_STATUS.json
+              break
+            fi
+            sleep 10
+          done
+          test -s results/mb09-rc03-2nt/RUN_STATUS.json
+          cat results/mb09-rc03-2nt/RUN_STATUS.json
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git pull --rebase origin main
+          git add results/mb09-rc03-2nt/RUN_STATUS.json
+          git diff --cached --quiet || git commit -m 'Record MB09 RC03 2NT final gate status'
+          git push
