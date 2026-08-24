@@ -1,0 +1,71 @@
+name: Gate MB09-RC24 JT2353 HL8 discovery true DDS
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/gate-mb09-rc24-jt2353-hl8-discovery.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  ODIN_COMMIT: 38fcd537dd6c7dec7ef596e861551f1b278f2f98
+  DDS_UPSTREAM_COMMIT: 7219c956f4ed9a9f8d1585e9a1a2c57465745ac5
+  DDS_A_SHA256: e5c7bcdcf96d3ed24b14b2840303a0d0936b05419de463809f68982c565c7f4c
+  CURRENT_CRITIC_SHA256: 5f062cfd46c93073322b032ade9c236beee9d46a448a7f52201a654b04a24968
+  CANDIDATE_CRITIC_SHA256: c173529f281a9ddcb833f3311bbf5c7344e9da967ea54c7cf7d4a832a86ddd72
+
+jobs:
+  gate:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify input
+        run: |
+          set -euo pipefail
+          test "$(wc -l < inputs/mb09_rc24_jt2353_hl8_discovery3.tsv)" = 3
+      - name: Build pinned DDS and solve
+        run: |
+          set -euo pipefail
+          git clone -q https://github.com/enerqi/odin-dds.git odin-dds
+          git -C odin-dds checkout -q "$ODIN_COMMIT"
+          test "$(git -C odin-dds rev-parse HEAD)" = "$ODIN_COMMIT"
+          grep -q "$DDS_UPSTREAM_COMMIT" odin-dds/external/dds/VENDORED.md
+          make -s -C odin-dds/src
+          test "$(sha256sum odin-dds/lib/dds.a | awk '{print $1}')" = "$DDS_A_SHA256"
+          cat > score.cpp <<'CPP'
+          #include <algorithm>
+          #include <cstring>
+          #include <fstream>
+          #include <iostream>
+          #include <string>
+          #include <vector>
+          #include "dll.h"
+          struct C{bool po{};int l{};char s{'-'};char d{'-'};std::string x{"NONE"};}; struct R{long long i{};unsigned long long seed{};char dealer{};std::string vul,pbn;C a,b;};
+          static std::vector<std::string> sp(const std::string&s){std::vector<std::string>v;size_t p=0;for(;;){auto q=s.find('\t',p);if(q==std::string::npos){v.push_back(s.substr(p));break;}v.push_back(s.substr(p,q-p));p=q+1;}return v;}
+          static int hc(char c){return c=='N'?0:c=='E'?1:c=='S'?2:3;} static int sc(char c){return c=='S'?0:c=='H'?1:c=='D'?2:c=='C'?3:4;} static int vc(const std::string&v){return v=="None"?0:v=="Both"?1:v=="NS"?2:3;} static bool iv(char d,int v){if(v==1)return true;if(v==0)return false;bool ns=d=='N'||d=='S';return v==2?ns:!ns;}
+          static int ds(const C&c,int t,int v){if(c.po)return 0;int tar=c.l+6,del=t-tar;bool vu=iv(c.d,v);int m=c.x=="XX"?4:c.x=="X"?2:1;if(del>=0){int base=(c.s=='C'||c.s=='D')?20*c.l:(c.s=='H'||c.s=='S')?30*c.l:40+30*(c.l-1);int cp=base*m,z=cp;if(m==2)z+=50;else if(m==4)z+=100;if(del>0){if(m==1)z+=del*((c.s=='C'||c.s=='D')?20:30);else if(m==2)z+=del*(vu?200:100);else z+=del*(vu?400:200);}z+=cp>=100?(vu?500:300):50;if(c.l==6)z+=vu?750:500;else if(c.l==7)z+=vu?1500:1000;return z;}int u=-del,pen;if(m==1)pen=u*(vu?100:50);else{int q;if(vu)q=200+(u-1)*300;else q=u==1?100:u==2?300:u==3?500:500+(u-3)*300;pen=q*(m==4?2:1);}return -pen;} static int ns(const C&c,int t,int v){int z=ds(c,t,v);return c.po?0:((c.d=='N'||c.d=='S')?z:-z);}
+          int main(){std::ifstream in("inputs/mb09_rc24_jt2353_hl8_discovery3.tsv");std::ofstream out("dds.tsv");std::vector<R>rs;std::string l;while(std::getline(in,l)){auto f=sp(l);if(f.size()!=15)return 2;R r;r.i=std::stoll(f[0]);r.seed=std::stoull(f[1]);r.dealer=f[2][0];r.vul=f[3];r.pbn=f[4];auto pc=[&](int o,C&c){c.po=f[o]=="1";c.l=std::stoi(f[o+1]);c.s=f[o+2][0];c.d=f[o+3][0];c.x=f[o+4];};pc(5,r.a);pc(10,r.b);rs.push_back(r);}SetMaxThreads(0);int filter[5]={0,0,0,0,0};for(size_t base=0;base<rs.size();base+=40){size_t n=std::min<size_t>(40,rs.size()-base);ddTableDealsPBN deals{};deals.noOfTables=n;for(size_t j=0;j<n;j++)std::strncpy(deals.deals[j].cards,rs[base+j].pbn.c_str(),sizeof(deals.deals[j].cards)-1);ddTablesRes res{};allParResults pars{};if(CalcAllTablesPBN(&deals,-1,filter,&res,&pars)!=RETURN_NO_FAULT)return 3;for(size_t j=0;j<n;j++){auto&r=rs[base+j];auto&t=res.results[j];int v=vc(r.vul),ta=r.a.po?0:t.resTable[sc(r.a.s)][hc(r.a.d)],tb=r.b.po?0:t.resTable[sc(r.b.s)][hc(r.b.d)];int sa=ns(r.a,ta,v),sb=ns(r.b,tb,v);parResultsDealer pr{};if(DealerPar(&t,&pr,hc(r.dealer),v)!=RETURN_NO_FAULT)return 4;out<<r.i<<'\t'<<r.seed<<'\t'<<ta<<'\t'<<sa<<'\t'<<tb<<'\t'<<sb<<'\t'<<pr.score<<'\n';}}FreeMemory();return 0;}
+          CPP
+          g++ -std=c++17 -O3 -I odin-dds/external/dds/include score.cpp odin-dds/lib/dds.a -pthread -o score
+          ./score
+      - name: Persist discovery result
+        run: |
+          set -euo pipefail
+          mkdir -p results/mb09-rc24-jt2353-hl8
+          python3 - <<'PY'
+          import json,os
+          rows=[];c={'BETTER':0,'WORSE':0,'EQUIVALENT':0};net=0
+          for l in open('dds.tsv'):
+            z=l.rstrip().split('\t');idx=int(z[0]);seed=int(z[1]);ta,sa,tb,sb,par=map(int,z[2:7]);ga=abs(sa-par);gb=abs(sb-par);d=gb-ga;v='BETTER' if d<0 else 'WORSE' if d>0 else 'EQUIVALENT';c[v]+=1;net+=d;rows.append({'index':idx,'seed':seed,'baseline_tricks':ta,'baseline_ns_score':sa,'candidate_tricks':tb,'candidate_ns_score':sb,'dealer_par_ns_score':par,'baseline_gap':ga,'candidate_gap':gb,'gap_delta':d,'verdict':v})
+          status='PROMISING' if c['WORSE']==0 and net<=0 else 'REJECTED'
+          out={'status':status,'stage':'discovery-only; independent fresh validation required before GREEN','scope':'MB09-RC24 exact one-level diamond-overcall exception: S2-H3-D5-C3, HL=8, exactly one top honor, JT in diamonds without QJ -> PASS instead of marginal 1D quality exception','fresh_master_seed':1018000000001,'scanned_prefix_deals':704000,'changed_auctions':3,'changed_contracts':3,**c,'net_dds_gap_delta':net,'current_critic_sha256':os.environ['CURRENT_CRITIC_SHA256'],'candidate_critic_sha256':os.environ['CANDIDATE_CRITIC_SHA256'],'dds_runtime_sha256':os.environ['DDS_A_SHA256'],'rows':rows}
+          json.dump(out,open('results/mb09-rc24-jt2353-hl8/DISCOVERY_TRUE_DDS.json','w'),indent=2);print(json.dumps(out,indent=2))
+          PY
+          git config user.name 'github-actions[bot]';git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git pull --rebase origin main
+          git add results/mb09-rc24-jt2353-hl8/DISCOVERY_TRUE_DDS.json
+          git diff --cached --quiet || git commit -m 'Record MB09 RC24 discovery true DDS'
+          git push
