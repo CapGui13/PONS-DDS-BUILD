@@ -1,0 +1,223 @@
+[
+  {
+    "dimensions": "variant+openerSuit+openerLen",
+    "variant": "QJ9",
+    "openerSuit": "H",
+    "openerLen": 3,
+    "n": 4,
+    "BETTER": 3,
+    "WORSE": 0,
+    "EQUIVALENT": 1,
+    "net": -1330
+  },
+  {
+    "dimensions": "variant+openerLen",
+    "variant": "QJT",
+    "openerLen": 1,
+    "n": 8,
+    "BETTER": 3,
+    "WORSE": 0,
+    "EQUIVALENT": 5,
+    "net": -1050
+  },
+  {
+    "dimensions": "shape+variant",
+    "shape": "5-4-3-1",
+    "variant": "QJT",
+    "n": 3,
+    "BETTER": 2,
+    "WORSE": 0,
+    "EQUIVALENT": 1,
+    "net": -620
+  },
+  {
+    "dimensions": "shape+openerSuit",
+    "shape": "5-4-3-1",
+    "openerSuit": "C",
+    "n": 3,
+    "BETTER": 2,
+    "WORSE": 0,
+    "EQUIVALENT": 1,
+    "net": -620
+  },
+  {
+    "dimensions": "shape+openerLen",
+    "shape": "5-4-3-1",
+    "openerLen": 1,
+    "n": 3,
+    "BETTER": 2,
+    "WORSE": 0,
+    "EQUIVALENT": 1,
+    "net": -620
+  },
+  {
+    "dimensions": "shape+variant+openerSuit",
+    "shape": "5-4-3-1",
+    "variant": "QJT",
+    "openerSuit": "C",
+    "n": 3,
+    "BETTER": 2,
+    "WORSE": 0,
+    "EQUIVALENT": 1,
+    "net": -620
+  },
+  {
+    "dimensions": "shape+variant+openerLen",
+    "shape": "5-4-3-1",
+    "variant": "QJT",
+    "openerLen": 1,
+    "n": 3,
+    "BETTER": 2,
+    "WORSE": 0,
+    "EQUIVALENT": 1,
+    "net": -620
+  },
+  {
+    "dimensions": "shape+openerSuit+openerLen",
+    "shape": "5-4-3-1",
+    "openerSuit": "C",
+    "openerLen": 1,
+    "n": 3,
+    "BETTER": 2,
+    "WORSE": 0,
+    "EQUIVALENT": 1,
+    "net": -620
+  },
+  {
+    "dimensions": "variant+openerSuit+openerLen",
+    "variant": "QJT",
+    "openerSuit": "C",
+    "openerLen": 1,
+    "n": 3,
+    "BETTER": 2,
+    "WORSE": 0,
+    "EQUIVALENT": 1,
+    "net": -620
+  },
+  {
+    "dimensions": "variant+openerSuit+openerLen",
+    "variant": "QJT",
+    "openerSuit": "C",
+    "openerLen": 4,
+    "n": 4,
+    "BETTER": 3,
+    "WORSE": 0,
+    "EQUIVALENT": 1,
+    "net": -500
+  },
+  {
+    "dimensions": "shape+variant",
+    "shape": "5-3-2-3",
+    "variant": "QJ9",
+    "n": 7,
+    "BETTER": 2,
+    "WORSE": 0,
+    "EQUIVALENT": 5,
+    "net": -500
+  },
+  {
+    "dimensions": "variant+openerSuit+openerLen",
+    "variant": "QJT",
+    "openerSuit": "D",
+    "openerLen": 1,
+    "n": 3,
+    "BETTER": 1,
+    "WORSE": 0,
+    "EQUIVALENT": 2,
+    "net": -430
+  },
+  {
+    "dimensions": "shape+openerLen",
+    "shape": "5-3-2-3",
+    "openerLen": 3,
+    "n": 4,
+    "BETTER": 2,
+    "WORSE": 0,
+    "EQUIVALENT": 2,
+    "net": -390
+  },
+  {
+    "dimensions": "shape+variant+openerSuit",
+    "shape": "5-3-2-3",
+    "variant": "QJ9",
+    "openerSuit": "D",
+    "n": 5,
+    "BETTER": 1,
+    "WORSE": 0,
+    "EQUIVALENT": 4,
+    "net": -250
+  },
+  {
+    "dimensions": "shape+variant+openerLen",
+    "shape": "5-3-2-3",
+    "variant": "QJ9",
+    "openerLen": 2,
+    "n": 5,
+    "BETTER": 1,
+    "WORSE": 0,
+    "EQUIVALENT": 4,
+    "net": -250
+  },
+  {
+    "dimensions": "shape+variant",
+    "shape": "5-1-4-3",
+    "variant": "QJT",
+    "n": 3,
+    "BETTER": 0,
+    "WORSE": 0,
+    "EQUIVALENT": 3,
+    "net": 0
+  },
+  {
+    "dimensions": "shape+openerSuit",
+    "shape": "5-1-4-3",
+    "openerSuit": "H",
+    "n": 3,
+    "BETTER": 0,
+    "WORSE": 0,
+    "EQUIVALENT": 3,
+    "net": 0
+  },
+  {
+    "dimensions": "shape+openerLen",
+    "shape": "5-1-4-3",
+    "openerLen": 1,
+    "n": 3,
+    "BETTER": 0,
+    "WORSE": 0,
+    "EQUIVALENT": 3,
+    "net": 0
+  },
+  {
+    "dimensions": "openerSuit+openerLen",
+    "openerSuit": "H",
+    "openerLen": 1,
+    "n": 3,
+    "BETTER": 0,
+    "WORSE": 0,
+    "EQUIVALENT": 3,
+    "net": 0
+  },
+  {
+    "dimensions": "shape+openerSuit+openerLen",
+    "shape": "5-1-4-3",
+    "openerSuit": "H",
+    "openerLen": 1,
+    "n": 3,
+    "BETTER": 0,
+    "WORSE": 0,
+    "EQUIVALENT": 3,
+    "net": 0
+  },
+  {
+    "dimensions": "variant+openerSuit+openerLen",
+    "variant": "QJT",
+    "openerSuit": "C",
+    "openerLen": 3,
+    "n": 3,
+    "BETTER": 0,
+    "WORSE": 0,
+    "EQUIVALENT": 3,
+    "net": 0
+  }
+]
