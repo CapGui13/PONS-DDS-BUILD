@@ -1,0 +1,289 @@
+name: Solve MB09 500K changed-contract DDS
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/solve-mb09-500k-dds.yml'
+
+permissions:
+  contents: write
+
+env:
+  ODIN_COMMIT: 38fcd537dd6c7dec7ef596e861551f1b278f2f98
+  DDS_UPSTREAM_COMMIT: 7219c956f4ed9a9f8d1585e9a1a2c57465745ac5
+  DDS_A_SHA256: e5c7bcdcf96d3ed24b14b2840303a0d0936b05419de463809f68982c565c7f4c
+  B64_SHA256: 15a8fbaa147906bf197f168a49764fb3cd7fd4b98c75dd2d470b35a9c9ce602d
+  XZ_SHA256: 1ae3d77b89e862d95fa771cd2e3fe648fbf6c20e282a84c1eb1f4532ddc6c56e
+  BIN_SHA256: 8981d03e6eeca8f843cf7a526b5e8dcb2757e6eab147c7fc00df82c3d0bae68b
+  EXPECTED_ROWS: '67053'
+  PARTS: '20'
+
+jobs:
+  prepare:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Reconstruct and verify immutable index payload
+        run: |
+          set -euo pipefail
+          cat \
+            inputs/mb09_dds_v2_b64/part_00 \
+            inputs/mb09_indices_b64/part_01 \
+            inputs/mb09_indices_b64/part_02 \
+            inputs/mb09_indices_b64/part_03 \
+            inputs/mb09_indices_b64/part_04 \
+            | tr -d '\r\n' > indices.b64
+          test "$(wc -c < indices.b64)" = '49056'
+          test "$(sha256sum indices.b64 | awk '{print $1}')" = "$B64_SHA256"
+          base64 -d indices.b64 > indices.bin.xz
+          test "$(sha256sum indices.bin.xz | awk '{print $1}')" = "$XZ_SHA256"
+          xz -t indices.bin.xz
+          xz -dc indices.bin.xz > indices.bin
+          test "$(sha256sum indices.bin | awk '{print $1}')" = "$BIN_SHA256"
+      - name: Decode and validate 67053 global indices
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import os, struct
+          b=open('indices.bin','rb').read()
+          assert b[:6] == b'M09I1\0'
+          n=struct.unpack_from('<I',b,6)[0]
+          assert n == int(os.environ['EXPECTED_ROWS'])
+          off=10; prev=-1; vals=[]
+          for _ in range(n):
+              x=0; shift=0
+              while True:
+                  c=b[off]; off+=1; x |= (c & 127) << shift
+                  if not (c & 128): break
+                  shift += 7
+              idx=prev+x; prev=idx; vals.append(idx)
+          assert off == len(b)
+          assert len(vals)==len(set(vals))==n
+          assert all(a<b for a,b in zip(vals,vals[1:]))
+          assert vals[0]==9 and vals[-1]==499978
+          assert all(0 <= x < 500000 for x in vals)
+          with open('indices.txt','w') as f:
+              f.write('\n'.join(map(str,vals))+'\n')
+          print('rows',n,'first',vals[0],'last',vals[-1])
+          PY
+          test "$(wc -l < indices.txt)" = "$EXPECTED_ROWS"
+          sha256sum indices.b64 indices.bin.xz indices.bin indices.txt | tee INPUT_SHA256SUMS.txt
+      - name: Upload validated indices
+        uses: actions/upload-artifact@v4
+        with:
+          name: mb09-validated-indices
+          path: |
+            indices.txt
+            INPUT_SHA256SUMS.txt
+          compression-level: 9
+          retention-days: 7
+
+  build-dds:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Fetch pinned DDS vendor
+        run: |
+          set -euo pipefail
+          git clone https://github.com/enerqi/odin-dds.git odin-dds
+          git -C odin-dds checkout "$ODIN_COMMIT"
+          test "$(git -C odin-dds rev-parse HEAD)" = "$ODIN_COMMIT"
+          grep -q "$DDS_UPSTREAM_COMMIT" odin-dds/external/dds/VENDORED.md
+      - name: Build and verify pinned DDS 2.9.1
+        run: |
+          set -euo pipefail
+          make -C odin-dds/src
+          test -s odin-dds/lib/dds.a
+          test "$(sha256sum odin-dds/lib/dds.a | awk '{print $1}')" = "$DDS_A_SHA256"
+          mkdir -p runtime/include runtime/provenance
+          cp odin-dds/lib/dds.a runtime/dds.a
+          cp odin-dds/external/dds/include/dll.h runtime/include/dll.h
+          cp odin-dds/external/dds/include/portab.h runtime/include/portab.h
+          cp odin-dds/external/dds/VENDORED.md runtime/provenance/VENDORED.md
+          printf 'ODIN_COMMIT=%s\nDDS_UPSTREAM_COMMIT=%s\nDDS_A_SHA256=%s\n' "$ODIN_COMMIT" "$DDS_UPSTREAM_COMMIT" "$DDS_A_SHA256" > runtime/PROVENANCE.txt
+      - name: Upload pinned DDS runtime
+        uses: actions/upload-artifact@v4
+        with:
+          name: mb09-pinned-dds-runtime
+          path: runtime/
+          compression-level: 9
+          retention-days: 7
+
+  solve:
+    needs: [prepare, build-dds]
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        part: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: mb09-validated-indices
+          path: input
+      - uses: actions/download-artifact@v4
+        with:
+          name: mb09-pinned-dds-runtime
+          path: dds-runtime
+      - name: Verify runtime and generate deterministic deal partition
+        env:
+          PART: ${{ matrix.part }}
+        run: |
+          set -euo pipefail
+          test "$(sha256sum dds-runtime/dds.a | awk '{print $1}')" = "$DDS_A_SHA256"
+          python3 - <<'PY'
+          import os
+          MASK=(1<<64)-1; RANKS='AKQJT98765432'; SUITS='SHDC'; SEATS='NESW'
+          VUL=['None','NS','EW','Both','NS','EW','Both','None','EW','Both','None','NS','Both','None','NS','EW']
+          class SM:
+              def __init__(self,s): self.x=s&MASK
+              def next(self):
+                  self.x=(self.x+0x9E3779B97F4A7C15)&MASK; z=self.x
+                  z=((z^(z>>30))*0xBF58476D1CE4E5B9)&MASK
+                  z=((z^(z>>27))*0x94D049BB133111EB)&MASK
+                  return (z^(z>>31))&MASK
+              def bounded(self,n):
+                  limit=((1<<64)//n)*n
+                  while True:
+                      x=self.next()
+                      if x<limit:return x%n
+          def deal(seed):
+              d=[(s,r) for s in SUITS for r in RANKS]; q=SM(seed)
+              for i in range(51,0,-1):
+                  j=q.bounded(i+1); d[i],d[j]=d[j],d[i]
+              rp={r:i for i,r in enumerate(RANKS)}
+              h={p:{s:'' for s in SUITS} for p in SEATS}
+              for pi,p in enumerate(SEATS):
+                  for s,r in d[13*pi:13*(pi+1)]: h[p][s]+=r
+                  for s in SUITS: h[p][s]=''.join(sorted(h[p][s],key=rp.get))
+              return h
+          def pbn(h): return 'N:'+' '.join('.'.join(h[p][s] or '-' for s in SUITS) for p in SEATS)
+          part=int(os.environ['PART']); parts=int(os.environ['PARTS']); out=0
+          with open('input/indices.txt') as src, open('part.tsv','w') as dst:
+              for pos,line in enumerate(src):
+                  if pos % parts != part: continue
+                  idx=int(line); si=idx//100000; local=idx%100000
+                  seed=994000000001 + si*100000000 + local
+                  h=deal(seed)
+                  dst.write(f'{idx}\t{seed}\t{SEATS[local%4]}\t{VUL[local%16]}\t{pbn(h)}\n')
+                  out+=1
+          assert out>0
+          print('part',part,'rows',out)
+          PY
+      - name: Materialize DDS table + DealerPar runner
+        run: |
+          cat > dds_mb09_runner.cpp <<'CPP'
+          #include <algorithm>
+          #include <cstring>
+          #include <fstream>
+          #include <iostream>
+          #include <string>
+          #include <vector>
+          #include "dll.h"
+          struct Row { long long idx{}; unsigned long long seed{}; char dealer{}; std::string vul,pbn; };
+          static std::vector<std::string> split(const std::string&s){ std::vector<std::string>v; size_t p=0; while(true){size_t q=s.find('\t',p); if(q==std::string::npos){v.push_back(s.substr(p));break;}v.push_back(s.substr(p,q-p));p=q+1;}return v; }
+          static int hand(char c){return c=='N'?0:c=='E'?1:c=='S'?2:3;}
+          static int vul(const std::string&v){return v=="None"?0:v=="Both"?1:v=="NS"?2:3;}
+          static std::string parText(const parResultsDealer&p){std::string s;for(int i=0;i<p.number;i++){if(i)s.push_back('|');s+=p.contracts[i];}return s;}
+          int main(int argc,char**argv){
+            if(argc!=3)return 2; std::ifstream in(argv[1]); std::ofstream out(argv[2]); if(!in||!out)return 2;
+            std::vector<Row> rows; std::string line;
+            while(std::getline(in,line)){if(line.empty())continue;auto f=split(line);if(f.size()!=5)return 3;Row r;r.idx=std::stoll(f[0]);r.seed=std::stoull(f[1]);r.dealer=f[2][0];r.vul=f[3];r.pbn=f[4];rows.push_back(std::move(r));}
+            SetMaxThreads(0); DDSInfo info{};GetDDSInfo(&info);std::cerr<<"DDS="<<info.versionString<<" rows="<<rows.size()<<"\n";
+            const size_t B=40; int filter[5]={0,0,0,0,0}; long long errors=0; size_t done=0;
+            for(size_t base=0;base<rows.size();base+=B){
+              size_t n=std::min(B,rows.size()-base); ddTableDealsPBN deals{};deals.noOfTables=(int)n;
+              for(size_t i=0;i<n;i++)std::strncpy(deals.deals[i].cards,rows[base+i].pbn.c_str(),sizeof(deals.deals[i].cards)-1);
+              ddTablesRes res{}; allParResults dummy{}; int rc=CalcAllTablesPBN(&deals,-1,filter,&res,&dummy);
+              if(rc!=RETURN_NO_FAULT){
+                char msg[80]{};ErrorMessage(rc,msg);std::cerr<<"batch error "<<rc<<" "<<msg<<" base="<<base<<"\n";
+                res.noOfBoards=(int)n;
+                for(size_t i=0;i<n;i++){ddTableDealPBN d{};std::strncpy(d.cards,rows[base+i].pbn.c_str(),sizeof(d.cards)-1);int rr=CalcDDtablePBN(d,&res.results[i]);if(rr!=RETURN_NO_FAULT){errors++;for(int s=0;s<5;s++)for(int h=0;h<4;h++)res.results[i].resTable[s][h]=-99;}}
+              }
+              for(size_t i=0;i<n;i++){
+                auto&r=rows[base+i];auto&t=res.results[i];parResultsDealer pr{};int prc=DealerPar(&t,&pr,hand(r.dealer),vul(r.vul));if(prc!=RETURN_NO_FAULT)errors++;
+                out<<r.idx<<'\t'<<r.seed<<'\t'<<r.dealer<<'\t'<<r.vul<<'\t'<<prc<<'\t'<<pr.score<<'\t'<<parText(pr)<<'\t';
+                for(int s=0;s<5;s++)for(int h=0;h<4;h++){if(s||h)out<<',';out<<t.resTable[s][h];}out<<'\n';
+              }
+              done+=n;if(done%1000==0||done==rows.size())std::cerr<<"done="<<done<<" errors="<<errors<<"\n";
+            }
+            FreeMemory();std::cerr<<"COMPLETE rows="<<done<<" errors="<<errors<<"\n";return errors?4:0;
+          }
+          CPP
+          g++ -std=c++17 -O3 -I dds-runtime/include dds_mb09_runner.cpp dds-runtime/dds.a -pthread -o dds_mb09_runner
+      - name: Solve true DDS table and DealerPar
+        env:
+          PART: ${{ matrix.part }}
+        run: |
+          set -euo pipefail
+          /usr/bin/time -v ./dds_mb09_runner part.tsv "DDS_PART_${PART}.tsv" 2> "DDS_PART_${PART}.log"
+          test "$(wc -l < "DDS_PART_${PART}.tsv")" = "$(wc -l < part.tsv)"
+          grep -q 'errors=0' "DDS_PART_${PART}.log"
+          tail -20 "DDS_PART_${PART}.log"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mb09-dds-part-${{ matrix.part }}
+          path: |
+            DDS_PART_${{ matrix.part }}.tsv
+            DDS_PART_${{ matrix.part }}.log
+          compression-level: 9
+          retention-days: 7
+
+  aggregate:
+    needs: solve
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: mb09-dds-part-*
+          path: parts
+          merge-multiple: true
+      - name: Aggregate and strictly validate all DDS rows
+        run: |
+          set -euo pipefail
+          cat parts/DDS_PART_*.tsv | sort -t $'\t' -k1,1n > DDS_MB09_RESULTS.tsv
+          python3 - <<'PY'
+          import os,hashlib,json
+          exp=int(os.environ['EXPECTED_ROWS']); rows=[]
+          for line in open('DDS_MB09_RESULTS.tsv'):
+              z=line.rstrip('\n').split('\t'); assert len(z)==8,(len(z),z[:3])
+              idx=int(z[0]); seed=int(z[1]); prc=int(z[4]); par=int(z[5]); vals=list(map(int,z[7].split(',')))
+              assert prc==1
+              assert len(vals)==20 and all(0<=x<=13 for x in vals)
+              si=idx//100000; local=idx%100000
+              assert seed==994000000001+si*100000000+local
+              rows.append(idx)
+          assert len(rows)==exp
+          assert len(set(rows))==exp
+          assert rows==sorted(rows)
+          assert rows[0]==9 and rows[-1]==499978
+          sha=hashlib.sha256(open('DDS_MB09_RESULTS.tsv','rb').read()).hexdigest()
+          summary={'status':'GREEN','rows':len(rows),'unique_indices':len(set(rows)),'first_index':rows[0],'last_index':rows[-1],'dds_errors':0,'dds_results_sha256':sha,'dds_runtime_sha256':os.environ['DDS_A_SHA256'],'odin_commit':os.environ['ODIN_COMMIT'],'dds_upstream_commit':os.environ['DDS_UPSTREAM_COMMIT']}
+          open('DDS_MB09_SUMMARY.json','w').write(json.dumps(summary,indent=2)+'\n')
+          print(json.dumps(summary,indent=2))
+          PY
+          gzip -9 -n -c DDS_MB09_RESULTS.tsv > DDS_MB09_RESULTS.tsv.gz
+          sha256sum DDS_MB09_RESULTS.tsv DDS_MB09_RESULTS.tsv.gz DDS_MB09_SUMMARY.json > DDS_MB09_SHA256SUMS.txt
+          cat DDS_MB09_SHA256SUMS.txt
+      - name: Persist compact final results in repository
+        run: |
+          set -euo pipefail
+          mkdir -p results/mb09-500k-dds
+          cp DDS_MB09_RESULTS.tsv.gz DDS_MB09_SUMMARY.json DDS_MB09_SHA256SUMS.txt results/mb09-500k-dds/
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add results/mb09-500k-dds/
+          git diff --cached --quiet || git commit -m 'Add MB09 500K true DDS results'
+          git push
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mb09-dds-final
+          path: |
+            DDS_MB09_RESULTS.tsv.gz
+            DDS_MB09_SUMMARY.json
+            DDS_MB09_SHA256SUMS.txt
+          compression-level: 9
+          retention-days: 14
