@@ -1,0 +1,61 @@
+name: Gate MB09-RC11 H2D2C5 final
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/gate-mb09-rc11-h2d2c5-final.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  ODIN_COMMIT: 38fcd537dd6c7dec7ef596e861551f1b278f2f98
+  DDS_UPSTREAM_COMMIT: 7219c956f4ed9a9f8d1585e9a1a2c57465745ac5
+  DDS_A_SHA256: e5c7bcdcf96d3ed24b14b2840303a0d0936b05419de463809f68982c565c7f4c
+  CANDIDATE_CRITIC_SHA256: efc1f857f12d47da6edd70211d5e3169a2ed581f9af2f576e56657c2b85cafdb
+
+jobs:
+  gate:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build pinned DDS and solve
+        run: |
+          set -euo pipefail
+          git clone -q https://github.com/enerqi/odin-dds.git odin-dds
+          git -C odin-dds checkout -q "$ODIN_COMMIT"
+          test "$(git -C odin-dds rev-parse HEAD)" = "$ODIN_COMMIT"
+          grep -q "$DDS_UPSTREAM_COMMIT" odin-dds/external/dds/VENDORED.md
+          make -s -C odin-dds/src
+          test "$(sha256sum odin-dds/lib/dds.a | awk '{print $1}')" = "$DDS_A_SHA256"
+          cat > dds.cpp <<'CPP'
+          #include <cstring>
+          #include <fstream>
+          #include <iostream>
+          #include "dll.h"
+          static int ds(int level,char strain,char declarer,int tricks){int tar=level+6,del=tricks-tar;if(del>=0){int base=(strain=='C'||strain=='D')?20*level:(strain=='H'||strain=='S')?30*level:40+30*(level-1);int z=base;if(del>0)z+=del*((strain=='C'||strain=='D')?20:30);z+=base>=100?300:50;if(level==6)z+=500;else if(level==7)z+=1000;return z;}return -(-del)*50;}
+          int main(){ddTableDealPBN d{};std::strncpy(d.cards,"N:5.K6532.KQ52.962 AQ763.QT.43.AKQ3 984.J984.JT976.5 KJT2.A7.A8.JT874",sizeof(d.cards)-1);ddTableResults t{};SetMaxThreads(0);if(CalcDDtablePBN(d,&t)!=RETURN_NO_FAULT)return 2;int tricks=t.resTable[0][1];parResultsDealer pr{};if(DealerPar(&t,&pr,1,0)!=RETURN_NO_FAULT)return 3;int b=-ds(5,'S','E',tricks);int c=-ds(6,'S','E',tricks);std::cout<<tricks<<"\t"<<b<<"\t"<<c<<"\t"<<pr.score<<"\n";FreeMemory();return 0;}
+          CPP
+          g++ -std=c++17 -O3 -I odin-dds/external/dds/include dds.cpp odin-dds/lib/dds.a -pthread -o dds
+          ./dds > dds.tsv
+      - name: Persist gate
+        run: |
+          set -euo pipefail
+          mkdir -p results/mb09-rc11-h2d2c5
+          python3 - <<'PY'
+          import json,os
+          tricks,b,c,par=map(int,open('dds.tsv').read().strip().split('\t'))
+          gb=abs(b-par); gc=abs(c-par); d=gc-gb
+          v='BETTER' if d<0 else 'WORSE' if d>0 else 'EQUIVALENT'
+          status='GREEN' if v!='WORSE' else 'FAIL'
+          out={'status':status,'scope':'MB09-RC11 exact S4-H2-D2-C5 / 18 HLD -> direct fitted 2NT','fresh_deals':500000,'fresh_master_seed':1006000000001,'exhaustive_feature_prefilter_candidates':1237,'target_occurrences':9,'changed_contracts':1,'same_contract_changes':8,'BETTER':1 if v=='BETTER' else 0,'WORSE':1 if v=='WORSE' else 0,'EQUIVALENT':8+(1 if v=='EQUIVALENT' else 0),'net_dds_gap_delta':d,'historical_500k_targeted':9,'historical_verdicts_before_patch':{'BETTER':0,'WORSE':3,'EQUIVALENT':6},'historical_old_gap_delta':2250,'candidate_critic_sha256':os.environ['CANDIDATE_CRITIC_SHA256'],'dds_runtime_sha256':os.environ['DDS_A_SHA256'],'row':{'index':250221,'seed':1006000250222,'baseline_contract':'5S@E:NONE','candidate_contract':'6S@E:NONE','dds_tricks':tricks,'baseline_ns_score':b,'candidate_ns_score':c,'dealer_par_ns_score':par,'baseline_gap':gb,'candidate_gap':gc,'gap_delta':d,'verdict':v}}
+          print(json.dumps(out,indent=2)); json.dump(out,open('results/mb09-rc11-h2d2c5/FRESH_500K_TRUE_DDS_GATE.json','w'),indent=2)
+          if status!='GREEN': raise SystemExit(1)
+          PY
+          git config user.name 'github-actions[bot]'; git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git pull --rebase origin main
+          git add results/mb09-rc11-h2d2c5/FRESH_500K_TRUE_DDS_GATE.json
+          git diff --cached --quiet || git commit -m 'Record MB09 RC11 H2D2C5 fresh 500K true DDS gate'
+          git push
