@@ -1,0 +1,1034 @@
+{
+  "run_id": 32717767959,
+  "status": "in_progress",
+  "conclusion": "",
+  "html_url": "https://github.com/CapGui13/PONS-DDS-BUILD/actions/runs/32717767959",
+  "created_at": "2026-08-24T10:38:07Z",
+  "jobs": [
+    {
+      "id": 97402555784,
+      "name": "prepare",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-08-24T10:38:11Z",
+      "completed_at": "2026-08-24T10:38:27Z",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Reconstruct and verify immutable index payload",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Decode and validate 67053 global indices",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Upload validated indices",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "id": 97402556055,
+      "name": "build-dds",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-08-24T10:38:11Z",
+      "completed_at": "2026-08-24T10:38:31Z",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Fetch pinned DDS vendor",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Build and verify pinned DDS 2.9.1",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Upload pinned DDS runtime",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "id": 97402649913,
+      "name": "solve (1)",
+      "status": "in_progress",
+      "conclusion": null,
+      "started_at": "2026-08-24T10:38:34Z",
+      "completed_at": null,
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/download-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/download-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Verify runtime and generate deterministic deal partition",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Materialize DDS table + DealerPar runner",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Solve true DDS table and DealerPar",
+          "status": "in_progress",
+          "conclusion": null
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "status": "pending",
+          "conclusion": null
+        }
+      ]
+    },
+    {
+      "id": 97402649921,
+      "name": "solve (8)",
+      "status": "in_progress",
+      "conclusion": null,
+      "started_at": "2026-08-24T10:38:34Z",
+      "completed_at": null,
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/download-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/download-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Verify runtime and generate deterministic deal partition",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Materialize DDS table + DealerPar runner",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Solve true DDS table and DealerPar",
+          "status": "in_progress",
+          "conclusion": null
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "status": "pending",
+          "conclusion": null
+        }
+      ]
+    },
+    {
+      "id": 97402649947,
+      "name": "solve (13)",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-08-24T10:38:33Z",
+      "completed_at": "2026-08-24T10:42:24Z",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/download-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/download-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Verify runtime and generate deterministic deal partition",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Materialize DDS table + DealerPar runner",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Solve true DDS table and DealerPar",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "id": 97402649953,
+      "name": "solve (18)",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-08-24T10:38:33Z",
+      "completed_at": "2026-08-24T10:43:37Z",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/download-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/download-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Verify runtime and generate deterministic deal partition",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Materialize DDS table + DealerPar runner",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Solve true DDS table and DealerPar",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "id": 97402649955,
+      "name": "solve (3)",
+      "status": "in_progress",
+      "conclusion": null,
+      "started_at": "2026-08-24T10:38:36Z",
+      "completed_at": null,
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/download-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/download-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Verify runtime and generate deterministic deal partition",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Materialize DDS table + DealerPar runner",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Solve true DDS table and DealerPar",
+          "status": "in_progress",
+          "conclusion": null
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "status": "pending",
+          "conclusion": null
+        }
+      ]
+    },
+    {
+      "id": 97402649959,
+      "name": "solve (6)",
+      "status": "in_progress",
+      "conclusion": null,
+      "started_at": "2026-08-24T10:38:34Z",
+      "completed_at": null,
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/download-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/download-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Verify runtime and generate deterministic deal partition",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Materialize DDS table + DealerPar runner",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Solve true DDS table and DealerPar",
+          "status": "in_progress",
+          "conclusion": null
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "status": "pending",
+          "conclusion": null
+        }
+      ]
+    },
+    {
+      "id": 97402649979,
+      "name": "solve (4)",
+      "status": "in_progress",
+      "conclusion": null,
+      "started_at": "2026-08-24T10:38:33Z",
+      "completed_at": null,
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/download-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/download-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Verify runtime and generate deterministic deal partition",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Materialize DDS table + DealerPar runner",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Solve true DDS table and DealerPar",
+          "status": "in_progress",
+          "conclusion": null
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "status": "pending",
+          "conclusion": null
+        }
+      ]
+    },
+    {
+      "id": 97402649987,
+      "name": "solve (11)",
+      "status": "in_progress",
+      "conclusion": null,
+      "started_at": "2026-08-24T10:38:34Z",
+      "completed_at": null,
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/download-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/download-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Verify runtime and generate deterministic deal partition",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Materialize DDS table + DealerPar runner",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Solve true DDS table and DealerPar",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "status": "in_progress",
+          "conclusion": null
+        }
+      ]
+    },
+    {
+      "id": 97402649993,
+      "name": "solve (9)",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-08-24T10:38:34Z",
+      "completed_at": "2026-08-24T10:43:38Z",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/download-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/download-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Verify runtime and generate deterministic deal partition",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Materialize DDS table + DealerPar runner",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Solve true DDS table and DealerPar",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "id": 97402649995,
+      "name": "solve (12)",
+      "status": "in_progress",
+      "conclusion": null,
+      "started_at": "2026-08-24T10:38:34Z",
+      "completed_at": null,
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/download-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/download-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Verify runtime and generate deterministic deal partition",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Materialize DDS table + DealerPar runner",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Solve true DDS table and DealerPar",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "id": 97402650007,
+      "name": "solve (5)",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-08-24T10:38:34Z",
+      "completed_at": "2026-08-24T10:43:30Z",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/download-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/download-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Verify runtime and generate deterministic deal partition",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Materialize DDS table + DealerPar runner",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Solve true DDS table and DealerPar",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "id": 97402650029,
+      "name": "solve (0)",
+      "status": "in_progress",
+      "conclusion": null,
+      "started_at": "2026-08-24T10:38:34Z",
+      "completed_at": null,
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/download-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/download-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Verify runtime and generate deterministic deal partition",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Materialize DDS table + DealerPar runner",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Solve true DDS table and DealerPar",
+          "status": "in_progress",
+          "conclusion": null
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "status": "pending",
+          "conclusion": null
+        }
+      ]
+    },
+    {
+      "id": 97402650033,
+      "name": "solve (10)",
+      "status": "in_progress",
+      "conclusion": null,
+      "started_at": "2026-08-24T10:38:34Z",
+      "completed_at": null,
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/download-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/download-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Verify runtime and generate deterministic deal partition",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Materialize DDS table + DealerPar runner",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Solve true DDS table and DealerPar",
+          "status": "in_progress",
+          "conclusion": null
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "status": "pending",
+          "conclusion": null
+        }
+      ]
+    },
+    {
+      "id": 97402650034,
+      "name": "solve (7)",
+      "status": "in_progress",
+      "conclusion": null,
+      "started_at": "2026-08-24T10:38:34Z",
+      "completed_at": null,
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/download-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/download-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Verify runtime and generate deterministic deal partition",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Materialize DDS table + DealerPar runner",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Solve true DDS table and DealerPar",
+          "status": "in_progress",
+          "conclusion": null
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "status": "pending",
+          "conclusion": null
+        }
+      ]
+    },
+    {
+      "id": 97402650043,
+      "name": "solve (16)",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-08-24T10:38:34Z",
+      "completed_at": "2026-08-24T10:43:35Z",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/download-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/download-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Verify runtime and generate deterministic deal partition",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Materialize DDS table + DealerPar runner",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Solve true DDS table and DealerPar",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "id": 97402650083,
+      "name": "solve (15)",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-08-24T10:38:33Z",
+      "completed_at": "2026-08-24T10:43:33Z",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/download-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/download-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Verify runtime and generate deterministic deal partition",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Materialize DDS table + DealerPar runner",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Solve true DDS table and DealerPar",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "id": 97402650093,
+      "name": "solve (19)",
+      "status": "in_progress",
+      "conclusion": null,
+      "started_at": "2026-08-24T10:38:35Z",
+      "completed_at": null,
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/download-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/download-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Verify runtime and generate deterministic deal partition",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Materialize DDS table + DealerPar runner",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Solve true DDS table and DealerPar",
+          "status": "in_progress",
+          "conclusion": null
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "status": "pending",
+          "conclusion": null
+        }
+      ]
+    },
+    {
+      "id": 97402650110,
+      "name": "solve (17)",
+      "status": "in_progress",
+      "conclusion": null,
+      "started_at": "2026-08-24T10:42:26Z",
+      "completed_at": null,
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/download-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/download-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Verify runtime and generate deterministic deal partition",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Materialize DDS table + DealerPar runner",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Solve true DDS table and DealerPar",
+          "status": "in_progress",
+          "conclusion": null
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "status": "pending",
+          "conclusion": null
+        }
+      ]
+    },
+    {
+      "id": 97402650118,
+      "name": "solve (14)",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-08-24T10:38:34Z",
+      "completed_at": "2026-08-24T10:43:37Z",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/download-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/download-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Verify runtime and generate deterministic deal partition",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Materialize DDS table + DealerPar runner",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Solve true DDS table and DealerPar",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "id": 97402650146,
+      "name": "solve (2)",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-08-24T10:38:34Z",
+      "completed_at": "2026-08-24T10:43:34Z",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/download-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/download-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Verify runtime and generate deterministic deal partition",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Materialize DDS table + DealerPar runner",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Solve true DDS table and DealerPar",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    }
+  ]
+}
