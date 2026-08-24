@@ -1,0 +1,71 @@
+name: Diagnose MB09 index payload
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/diagnose-mb09-indices.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Diagnose payload
+        run: |
+          set -u
+          mkdir -p results/mb09-500k-dds
+          REPORT=results/mb09-500k-dds/INPUT_DIAG.txt
+          : > "$REPORT"
+          files=(
+            inputs/mb09_dds_v2_b64/part_00
+            inputs/mb09_indices_b64/part_01
+            inputs/mb09_indices_b64/part_02
+            inputs/mb09_indices_b64/part_03
+            inputs/mb09_indices_b64/part_04
+          )
+          for f in "${files[@]}"; do
+            echo "FILE $f" | tee -a "$REPORT"
+            wc -c "$f" | tee -a "$REPORT"
+            sha256sum "$f" | tee -a "$REPORT"
+            tail -c 8 "$f" | od -An -t x1 | tr -s ' ' | tee -a "$REPORT"
+          done
+          cat "${files[@]}" | tr -d '\r\n' > /tmp/indices.b64
+          echo "B64_BYTES=$(wc -c < /tmp/indices.b64)" | tee -a "$REPORT"
+          echo "B64_SHA=$(sha256sum /tmp/indices.b64 | awk '{print $1}')" | tee -a "$REPORT"
+          if base64 -d /tmp/indices.b64 > /tmp/indices.bin.xz 2>>"$REPORT"; then
+            echo "BASE64_DECODE=OK" | tee -a "$REPORT"
+            echo "XZ_BYTES=$(wc -c < /tmp/indices.bin.xz)" | tee -a "$REPORT"
+            echo "XZ_SHA=$(sha256sum /tmp/indices.bin.xz | awk '{print $1}')" | tee -a "$REPORT"
+            if xz -t /tmp/indices.bin.xz 2>>"$REPORT"; then
+              echo "XZ_TEST=OK" | tee -a "$REPORT"
+              xz -dc /tmp/indices.bin.xz > /tmp/indices.bin
+              echo "BIN_BYTES=$(wc -c < /tmp/indices.bin)" | tee -a "$REPORT"
+              echo "BIN_SHA=$(sha256sum /tmp/indices.bin | awk '{print $1}')" | tee -a "$REPORT"
+              python3 - <<'PY' | tee -a "$REPORT"
+          import struct
+          b=open('/tmp/indices.bin','rb').read()
+          print('MAGIC',repr(b[:6]))
+          if len(b)>=10:
+              print('N',struct.unpack_from('<I',b,6)[0])
+          PY
+            else
+              echo "XZ_TEST=FAIL" | tee -a "$REPORT"
+            fi
+          else
+            echo "BASE64_DECODE=FAIL" | tee -a "$REPORT"
+          fi
+          cat "$REPORT"
+      - name: Persist diagnosis
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git pull --rebase origin main
+          git add results/mb09-500k-dds/INPUT_DIAG.txt
+          git diff --cached --quiet || git commit -m 'Diagnose MB09 index payload'
+          git push
