@@ -1,0 +1,51 @@
+{
+  "status": "GREEN",
+  "scope": "MB09-RC02 HCP=8, max suit <=4, both majors <=3 over Landy -> PASS",
+  "fresh_deals": 20000,
+  "changed_auctions": 3,
+  "changed_contracts": 3,
+  "BETTER": 2,
+  "WORSE": 0,
+  "EQUIVALENT": 1,
+  "net_dds_gap_delta": -1090,
+  "candidate_critic_sha256": "1ded9f1bd29fe2cd9da072027db1ecc891f3df3d818cf8752f99b66c2292b16e",
+  "dds_runtime_sha256": "e5c7bcdcf96d3ed24b14b2840303a0d0936b05419de463809f68982c565c7f4c",
+  "rows": [
+    {
+      "index": 2860,
+      "baseline_tricks": 4,
+      "baseline_ns_score": 1400,
+      "candidate_tricks": 8,
+      "candidate_ns_score": -110,
+      "dealer_par_ns_score": 120,
+      "baseline_gap": 1280,
+      "candidate_gap": 230,
+      "gap_delta": -1050,
+      "verdict": "BETTER"
+    },
+    {
+      "index": 16747,
+      "baseline_tricks": 10,
+      "baseline_ns_score": 170,
+      "candidate_tricks": 10,
+      "candidate_ns_score": 170,
+      "dealer_par_ns_score": 300,
+      "baseline_gap": 130,
+      "candidate_gap": 130,
+      "gap_delta": 0,
+      "verdict": "EQUIVALENT"
+    },
+    {
+      "index": 17567,
+      "baseline_tricks": 6,
+      "baseline_ns_score": -150,
+      "candidate_tricks": 8,
+      "candidate_ns_score": -110,
+      "dealer_par_ns_score": 110,
+      "baseline_gap": 260,
+      "candidate_gap": 220,
+      "gap_delta": -40,
+      "verdict": "BETTER"
+    }
+  ]
+}
