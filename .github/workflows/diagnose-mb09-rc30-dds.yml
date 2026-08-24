@@ -1,0 +1,84 @@
+name: Diagnose MB09-RC30 DDS gate
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/diagnose-mb09-rc30-dds.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify input
+        id: verify
+        continue-on-error: true
+        run: |
+          set -x
+          wc -l inputs/mb09_rc30_landy_s4441_h8_fresh3m_changed19.tsv
+          test "$(wc -l < inputs/mb09_rc30_landy_s4441_h8_fresh3m_changed19.tsv)" = 19
+          awk -F '\t' 'NF!=15{print NR,NF;bad=1} END{exit bad}' inputs/mb09_rc30_landy_s4441_h8_fresh3m_changed19.tsv
+
+      - name: Build pinned DDS
+        id: build
+        continue-on-error: true
+        run: |
+          set -x
+          git clone -q https://github.com/enerqi/odin-dds.git odin-dds
+          git -C odin-dds checkout -q 38fcd537dd6c7dec7ef596e861551f1b278f2f98
+          git -C odin-dds rev-parse HEAD
+          grep 7219c956f4ed9a9f8d1585e9a1a2c57465745ac5 odin-dds/external/dds/VENDORED.md
+          make -C odin-dds/src
+          sha256sum odin-dds/lib/dds.a
+          test "$(sha256sum odin-dds/lib/dds.a | awk '{print $1}')" = e5c7bcdcf96d3ed24b14b2840303a0d0936b05419de463809f68982c565c7f4c
+
+      - name: Compile minimal DDS probe
+        id: compile
+        continue-on-error: true
+        run: |
+          set -x
+          test -f odin-dds/lib/dds.a
+          cat > probe.cpp <<'CPP'
+          #include <iostream>
+          #include "dll.h"
+          int main(){ SetMaxThreads(0); std::cout << "dds-ok\n"; FreeMemory(); return 0; }
+          CPP
+          g++ -std=c++17 -O2 -I odin-dds/external/dds/include probe.cpp odin-dds/lib/dds.a -pthread -o probe
+          ./probe
+
+      - name: Persist diagnostic
+        if: always()
+        env:
+          VERIFY_OUTCOME: ${{ steps.verify.outcome }}
+          BUILD_OUTCOME: ${{ steps.build.outcome }}
+          COMPILE_OUTCOME: ${{ steps.compile.outcome }}
+        run: |
+          set -e
+          mkdir -p results/mb09-rc30-landy-s4441-h8
+          python3 - <<'PY'
+          import json, os, subprocess
+          p='inputs/mb09_rc30_landy_s4441_h8_fresh3m_changed19.tsv'
+          d={
+            'verify_outcome': os.getenv('VERIFY_OUTCOME'),
+            'build_outcome': os.getenv('BUILD_OUTCOME'),
+            'compile_outcome': os.getenv('COMPILE_OUTCOME'),
+            'input_lines': sum(1 for _ in open(p)) if os.path.exists(p) else None,
+            'dds_archive_exists': os.path.exists('odin-dds/lib/dds.a'),
+          }
+          if os.path.exists('odin-dds/lib/dds.a'):
+            d['dds_archive_sha256']=subprocess.check_output(['sha256sum','odin-dds/lib/dds.a'],text=True).split()[0]
+          json.dump(d,open('results/mb09-rc30-landy-s4441-h8/DIAGNOSTIC.json','w'),indent=2)
+          print(json.dumps(d,indent=2))
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git pull --rebase origin main
+          git add results/mb09-rc30-landy-s4441-h8/DIAGNOSTIC.json
+          git diff --cached --quiet || git commit -m 'Record MB09 RC30 DDS diagnostic'
+          git push
