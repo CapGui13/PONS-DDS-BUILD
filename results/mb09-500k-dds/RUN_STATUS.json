@@ -1,0 +1,39 @@
+{
+  "run_id": 32716866291,
+  "status": "completed",
+  "conclusion": "failure",
+  "html_url": "https://github.com/CapGui13/PONS-DDS-BUILD/actions/runs/32716866291",
+  "created_at": "2026-08-24T10:27:23Z",
+  "jobs": [
+    {
+      "id": 97399870653,
+      "name": "prepare",
+      "status": "completed",
+      "conclusion": "failure",
+      "failed_steps": [
+        "Reconstruct and verify immutable index payload"
+      ]
+    },
+    {
+      "id": 97399870815,
+      "name": "build-dds",
+      "status": "completed",
+      "conclusion": "success",
+      "failed_steps": []
+    },
+    {
+      "id": 97400003776,
+      "name": "solve",
+      "status": "completed",
+      "conclusion": "skipped",
+      "failed_steps": []
+    },
+    {
+      "id": 97400004210,
+      "name": "aggregate",
+      "status": "completed",
+      "conclusion": "skipped",
+      "failed_steps": []
+    }
+  ]
+}
