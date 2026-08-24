@@ -1,0 +1,27 @@
+{
+  "status": "GREEN",
+  "scope": "MB09-RC04 exact 1S response hand: 4S-2H-3D-4C and exactly 16 HLD -> direct fitted 2NT",
+  "fresh_deals": 20000,
+  "prefilter_basis": "chailleyFitHld exact formula: HCP 13 + heart doubleton 1 + ninth-trump bonus 2 = HLD 16; exact shape S4-H2-D3-C4",
+  "prefilter_candidates": 98,
+  "target_occurrences": 3,
+  "changed_contracts": 1,
+  "same_contract_changes": 2,
+  "BETTER": 0,
+  "WORSE": 0,
+  "EQUIVALENT": 3,
+  "net_dds_gap_delta": 0,
+  "historical_500k_targeted": 27,
+  "historical_verdicts_before_patch": {"BETTER": 0, "WORSE": 5, "EQUIVALENT": 22},
+  "historical_old_gap_delta": 3240,
+  "historical_exact_v261_call_restored": 27,
+  "projected_global_dds_improvement": -3240,
+  "candidate_critic_sha256": "49bf2a2cd9b21cf8ee5aa5b71395541923ea341e764c15b983111be729769f09",
+  "dds_runtime_sha256": "e5c7bcdcf96d3ed24b14b2840303a0d0936b05419de463809f68982c565c7f4c",
+  "dds_evidence_reused_from": {"run_id": 32751293095, "job_id": 97508605433, "reason": "DDS is contract/deal dependent; the exact changed-contract deal 10818 and exact 5S-S -> 4S-S contracts were already solved under the same pinned DDS runtime"},
+  "rows": [
+    {"index": 9243, "baseline_contract": "4S@N:NONE", "candidate_contract": "4S@N:NONE", "verdict": "EQUIVALENT", "gap_delta": 0},
+    {"index": 10405, "baseline_contract": "4S@S:NONE", "candidate_contract": "4S@S:NONE", "verdict": "EQUIVALENT", "gap_delta": 0},
+    {"index": 10818, "baseline_contract": "5S@S:NONE", "candidate_contract": "4S@S:NONE", "baseline_tricks": 12, "candidate_tricks": 12, "baseline_ns_score": 480, "candidate_ns_score": 480, "dealer_par_ns_score": 980, "baseline_gap": 500, "candidate_gap": 500, "verdict": "EQUIVALENT", "gap_delta": 0}
+  ]
+}
