@@ -1,0 +1,48 @@
+name: Monitor MB09 repair
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/monitor-mb09-repair.yml'
+
+permissions:
+  actions: read
+  contents: write
+
+jobs:
+  monitor:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - name: Wait for repair run
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p results/mb09-500k-dds
+          for i in $(seq 1 180); do
+            gh api 'repos/CapGui13/PONS-DDS-BUILD/actions/workflows/repair-mb09-boundary.yml/runs?per_page=3' > /tmp/runs.json
+            RUN_ID=$(jq -r '.workflow_runs[0].id // empty' /tmp/runs.json)
+            STATUS=$(jq -r '.workflow_runs[0].status // empty' /tmp/runs.json)
+            CONCLUSION=$(jq -r '.workflow_runs[0].conclusion // empty' /tmp/runs.json)
+            URL=$(jq -r '.workflow_runs[0].html_url // empty' /tmp/runs.json)
+            echo "attempt=$i run=$RUN_ID status=$STATUS conclusion=$CONCLUSION"
+            if [ -n "$RUN_ID" ] && [ "$STATUS" = completed ]; then
+              gh api "repos/CapGui13/PONS-DDS-BUILD/actions/runs/$RUN_ID/jobs?per_page=100" > /tmp/jobs.json
+              jq --arg run_id "$RUN_ID" --arg status "$STATUS" --arg conclusion "$CONCLUSION" --arg url "$URL" '{run_id:($run_id|tonumber),status:$status,conclusion:$conclusion,html_url:$url,jobs:[.jobs[]|{id,name,status,conclusion,failed_steps:[.steps[]?|select(.conclusion=="failure")|.name]}]}' /tmp/jobs.json > results/mb09-500k-dds/REPAIR_RUN_STATUS.json
+              break
+            fi
+            sleep 10
+          done
+          test -s results/mb09-500k-dds/REPAIR_RUN_STATUS.json
+      - name: Persist status
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git pull --rebase origin main
+          git add results/mb09-500k-dds/REPAIR_RUN_STATUS.json
+          git diff --cached --quiet || git commit -m 'Record MB09 repair run status'
+          git push
