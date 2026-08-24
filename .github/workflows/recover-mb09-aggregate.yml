@@ -1,0 +1,81 @@
+name: Recover MB09 DDS aggregate
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/recover-mb09-aggregate.yml'
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: write
+
+jobs:
+  recover:
+    runs-on: ubuntu-22.04
+    env:
+      SOURCE_RUN_ID: '32717767959'
+      EXPECTED_ROWS: '67053'
+      DDS_A_SHA256: e5c7bcdcf96d3ed24b14b2840303a0d0936b05419de463809f68982c565c7f4c
+      ODIN_COMMIT: 38fcd537dd6c7dec7ef596e861551f1b278f2f98
+      DDS_UPSTREAM_COMMIT: 7219c956f4ed9a9f8d1585e9a1a2c57465745ac5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download 20 successful DDS part artifacts from source run
+        uses: actions/download-artifact@v4
+        with:
+          pattern: mb09-dds-part-*
+          path: parts
+          merge-multiple: true
+          run-id: ${{ env.SOURCE_RUN_ID }}
+          github-token: ${{ github.token }}
+      - name: Aggregate and strictly validate all DDS rows
+        run: |
+          set -euo pipefail
+          test "$(find parts -maxdepth 1 -name 'DDS_PART_*.tsv' | wc -l)" = '20'
+          cat parts/DDS_PART_*.tsv | sort -t $'\t' -k1,1n > DDS_MB09_RESULTS.tsv
+          python3 - <<'PY'
+          import os,hashlib,json
+          exp=int(os.environ['EXPECTED_ROWS']); rows=[]
+          for line in open('DDS_MB09_RESULTS.tsv'):
+              z=line.rstrip('\n').split('\t'); assert len(z)==8,(len(z),z[:3])
+              idx=int(z[0]); seed=int(z[1]); prc=int(z[4]); vals=list(map(int,z[7].split(',')))
+              assert prc==1
+              assert len(vals)==20 and all(0<=x<=13 for x in vals)
+              si=idx//100000; local=idx%100000
+              assert seed==994000000001+si*100000000+local
+              rows.append(idx)
+          assert len(rows)==exp
+          assert len(set(rows))==exp
+          assert rows==sorted(rows)
+          assert rows[0]==9 and rows[-1]==499978
+          sha=hashlib.sha256(open('DDS_MB09_RESULTS.tsv','rb').read()).hexdigest()
+          assert sha=='5fceabd0d0dd40eb44366dbe5574d2c76c252b454607bd90bed56ae67cd9ec2c',sha
+          summary={'status':'GREEN','rows':len(rows),'unique_indices':len(set(rows)),'first_index':rows[0],'last_index':rows[-1],'dds_errors':0,'dds_results_sha256':sha,'dds_runtime_sha256':os.environ['DDS_A_SHA256'],'odin_commit':os.environ['ODIN_COMMIT'],'dds_upstream_commit':os.environ['DDS_UPSTREAM_COMMIT'],'source_run_id':int(os.environ['SOURCE_RUN_ID']),'recovered_after_push_race':True}
+          open('DDS_MB09_SUMMARY.json','w').write(json.dumps(summary,indent=2)+'\n')
+          print(json.dumps(summary,indent=2))
+          PY
+          gzip -9 -n -c DDS_MB09_RESULTS.tsv > DDS_MB09_RESULTS.tsv.gz
+          sha256sum DDS_MB09_RESULTS.tsv DDS_MB09_RESULTS.tsv.gz DDS_MB09_SUMMARY.json > DDS_MB09_SHA256SUMS.txt
+          test "$(sha256sum DDS_MB09_RESULTS.tsv.gz | awk '{print $1}')" = '5d3af6aef0785015e1343b1e469f708537fddb0ed4dad450857de7c7ae85ce12'
+      - name: Persist final GREEN results safely
+        run: |
+          set -euo pipefail
+          mkdir -p results/mb09-500k-dds
+          cp DDS_MB09_RESULTS.tsv.gz DDS_MB09_SUMMARY.json DDS_MB09_SHA256SUMS.txt results/mb09-500k-dds/
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git pull --rebase origin main
+          git add results/mb09-500k-dds/DDS_MB09_RESULTS.tsv.gz results/mb09-500k-dds/DDS_MB09_SUMMARY.json results/mb09-500k-dds/DDS_MB09_SHA256SUMS.txt
+          git diff --cached --quiet || git commit -m 'Persist MB09 500K true DDS GREEN results'
+          git push
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mb09-dds-final-recovered
+          path: |
+            DDS_MB09_RESULTS.tsv.gz
+            DDS_MB09_SUMMARY.json
+            DDS_MB09_SHA256SUMS.txt
+          compression-level: 9
+          retention-days: 14
