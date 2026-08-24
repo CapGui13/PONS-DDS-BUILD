@@ -38,10 +38,10 @@ jobs:
             echo "decoded_file=$(file -b payload.dec)"
             echo '--- xz stderr ---'
             cat xz.err
-            echo '--- first 5 lines ---'
-            head -5 payload.dec 2>/dev/null || true
-            echo '--- first 20 strings ---'
-            strings payload.dec | head -20 || true
+            echo '--- first 512 bytes hex ---'
+            xxd -g1 -l512 payload.dec || true
+            echo '--- first 40 strings ---'
+            strings payload.dec | head -40 || true
           } | tee INSPECT_MB08_INPUT.txt
       - name: Commit inspection report
         run: |
@@ -51,5 +51,5 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add results/mb08-dds-inspect/INSPECT_MB08_INPUT.txt
-          git diff --cached --quiet || git commit -m 'Inspect partial MB08 DDS v2 payload'
+          git diff --cached --quiet || git commit -m 'Inspect MB08 DDS v2 payload hex'
           git push
