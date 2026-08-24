@@ -1,0 +1,57 @@
+{
+  "status": "PROMISING",
+  "stage": "discovery-only; independent fresh validation required before GREEN",
+  "scope": "MB09-RC24 exact one-level diamond-overcall exception: S2-H3-D5-C3, HL=8, exactly one top honor, JT in diamonds without QJ -> PASS instead of marginal 1D quality exception",
+  "fresh_master_seed": 1018000000001,
+  "scanned_prefix_deals": 704000,
+  "changed_auctions": 3,
+  "changed_contracts": 3,
+  "BETTER": 2,
+  "WORSE": 0,
+  "EQUIVALENT": 1,
+  "net_dds_gap_delta": -140,
+  "current_critic_sha256": "5f062cfd46c93073322b032ade9c236beee9d46a448a7f52201a654b04a24968",
+  "candidate_critic_sha256": "c173529f281a9ddcb833f3311bbf5c7344e9da967ea54c7cf7d4a832a86ddd72",
+  "dds_runtime_sha256": "e5c7bcdcf96d3ed24b14b2840303a0d0936b05419de463809f68982c565c7f4c",
+  "rows": [
+    {
+      "index": 360117,
+      "seed": 1018000360118,
+      "baseline_tricks": 8,
+      "baseline_ns_score": -50,
+      "candidate_tricks": 8,
+      "candidate_ns_score": -110,
+      "dealer_par_ns_score": -100,
+      "baseline_gap": 50,
+      "candidate_gap": 10,
+      "gap_delta": -40,
+      "verdict": "BETTER"
+    },
+    {
+      "index": 377317,
+      "seed": 1018000377318,
+      "baseline_tricks": 11,
+      "baseline_ns_score": -650,
+      "candidate_tricks": 11,
+      "candidate_ns_score": -650,
+      "dealer_par_ns_score": -650,
+      "baseline_gap": 0,
+      "candidate_gap": 0,
+      "gap_delta": 0,
+      "verdict": "EQUIVALENT"
+    },
+    {
+      "index": 652191,
+      "seed": 1018000652192,
+      "baseline_tricks": 8,
+      "baseline_ns_score": 200,
+      "candidate_tricks": 8,
+      "candidate_ns_score": 100,
+      "dealer_par_ns_score": -110,
+      "baseline_gap": 310,
+      "candidate_gap": 210,
+      "gap_delta": -100,
+      "verdict": "BETTER"
+    }
+  ]
+}
