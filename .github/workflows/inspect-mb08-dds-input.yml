@@ -15,45 +15,55 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-      - name: Recover missing final base64 character including padding
+      - name: Search missing base64 char near chunk boundaries
         run: |
           set -euo pipefail
-          cat inputs/mb08_f1_xz_b64/f1_00 inputs/mb08_f1_xz_b64/f1_01 inputs/mb08_f1_xz_b64/f1_02 | tr -d '\r\n' > f1.bad.b64
-          test "$(wc -c < f1.bad.b64)" = 59999
+          cat inputs/mb08_f1_xz_b64/f1_00 inputs/mb08_f1_xz_b64/f1_01 inputs/mb08_f1_xz_b64/f1_02 | tr -d '\r\n' > bad.b64
+          test "$(wc -c < bad.b64)" = 59999
           alphabet='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/='
           : > matches.txt
-          for ((i=0;i<${#alphabet};i++)); do
-            c=${alphabet:i:1}
-            { cat f1.bad.b64; printf '%s' "$c"; } > candidate.b64
-            base64 -d candidate.b64 > candidate.xz 2>/dev/null || continue
-            xz -t candidate.xz 2>/dev/null && printf '%s\n' "$c" >> matches.txt
+          # Missing character is most likely around a copy boundary. Search ±16 chars around 20k, 40k, and EOF.
+          for center in 20000 40000 59999; do
+            for ((pos=center-16; pos<=center+16; pos++)); do
+              [ "$pos" -ge 0 ] || continue
+              [ "$pos" -le 59999 ] || continue
+              head -c "$pos" bad.b64 > left
+              tail -c +$((pos+1)) bad.b64 > right
+              for ((i=0;i<${#alphabet};i++)); do
+                c=${alphabet:i:1}
+                { cat left; printf '%s' "$c"; cat right; } > cand.b64
+                base64 -d cand.b64 > cand.xz 2>/dev/null || continue
+                if xz -t cand.xz 2>/dev/null; then
+                  printf '%s\t%s\n' "$pos" "$c" >> matches.txt
+                fi
+              done
+            done
           done
-          MATCHES=$(wc -l < matches.txt)
           {
-            echo "original_b64_bytes=$(wc -c < f1.bad.b64)"
-            echo "valid_candidates=$MATCHES"
-            echo "candidates=$(tr '\n' ' ' < matches.txt)"
-          } > RECOVER_F1_REPORT.txt
-          if [ "$MATCHES" = 1 ]; then
-            C=$(cat matches.txt)
-            { cat f1.bad.b64; printf '%s' "$C"; } > F1_COMPLETE.b64
-            base64 -d F1_COMPLETE.b64 > F1_COMPLETE.xz
-            xz -t F1_COMPLETE.xz
-            xz -dc F1_COMPLETE.xz > F1_COMPLETE.bin
+            echo "searched_boundary_positions=99"
+            echo "valid_candidates=$(wc -l < matches.txt)"
+            cat matches.txt
+          } | tee RECOVER_F1_REPORT.txt
+          if [ "$(wc -l < matches.txt)" = 1 ]; then
+            read POS C < matches.txt
+            head -c "$POS" bad.b64 > left
+            tail -c +$((POS+1)) bad.b64 > right
+            { cat left; printf '%s' "$C"; cat right; } > complete.b64
+            base64 -d complete.b64 > complete.xz
+            xz -t complete.xz
+            xz -dc complete.xz > complete.bin
             {
+              echo "recovered_pos=$POS"
               echo "recovered_char=$C"
-              echo "b64_bytes=$(wc -c < F1_COMPLETE.b64)"
-              echo "xz_bytes=$(wc -c < F1_COMPLETE.xz)"
-              echo "xz_sha256=$(sha256sum F1_COMPLETE.xz | awk '{print $1}')"
-              echo "decoded_bytes=$(wc -c < F1_COMPLETE.bin)"
-              echo "decoded_sha256=$(sha256sum F1_COMPLETE.bin | awk '{print $1}')"
-              echo "decoded_lines=$(wc -l < F1_COMPLETE.bin)"
-              echo "decoded_file=$(file -b F1_COMPLETE.bin)"
-              echo '--- first 512 bytes hex ---'; xxd -g1 -l512 F1_COMPLETE.bin
-              echo '--- first 50 strings ---'; strings F1_COMPLETE.bin | head -50 || true
-            } >> RECOVER_F1_REPORT.txt
+              echo "xz_sha256=$(sha256sum complete.xz | awk '{print $1}')"
+              echo "decoded_bytes=$(wc -c < complete.bin)"
+              echo "decoded_sha256=$(sha256sum complete.bin | awk '{print $1}')"
+              echo "decoded_lines=$(wc -l < complete.bin)"
+              echo "decoded_file=$(file -b complete.bin)"
+              xxd -g1 -l256 complete.bin
+              strings complete.bin | head -40 || true
+            } | tee -a RECOVER_F1_REPORT.txt
           fi
-          cat RECOVER_F1_REPORT.txt
       - name: Persist recovery report
         run: |
           set -euo pipefail
@@ -62,5 +72,5 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add results/mb08-dds-inspect/RECOVER_F1_REPORT.txt
-          git diff --cached --quiet || git commit -m 'Recover MB08 DDS F1 payload with padding'
+          git diff --cached --quiet || git commit -m 'Search MB08 DDS F1 missing base64 char'
           git push
