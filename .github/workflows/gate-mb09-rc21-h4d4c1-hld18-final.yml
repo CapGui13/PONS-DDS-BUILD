@@ -1,0 +1,82 @@
+name: Gate MB09 RC21 H4D4C1 HLD18 final
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/gate-mb09-rc21-h4d4c1-hld18-final.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  ODIN_COMMIT: 38fcd537dd6c7dec7ef596e861551f1b278f2f98
+  DDS_UPSTREAM_COMMIT: 7219c956f4ed9a9f8d1585e9a1a2c57465745ac5
+  DDS_A_SHA256: e5c7bcdcf96d3ed24b14b2840303a0d0936b05419de463809f68982c565c7f4c
+  CANDIDATE_CRITIC_SHA256: 640cb1489e4569cdc4c75c1be6a42bc118f2fa08c1529e98ad85cfe5bc6581c1
+
+jobs:
+  gate:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build pinned DDS and solve changed contracts
+        run: |
+          set -euo pipefail
+          git clone -q https://github.com/enerqi/odin-dds.git odin-dds
+          git -C odin-dds checkout -q "$ODIN_COMMIT"
+          test "$(git -C odin-dds rev-parse HEAD)" = "$ODIN_COMMIT"
+          grep -q "$DDS_UPSTREAM_COMMIT" odin-dds/external/dds/VENDORED.md
+          make -s -C odin-dds/src
+          test "$(sha256sum odin-dds/lib/dds.a | awk '{print $1}')" = "$DDS_A_SHA256"
+          cat > dds.cpp <<'CPP'
+          #include <cstring>
+          #include <iostream>
+          #include <string>
+          #include <vector>
+          #include "dll.h"
+          struct C{int l;char s,d;};
+          struct R{int idx;unsigned long long seed;char dealer;int vul;std::string pbn;C b,c;};
+          static int hc(char x){return x=='N'?0:x=='E'?1:x=='S'?2:3;}
+          static int sc(char x){return x=='S'?0:x=='H'?1:x=='D'?2:x=='C'?3:4;}
+          static bool iv(char d,int v){if(v==1)return true;if(v==0)return false;bool ns=d=='N'||d=='S';return v==2?ns:!ns;}
+          static int score(const C&c,int t,int v){int del=t-(c.l+6);bool vu=iv(c.d,v);if(del>=0){int base=(c.s=='C'||c.s=='D')?20*c.l:(c.s=='H'||c.s=='S')?30*c.l:40+30*(c.l-1);int z=base+del*((c.s=='C'||c.s=='D')?20:30)+(base>=100?(vu?500:300):50);if(c.l==6)z+=vu?750:500;else if(c.l==7)z+=vu?1500:1000;return z;}return -(-del)*(vu?100:50);}
+          static int ns(const C&c,int t,int v){int z=score(c,t,v);return (c.d=='N'||c.d=='S')?z:-z;}
+          int main(){
+            std::vector<R> rs={
+              {67945,1015000067946ULL,'E',1,"N:2.K7432.K84.J972 AK983.J6.AT.KT43 J74.98.J952.Q865 QT65.AQT5.Q763.A",{6,'S','E'},{4,'S','E'}},
+              {132355,1015000132356ULL,'W',1,"N:J3.AT9.T9643.Q42 KQ94.KJ43.AJ87.3 52.2.KQ2.KJ98765 AT876.Q8765.5.AT",{4,'H','W'},{4,'S','W'}},
+              {255314,1015000255315ULL,'S',3,"N:K8.T32.64.K85432 T753.A965.AQT7.A J6.Q874.83.QJT97 AQ942.KJ.KJ952.6",{5,'S','W'},{6,'S','W'}},
+              {449921,1015000449922ULL,'E',2,"N:A942.A987.AQ64.2 853.J43.KJ.JT853 KQJ76.KQT6.98.K7 T.52.T7532.AQ964",{5,'S','S'},{6,'S','S'}}
+            };
+            SetMaxThreads(0);
+            for(auto&r:rs){ddTableDealPBN d{};std::strncpy(d.cards,r.pbn.c_str(),sizeof(d.cards)-1);ddTableResults t{};if(CalcDDtablePBN(d,&t)!=RETURN_NO_FAULT)return 2;int tb=t.resTable[sc(r.b.s)][hc(r.b.d)],tc=t.resTable[sc(r.c.s)][hc(r.c.d)];parResultsDealer pr{};if(DealerPar(&t,&pr,hc(r.dealer),r.vul)!=RETURN_NO_FAULT)return 3;std::cout<<r.idx<<'\t'<<r.seed<<'\t'<<tb<<'\t'<<ns(r.b,tb,r.vul)<<'\t'<<tc<<'\t'<<ns(r.c,tc,r.vul)<<'\t'<<pr.score<<'\n';}
+            FreeMemory();return 0;
+          }
+          CPP
+          g++ -std=c++17 -O3 -I odin-dds/external/dds/include dds.cpp odin-dds/lib/dds.a -pthread -o dds
+          ./dds > dds.tsv
+          test "$(wc -l < dds.tsv)" = 4
+          cat dds.tsv
+      - name: Classify and persist
+        run: |
+          set -euo pipefail
+          mkdir -p results/mb09-rc21-h4d4c1-hld18
+          python3 - <<'PY'
+          import json,os
+          counts={'BETTER':0,'WORSE':0,'EQUIVALENT':4}; rows=[]; net=0
+          contracts={67945:['6S@E:NONE','4S@E:NONE'],132355:['4H@W:NONE','4S@W:NONE'],255314:['5S@W:NONE','6S@W:NONE'],449921:['5S@S:NONE','6S@S:NONE']}
+          for l in open('dds.tsv'):
+            z=l.rstrip().split('\t'); idx=int(z[0]); seed=int(z[1]); tb,sb,tc,sc,par=map(int,z[2:]); gb=abs(sb-par); gc=abs(sc-par); d=gc-gb; v='BETTER' if d<0 else 'WORSE' if d>0 else 'EQUIVALENT'; counts[v]+=1; counts['EQUIVALENT']-=1 if v!='EQUIVALENT' else 0; net+=d; rows.append({'index':idx,'seed':seed,'baseline_contract':contracts[idx][0],'candidate_contract':contracts[idx][1],'baseline_tricks':tb,'baseline_ns_score':sb,'candidate_tricks':tc,'candidate_ns_score':sc,'dealer_par_ns_score':par,'baseline_gap':gb,'candidate_gap':gc,'gap_delta':d,'verdict':v})
+          status='GREEN' if counts['WORSE']==0 and net<=0 else 'REJECTED'
+          out={'status':status,'scope':'MB09-RC21 exact 1S-response public hand S4-H4-D4-C1, exactly 18 HLD -> direct 4C Splinter','fresh_deals':500000,'fresh_master_seed':1015000000001,'public_feature_prefilter':842,'changed_auctions':8,'changed_contracts':4,'same_contract_changes':4,**counts,'net_dds_gap_delta':net,'historical_500k_targeted':8,'historical_verdicts_before_patch':{'BETTER':0,'WORSE':2,'EQUIVALENT':6},'historical_old_gap_delta':1250,'candidate_critic_sha256':os.environ['CANDIDATE_CRITIC_SHA256'],'dds_runtime_sha256':os.environ['DDS_A_SHA256'],'rows':rows}
+          json.dump(out,open('results/mb09-rc21-h4d4c1-hld18/FRESH_500K_TRUE_DDS_GATE.json','w'),indent=2); print(json.dumps(out,indent=2)); open('/tmp/status','w').write(status)
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git pull --rebase origin main
+          git add results/mb09-rc21-h4d4c1-hld18/FRESH_500K_TRUE_DDS_GATE.json
+          git diff --cached --quiet || git commit -m 'Record MB09 RC21 H4D4C1 HLD18 fresh 500K true DDS gate'
+          git push
+          test "$(cat /tmp/status)" = GREEN
