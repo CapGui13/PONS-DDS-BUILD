@@ -1,0 +1,38 @@
+{
+  "status": "GREEN",
+  "scope": "MB09-RC20 exact 1S-response public hand S4-H4-D1-C4, exactly 18 HLD -> direct 4D Splinter",
+  "fresh_deals": 500000,
+  "fresh_master_seed": 1014000000001,
+  "public_feature_prefilter": 210,
+  "changed_auctions": 1,
+  "changed_contracts": 1,
+  "BETTER": 1,
+  "WORSE": 0,
+  "EQUIVALENT": 0,
+  "net_dds_gap_delta": -140,
+  "historical_500k_targeted": 6,
+  "historical_verdicts_before_patch": {
+    "BETTER": 0,
+    "WORSE": 2,
+    "EQUIVALENT": 4
+  },
+  "historical_old_gap_delta": 1320,
+  "candidate_critic_sha256": "02a4fa30646496701bb3e2cc9a520168d1edce6d3221f20547eb994ce5ed13d8",
+  "dds_runtime_sha256": "e5c7bcdcf96d3ed24b14b2840303a0d0936b05419de463809f68982c565c7f4c",
+  "row": {
+    "index": 16528,
+    "seed": 1014000016529,
+    "dealer": "N",
+    "vulnerability": "None",
+    "baseline_contract": "5S@N:NONE",
+    "candidate_contract": "6S@N:NONE",
+    "dds_tricks": 12,
+    "baseline_ns_score": 480,
+    "candidate_ns_score": 980,
+    "dealer_par_ns_score": 800,
+    "baseline_gap": 320,
+    "candidate_gap": 180,
+    "gap_delta": -140,
+    "verdict": "BETTER"
+  }
+}
