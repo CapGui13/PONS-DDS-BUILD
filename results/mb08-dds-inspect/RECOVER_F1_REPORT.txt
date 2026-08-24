@@ -1,3 +1,2 @@
-original_b64_bytes=59999
+searched_boundary_positions=99
 valid_candidates=0
-candidates=
