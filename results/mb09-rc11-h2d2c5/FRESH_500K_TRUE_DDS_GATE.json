@@ -1,0 +1,98 @@
+{
+  "status": "REJECTED",
+  "scope": "MB09-RC11 exact S4-H2-D2-C5 / 18 HLD -> direct fitted 2NT",
+  "fresh_deals": 500000,
+  "fresh_master_seed": 1007000000001,
+  "exhaustive_feature_prefilter_candidates": 1218,
+  "target_occurrences": 18,
+  "changed_contracts": 6,
+  "same_contract_changes": 12,
+  "BETTER": 2,
+  "WORSE": 2,
+  "EQUIVALENT": 14,
+  "net_dds_gap_delta": -990,
+  "historical_500k_targeted": 9,
+  "historical_exact_v261_auction_restored": 9,
+  "historical_verdicts_before_patch": {
+    "BETTER": 0,
+    "WORSE": 3,
+    "EQUIVALENT": 6
+  },
+  "historical_old_gap_delta": 2250,
+  "candidate_critic_sha256": "0a5712e3af5109c47bc8a1be852929e1f9f6c1bb6f5338081ac17e5a24c1665b",
+  "dds_runtime_sha256": "e5c7bcdcf96d3ed24b14b2840303a0d0936b05419de463809f68982c565c7f4c",
+  "rows": [
+    {
+      "index": 101171,
+      "baseline_tricks": 11,
+      "baseline_ns_score": -650,
+      "candidate_tricks": 11,
+      "candidate_ns_score": -650,
+      "dealer_par_ns_score": -650,
+      "baseline_gap": 0,
+      "candidate_gap": 0,
+      "gap_delta": 0,
+      "verdict": "EQUIVALENT"
+    },
+    {
+      "index": 153252,
+      "baseline_tricks": 13,
+      "baseline_ns_score": -1020,
+      "candidate_tricks": 13,
+      "candidate_ns_score": -1010,
+      "dealer_par_ns_score": -1520,
+      "baseline_gap": 500,
+      "candidate_gap": 510,
+      "gap_delta": 10,
+      "verdict": "WORSE"
+    },
+    {
+      "index": 214358,
+      "baseline_tricks": 12,
+      "baseline_ns_score": 680,
+      "candidate_tricks": 12,
+      "candidate_ns_score": 1430,
+      "dealer_par_ns_score": 1430,
+      "baseline_gap": 750,
+      "candidate_gap": 0,
+      "gap_delta": -750,
+      "verdict": "BETTER"
+    },
+    {
+      "index": 343777,
+      "baseline_tricks": 12,
+      "baseline_ns_score": 680,
+      "candidate_tricks": 12,
+      "candidate_ns_score": 1430,
+      "dealer_par_ns_score": 1430,
+      "baseline_gap": 750,
+      "candidate_gap": 0,
+      "gap_delta": -750,
+      "verdict": "BETTER"
+    },
+    {
+      "index": 375834,
+      "baseline_tricks": 11,
+      "baseline_ns_score": -450,
+      "candidate_tricks": 11,
+      "candidate_ns_score": 50,
+      "dealer_par_ns_score": -450,
+      "baseline_gap": 0,
+      "candidate_gap": 500,
+      "gap_delta": 500,
+      "verdict": "WORSE"
+    },
+    {
+      "index": 466130,
+      "baseline_tricks": 11,
+      "baseline_ns_score": 450,
+      "candidate_tricks": 11,
+      "candidate_ns_score": 450,
+      "dealer_par_ns_score": 460,
+      "baseline_gap": 10,
+      "candidate_gap": 10,
+      "gap_delta": 0,
+      "verdict": "EQUIVALENT"
+    }
+  ]
+}
