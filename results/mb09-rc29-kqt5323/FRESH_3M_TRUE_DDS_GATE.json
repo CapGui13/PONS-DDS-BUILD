@@ -1,0 +1,60 @@
+{
+  "status": "REJECTED",
+  "scope": "MB09-RC29 refined direct 1S quality exception after 1H: non-vulnerable exact S5-H3-D2-C3, HL=8, KQT in spades without J -> PASS",
+  "fresh_deals": 3000000,
+  "fresh_master_seed": 1024000000001,
+  "public_feature_prefilter": 107,
+  "changed_auctions": 3,
+  "changed_contracts": 2,
+  "same_contract_changes": 1,
+  "BETTER": 1,
+  "WORSE": 1,
+  "EQUIVALENT": 1,
+  "net_dds_gap_delta": 80,
+  "historical_exact_scope": 3,
+  "historical_before": {
+    "BETTER": 0,
+    "WORSE": 3,
+    "EQUIVALENT": 0,
+    "old_gap_delta": 450
+  },
+  "historical_candidate_changed": 2,
+  "historical_candidate_v261_contract_restored": 2,
+  "development_seed_102300_broad_parent": {
+    "BETTER": 2,
+    "WORSE": 0,
+    "EQUIVALENT": 5,
+    "net_dds_gap_delta": -720
+  },
+  "current_critic_sha256": "67cd294fdd8f90c9c26c5799d3fac6e3d8f0c6eff38919bf51baac93207db8b7",
+  "candidate_critic_sha256": "f87c7cffa22ed5135cab55a3e9529a7c7373e2fef68d007c2225b01748a0a4f7",
+  "dds_runtime_sha256": "e5c7bcdcf96d3ed24b14b2840303a0d0936b05419de463809f68982c565c7f4c",
+  "rows": [
+    {
+      "index": 1389935,
+      "seed": 1024001389936,
+      "baseline_tricks": 8,
+      "baseline_ns_score": -50,
+      "candidate_tricks": 10,
+      "candidate_ns_score": -170,
+      "dealer_par_ns_score": -300,
+      "baseline_gap": 250,
+      "candidate_gap": 130,
+      "gap_delta": -120,
+      "verdict": "BETTER"
+    },
+    {
+      "index": 2527770,
+      "seed": 1024002527771,
+      "baseline_tricks": 11,
+      "baseline_ns_score": -150,
+      "candidate_tricks": 8,
+      "candidate_ns_score": 50,
+      "dealer_par_ns_score": -420,
+      "baseline_gap": 270,
+      "candidate_gap": 470,
+      "gap_delta": 200,
+      "verdict": "WORSE"
+    }
+  ]
+}
