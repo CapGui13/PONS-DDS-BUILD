@@ -1,0 +1,8 @@
+{
+  "verify_outcome": "success",
+  "build_outcome": "success",
+  "compile_outcome": "success",
+  "input_lines": 19,
+  "dds_archive_exists": true,
+  "dds_archive_sha256": "e5c7bcdcf96d3ed24b14b2840303a0d0936b05419de463809f68982c565c7f4c"
+}
