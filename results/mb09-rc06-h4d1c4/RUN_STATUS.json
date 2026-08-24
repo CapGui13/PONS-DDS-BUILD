@@ -1,0 +1,16 @@
+{
+  "run_id": 32754886402,
+  "status": "completed",
+  "conclusion": "failure",
+  "jobs": [
+    {
+      "id": 97520008815,
+      "name": "gate",
+      "status": "completed",
+      "conclusion": "failure",
+      "failed_steps": [
+        "Classify and persist final gate"
+      ]
+    }
+  ]
+}
