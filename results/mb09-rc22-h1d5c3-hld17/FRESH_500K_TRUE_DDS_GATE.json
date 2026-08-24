@@ -1,0 +1,37 @@
+{
+  "status": "GREEN",
+  "scope": "MB09-RC22 exact 1S-response public hand S4-H1-D5-C3, exactly 17 HLD -> direct 4H Splinter",
+  "fresh_deals": 500000,
+  "fresh_master_seed": 1016000000001,
+  "public_feature_prefilter": 845,
+  "changed_auctions": 6,
+  "changed_contracts": 1,
+  "same_contract_changes": 5,
+  "BETTER": 1,
+  "WORSE": 0,
+  "EQUIVALENT": 5,
+  "net_dds_gap_delta": -500,
+  "historical_500k_targeted": 5,
+  "historical_verdicts_before_patch": {
+    "BETTER": 0,
+    "WORSE": 2,
+    "EQUIVALENT": 3
+  },
+  "historical_old_gap_delta": 1500,
+  "candidate_critic_sha256": "5f062cfd46c93073322b032ade9c236beee9d46a448a7f52201a654b04a24968",
+  "dds_runtime_sha256": "e5c7bcdcf96d3ed24b14b2840303a0d0936b05419de463809f68982c565c7f4c",
+  "row": {
+    "index": 61130,
+    "seed": 1016000061131,
+    "baseline_contract": "5S@W:NONE",
+    "candidate_contract": "6S@W:NONE",
+    "dds_tricks": 12,
+    "baseline_ns_score": -480,
+    "candidate_ns_score": -980,
+    "dealer_par_ns_score": -990,
+    "baseline_gap": 510,
+    "candidate_gap": 10,
+    "gap_delta": -500,
+    "verdict": "BETTER"
+  }
+}
