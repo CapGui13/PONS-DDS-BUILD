@@ -55,7 +55,7 @@ jobs:
           int main(){
             std::ifstream in("inputs/mb09_rc14_strongD_d6_gate42.tsv"); std::ofstream out("dds.tsv"); std::vector<R>rs; std::string l;
             while(std::getline(in,l)){
-              auto f=sp(l); if(f.size()!=17){std::cerr<<"bad fields "<<f.size()<<"\n";return 2;}
+              auto f=sp(l); if(f.size()!=16){std::cerr<<"bad fields "<<f.size()<<"\n";return 2;}
               R r; r.g=f[0][0]; r.i=std::stoll(f[1]); r.seed=std::stoull(f[2]); r.dealer=f[3][0]; r.vul=f[4]; r.pbn=f[5];
               auto pc=[&](int o,C&c){c.po=f[o]=="1";c.l=std::stoi(f[o+1]);c.s=f[o+2][0];c.d=f[o+3][0];c.x=f[o+4];}; pc(6,r.a); pc(11,r.b); rs.push_back(r);
             }
