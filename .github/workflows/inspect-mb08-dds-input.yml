@@ -15,24 +15,33 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-      - name: Reconstruct staged payload v2
+      - name: Inspect current V2 payload, complete or partial
         run: |
           set -euo pipefail
-          cat inputs/mb08_v2_b64/p_00 inputs/mb08_v2_b64/p_01 inputs/mb08_v2_b64/p_02 > payload.b64
+          ls -1 inputs/mb08_v2_b64/p_* | sort -V > parts.list
+          cat $(cat parts.list) > payload.b64
           tr -d '\r\n' < payload.b64 > payload.clean.b64
           base64 -d payload.clean.b64 > payload.xz
-          xz -t payload.xz
-          xz -dc payload.xz > payload.dec
+          set +e
+          xz -dc payload.xz > payload.dec 2> xz.err
+          XZRC=$?
+          set -e
           {
+            echo "parts=$(wc -l < parts.list)"
+            echo "part_names=$(tr '\n' ' ' < parts.list)"
             echo "b64_bytes=$(wc -c < payload.clean.b64)"
             echo "xz_bytes=$(wc -c < payload.xz)"
             echo "xz_sha256=$(sha256sum payload.xz | awk '{print $1}')"
-            echo "decoded_bytes=$(wc -c < payload.dec)"
-            echo "decoded_sha256=$(sha256sum payload.dec | awk '{print $1}')"
-            echo "decoded_lines=$(wc -l < payload.dec)"
-            echo "file=$(file -b payload.dec)"
-            echo '--- first 10 strings ---'
-            strings payload.dec | head -10 || true
+            echo "xz_rc=$XZRC"
+            echo "decoded_bytes_so_far=$(wc -c < payload.dec)"
+            echo "decoded_lines_so_far=$(wc -l < payload.dec)"
+            echo "decoded_file=$(file -b payload.dec)"
+            echo '--- xz stderr ---'
+            cat xz.err
+            echo '--- first 5 lines ---'
+            head -5 payload.dec 2>/dev/null || true
+            echo '--- first 20 strings ---'
+            strings payload.dec | head -20 || true
           } | tee INSPECT_MB08_INPUT.txt
       - name: Commit inspection report
         run: |
@@ -42,5 +51,5 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add results/mb08-dds-inspect/INSPECT_MB08_INPUT.txt
-          git diff --cached --quiet || git commit -m 'Inspect MB08 DDS v2 payload'
+          git diff --cached --quiet || git commit -m 'Inspect partial MB08 DDS v2 payload'
           git push
