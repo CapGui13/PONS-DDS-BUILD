@@ -1,0 +1,51 @@
+{
+  "status": "GREEN",
+  "scope": "MB09-RC16 exact 1NT strong-diamonds correction: add responder public shape S3-H1-D6-C3, HCP<12 to the existing MB09-10 exclusion",
+  "fresh_deals": 500000,
+  "fresh_master_seed": 1013000000001,
+  "public_feature_prefilter": 294,
+  "changed_auctions": 3,
+  "changed_contracts": 2,
+  "same_contract_changes": 1,
+  "BETTER": 2,
+  "WORSE": 0,
+  "EQUIVALENT": 1,
+  "net_dds_gap_delta": -340,
+  "historical_500k_targeted": 3,
+  "historical_verdicts_before_patch": {
+    "BETTER": 0,
+    "WORSE": 3,
+    "EQUIVALENT": 0
+  },
+  "historical_old_gap_delta": 3320,
+  "candidate_critic_sha256": "c5f52fa793e0531132eebdff960182d476cc84aef6c704c7bdae23f093e94610",
+  "dds_runtime_sha256": "e5c7bcdcf96d3ed24b14b2840303a0d0936b05419de463809f68982c565c7f4c",
+  "rows": [
+    {
+      "index": 188187,
+      "seed": 1013000188188,
+      "baseline_tricks": 6,
+      "baseline_ns_score": -400,
+      "candidate_tricks": 8,
+      "candidate_ns_score": -100,
+      "dealer_par_ns_score": 800,
+      "baseline_gap": 1200,
+      "candidate_gap": 900,
+      "gap_delta": -300,
+      "verdict": "BETTER"
+    },
+    {
+      "index": 458042,
+      "seed": 1013000458043,
+      "baseline_tricks": 12,
+      "baseline_ns_score": -420,
+      "candidate_tricks": 11,
+      "candidate_ns_score": -460,
+      "dealer_par_ns_score": -920,
+      "baseline_gap": 500,
+      "candidate_gap": 460,
+      "gap_delta": -40,
+      "verdict": "BETTER"
+    }
+  ]
+}
