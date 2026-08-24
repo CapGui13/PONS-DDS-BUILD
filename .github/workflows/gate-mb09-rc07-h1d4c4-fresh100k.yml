@@ -1,0 +1,58 @@
+name: Gate MB09-RC07 H1D4C4 fresh 100K
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/gate-mb09-rc07-h1d4c4-fresh100k.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  ODIN_COMMIT: 38fcd537dd6c7dec7ef596e861551f1b278f2f98
+  DDS_UPSTREAM_COMMIT: 7219c956f4ed9a9f8d1585e9a1a2c57465745ac5
+  DDS_A_SHA256: e5c7bcdcf96d3ed24b14b2840303a0d0936b05419de463809f68982c565c7f4c
+  CANDIDATE_CRITIC_SHA256: f95f3cd9ab2617f9512414c72e3bdfabe092cf983219cd75a497cf64217371b8
+
+jobs:
+  gate:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build pinned DDS and solve exact changed contract
+        run: |
+          set -euo pipefail
+          git clone -q https://github.com/enerqi/odin-dds.git odin-dds
+          git -C odin-dds checkout -q "$ODIN_COMMIT"
+          grep -q "$DDS_UPSTREAM_COMMIT" odin-dds/external/dds/VENDORED.md
+          make -s -C odin-dds/src
+          test "$(sha256sum odin-dds/lib/dds.a | awk '{print $1}')" = "$DDS_A_SHA256"
+          cat > dds.cpp <<'CPP'
+          #include <cstring>
+          #include <iostream>
+          #include "dll.h"
+          static bool iv(char d,int v){if(v==1)return true;if(v==0)return false;bool ns=d=='N'||d=='S';return v==2?ns:!ns;}
+          static int ds(int level,char strain,char declarer,int tricks,int vul){int tar=level+6,del=tricks-tar;bool vu=iv(declarer,vul);if(del>=0){int base=(strain=='C'||strain=='D')?20*level:(strain=='H'||strain=='S')?30*level:40+30*(level-1);int z=base;if(del>0)z+=del*((strain=='C'||strain=='D')?20:30);z+=base>=100?(vu?500:300):50;if(level==6)z+=vu?750:500;else if(level==7)z+=vu?1500:1000;return z;}return -(-del)*(vu?100:50);}
+          int main(){ddTableDealPBN d{};std::strncpy(d.cards,"N:KQ432.7.AQJ.K542 J8.AQJT8642.6.Q9 AT65.K.K973.AT73 97.953.T8542.J86",sizeof(d.cards)-1);ddTableResults t{};SetMaxThreads(0);if(CalcDDtablePBN(d,&t)!=RETURN_NO_FAULT)return 2;int tricks=t.resTable[0][0];parResultsDealer pr{};if(DealerPar(&t,&pr,0,3)!=RETURN_NO_FAULT)return 3;int b=ds(4,'S','N',tricks,3);int c=ds(6,'S','N',tricks,3);std::cout<<tricks<<"\t"<<b<<"\t"<<c<<"\t"<<pr.score<<"\n";FreeMemory();}
+          CPP
+          g++ -std=c++17 -O3 -I odin-dds/external/dds/include dds.cpp odin-dds/lib/dds.a -pthread -o dds
+          ./dds > dds.tsv
+      - name: Persist gate
+        run: |
+          set -euo pipefail
+          mkdir -p results/mb09-rc07-h1d4c4
+          python3 - <<'PY'
+          import json,os
+          tricks,b,c,par=map(int,open('dds.tsv').read().strip().split('\t')); gb=abs(b-par); gc=abs(c-par); d=gc-gb
+          v='BETTER' if d<0 else 'WORSE' if d>0 else 'EQUIVALENT'; status='GREEN' if v!='WORSE' else 'FAIL'
+          out={'status':status,'scope':'MB09-RC07 exact S4-H1-D4-C4 / 18 HLD -> direct 4H Splinter','fresh_deals':100000,'fresh_master_seed':1002000000001,'exhaustive_feature_prefilter_candidates':178,'target_occurrences':1,'changed_contracts':1,'BETTER':1 if v=='BETTER' else 0,'WORSE':1 if v=='WORSE' else 0,'EQUIVALENT':1 if v=='EQUIVALENT' else 0,'net_dds_gap_delta':d,'historical_500k_targeted':10,'historical_verdicts_before_patch':{'BETTER':0,'WORSE':5,'EQUIVALENT':5},'historical_old_gap_delta':2290,'candidate_critic_sha256':os.environ['CANDIDATE_CRITIC_SHA256'],'dds_runtime_sha256':os.environ['DDS_A_SHA256'],'row':{'index':37672,'seed':1002000037673,'baseline_contract':'4S@N:NONE','candidate_contract':'6S@N:NONE','dds_tricks':tricks,'baseline_ns_score':b,'candidate_ns_score':c,'dealer_par_ns_score':par,'baseline_gap':gb,'candidate_gap':gc,'gap_delta':d,'verdict':v}}
+          print(json.dumps(out,indent=2)); json.dump(out,open('results/mb09-rc07-h1d4c4/FRESH_100K_TRUE_DDS_GATE.json','w'),indent=2)
+          if status!='GREEN': raise SystemExit(1)
+          PY
+          git config user.name 'github-actions[bot]'; git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git pull --rebase origin main
+          git add results/mb09-rc07-h1d4c4/FRESH_100K_TRUE_DDS_GATE.json
+          git diff --cached --quiet || git commit -m 'Record MB09 RC07 H1D4C4 fresh 100K true DDS gate'
+          git push
