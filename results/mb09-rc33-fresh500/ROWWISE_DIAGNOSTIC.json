@@ -1,0 +1,150 @@
+{
+  "candidate": "MB09-RC33",
+  "scope": "1S-PASS responder S4-H4-D3-C2 exactly 16 HLD; restore direct fitted 2NT",
+  "solver": "real pinned DDS static library",
+  "dds_static_sha256": "e5c7bcdcf96d3ed24b14b2840303a0d0936b05419de463809f68982c565c7f4c",
+  "input_rows": 11,
+  "solved": 11,
+  "failed": 0,
+  "counts": {
+    "BETTER": 6,
+    "WORSE": 3,
+    "EQUIVALENT": 2
+  },
+  "zero_worse_gate_pass": false,
+  "rows": [
+    {
+      "index": 55704,
+      "seed": 1033000055705,
+      "baseline_tricks": 11,
+      "baseline_ns_score": -650,
+      "candidate_tricks": 11,
+      "candidate_ns_score": -650,
+      "dealer_par_ns_score": -650,
+      "baseline_abs_par_gap": 0,
+      "candidate_abs_par_gap": 0,
+      "verdict": "EQUIVALENT"
+    },
+    {
+      "index": 89957,
+      "seed": 1033000089958,
+      "baseline_tricks": 13,
+      "baseline_ns_score": 510,
+      "candidate_tricks": 13,
+      "candidate_ns_score": 1010,
+      "dealer_par_ns_score": 1520,
+      "baseline_abs_par_gap": 1010,
+      "candidate_abs_par_gap": 510,
+      "verdict": "BETTER"
+    },
+    {
+      "index": 198657,
+      "seed": 1033000198658,
+      "baseline_tricks": 12,
+      "baseline_ns_score": 680,
+      "candidate_tricks": 12,
+      "candidate_ns_score": 1430,
+      "dealer_par_ns_score": 1440,
+      "baseline_abs_par_gap": 760,
+      "candidate_abs_par_gap": 10,
+      "verdict": "BETTER"
+    },
+    {
+      "index": 208650,
+      "seed": 1033000208651,
+      "baseline_tricks": 10,
+      "baseline_ns_score": 420,
+      "candidate_tricks": 8,
+      "candidate_ns_score": 300,
+      "dealer_par_ns_score": 420,
+      "baseline_abs_par_gap": 0,
+      "candidate_abs_par_gap": 120,
+      "verdict": "WORSE"
+    },
+    {
+      "index": 284405,
+      "seed": 1033000284406,
+      "baseline_tricks": 9,
+      "baseline_ns_score": 200,
+      "candidate_tricks": 12,
+      "candidate_ns_score": -680,
+      "dealer_par_ns_score": -2210,
+      "baseline_abs_par_gap": 2410,
+      "candidate_abs_par_gap": 1530,
+      "verdict": "BETTER"
+    },
+    {
+      "index": 350133,
+      "seed": 1033000350134,
+      "baseline_tricks": 13,
+      "baseline_ns_score": 510,
+      "candidate_tricks": 13,
+      "candidate_ns_score": 1510,
+      "dealer_par_ns_score": 1520,
+      "baseline_abs_par_gap": 1010,
+      "candidate_abs_par_gap": 10,
+      "verdict": "BETTER"
+    },
+    {
+      "index": 382408,
+      "seed": 1033000382409,
+      "baseline_tricks": 10,
+      "baseline_ns_score": 100,
+      "candidate_tricks": 10,
+      "candidate_ns_score": -620,
+      "dealer_par_ns_score": -650,
+      "baseline_abs_par_gap": 750,
+      "candidate_abs_par_gap": 30,
+      "verdict": "BETTER"
+    },
+    {
+      "index": 410218,
+      "seed": 1033000410219,
+      "baseline_tricks": 10,
+      "baseline_ns_score": -420,
+      "candidate_tricks": 10,
+      "candidate_ns_score": 100,
+      "dealer_par_ns_score": -460,
+      "baseline_abs_par_gap": 40,
+      "candidate_abs_par_gap": 560,
+      "verdict": "WORSE"
+    },
+    {
+      "index": 411632,
+      "seed": 1033000411633,
+      "baseline_tricks": 10,
+      "baseline_ns_score": 50,
+      "candidate_tricks": 10,
+      "candidate_ns_score": -420,
+      "dealer_par_ns_score": -420,
+      "baseline_abs_par_gap": 470,
+      "candidate_abs_par_gap": 0,
+      "verdict": "BETTER"
+    },
+    {
+      "index": 441074,
+      "seed": 1033000441075,
+      "baseline_tricks": 11,
+      "baseline_ns_score": -650,
+      "candidate_tricks": 11,
+      "candidate_ns_score": -650,
+      "dealer_par_ns_score": -660,
+      "baseline_abs_par_gap": 10,
+      "candidate_abs_par_gap": 10,
+      "verdict": "EQUIVALENT"
+    },
+    {
+      "index": 487130,
+      "seed": 1033000487131,
+      "baseline_tricks": 12,
+      "baseline_ns_score": -980,
+      "candidate_tricks": 12,
+      "candidate_ns_score": 50,
+      "dealer_par_ns_score": -990,
+      "baseline_abs_par_gap": 10,
+      "candidate_abs_par_gap": 1040,
+      "verdict": "WORSE"
+    }
+  ],
+  "failures": []
+}
