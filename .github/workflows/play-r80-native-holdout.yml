@@ -13,8 +13,10 @@ env:
   ODIN_COMMIT: 38fcd537dd6c7dec7ef596e861551f1b278f2f98
   DDS_UPSTREAM_COMMIT: 7219c956f4ed9a9f8d1585e9a1a2c57465745ac5
   DDS_A_SHA256: e5c7bcdcf96d3ed24b14b2840303a0d0936b05419de463809f68982c565c7f4c
-  BOARDS_SHA256: d03561670514de15080ea6dff2ba5396718fd31a2ed18641cac0ebd9e7d93b43
-  EQUIV_SHA256: 1a7c7f107196912f60d37978fa8f7799bbecf8e967935dac417184218441cfc3
+  BOARDS_BLOB: e7295da840c7f5651611f0004c63548adedc74e6
+  SAMPLER_BLOB: 0054c505116d8d5824af319800d2307b1e4c8bb7
+  EQUIV_BOARDS_BLOB: 6f7699ff0ddf5ef24f2779a6d81fe70cf404ce89
+  EQUIV_EXPECTED_BLOB: c2a351f54365fbf2a13a1452d4abeae56b4aed2a
 
 jobs:
   build:
@@ -25,6 +27,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          test "$(git hash-object r80/R80_BOARDS_51_100.tsv)" = "$BOARDS_BLOB"
+          test "$(git hash-object r80/R80_SAMPLER_MINI.cjs)" = "$SAMPLER_BLOB"
+          test "$(git hash-object r80/R80_EQUIV_BOARDS.tsv)" = "$EQUIV_BOARDS_BLOB"
+          test "$(git hash-object r80/R80_EQUIV_140_EXPECTED.tsv.gz.b64)" = "$EQUIV_EXPECTED_BLOB"
           git clone https://github.com/enerqi/odin-dds.git odin-dds
           git -C odin-dds checkout "$ODIN_COMMIT"
           test "$(git -C odin-dds rev-parse HEAD)" = "$ODIN_COMMIT"
@@ -39,47 +45,9 @@ jobs:
           #include <string>
           #include <vector>
           #include "dll.h"
-
-          static std::vector<std::string> splitTabs(const std::string& line) {
-            std::vector<std::string> z; std::string x; std::stringstream ss(line);
-            while (std::getline(ss, x, '\t')) z.push_back(x);
-            return z;
-          }
-          static void writeCanonical(std::ostream& out, const ddTableResults& t) {
-            const int strains[5] = {4,0,1,2,3}; // N,S,H,D,C
-            const int seats[4] = {0,2,1,3};     // N,S,E,W
-            bool first=true;
-            for (int si=0; si<5; ++si) for (int hi=0; hi<4; ++hi) {
-              if (!first) out << ','; first=false;
-              out << t.resTable[strains[si]][seats[hi]];
-            }
-          }
-          int main(int argc, char** argv) {
-            if (argc != 3) { std::cerr << "usage: runner input4.tsv output.tsv\n"; return 2; }
-            SetMaxThreads(0);
-            std::ifstream in(argv[1]); std::ofstream out(argv[2]);
-            if (!in || !out) return 3;
-            std::string line; long long rows=0, errors=0;
-            while (std::getline(in,line)) {
-              if (line.empty()) continue;
-              const auto z=splitTabs(line);
-              if (z.size()!=4) { std::cerr << "bad fields row " << rows << " got=" << z.size() << "\n"; return 4; }
-              ddTableDealPBN deal{};
-              std::strncpy(deal.cards, z[3].c_str(), sizeof(deal.cards)-1);
-              ddTableResults table{};
-              const int rc=CalcDDtablePBN(deal,&table);
-              if (rc!=RETURN_NO_FAULT) {
-                char msg[80]{}; ErrorMessage(rc,msg);
-                std::cerr << "DDS error board=" << z[0] << " sample=" << z[1] << " rc=" << rc << " " << msg << "\n";
-                errors++; continue;
-              }
-              out << z[0] << '\t' << z[1] << '\t' << z[2] << '\t';
-              writeCanonical(out,table); out << '\n'; rows++;
-            }
-            FreeMemory();
-            std::cerr << "COMPLETE rows=" << rows << " errors=" << errors << "\n";
-            return errors?5:0;
-          }
+          static std::vector<std::string> splitTabs(const std::string& line){std::vector<std::string> z;std::string x;std::stringstream ss(line);while(std::getline(ss,x,'\t'))z.push_back(x);return z;}
+          static void writeCanonical(std::ostream& out,const ddTableResults& t){const int strains[5]={4,0,1,2,3};const int seats[4]={0,2,1,3};bool first=true;for(int si=0;si<5;++si)for(int hi=0;hi<4;++hi){if(!first)out<<',';first=false;out<<t.resTable[strains[si]][seats[hi]];}}
+          int main(int argc,char**argv){if(argc!=3)return 2;SetMaxThreads(0);std::ifstream in(argv[1]);std::ofstream out(argv[2]);if(!in||!out)return 3;std::string line;long long rows=0,errors=0;while(std::getline(in,line)){if(line.empty())continue;const auto z=splitTabs(line);if(z.size()!=4)return 4;ddTableDealPBN deal{};std::strncpy(deal.cards,z[3].c_str(),sizeof(deal.cards)-1);ddTableResults table{};const int rc=CalcDDtablePBN(deal,&table);if(rc!=RETURN_NO_FAULT){errors++;continue;}out<<z[0]<<'\t'<<z[1]<<'\t'<<z[2]<<'\t';writeCanonical(out,table);out<<'\n';rows++;}FreeMemory();std::cerr<<"COMPLETE rows="<<rows<<" errors="<<errors<<"\n";return errors?5:0;}
           CPP
           g++ -std=c++17 -O3 -I odin-dds/external/dds/include dds_table_runner.cpp odin-dds/lib/dds.a -pthread -o dds_table_runner
           mkdir -p artifact
@@ -104,15 +72,19 @@ jobs:
         with:
           name: r80-native-runner
           path: runtime
-      - name: Validate native DDS against 140 embedded-DDS tables
+      - name: Validate native DDS against 140 embedded-DDS witnesses
         shell: bash
         run: |
           set -euo pipefail
           chmod +x runtime/dds_table_runner
-          echo "$EQUIV_SHA256  r80/R80_EQUIV_140.tsv" | sha256sum -c -
-          test "$(wc -l < r80/R80_EQUIV_140.tsv)" -eq 140
-          cut -f1,2,3,5 r80/R80_EQUIV_140.tsv > equiv_input4.tsv
-          cut -f1-4 r80/R80_EQUIV_140.tsv > equiv_expected.tsv
+          test "$(git hash-object r80/R80_SAMPLER_MINI.cjs)" = "$SAMPLER_BLOB"
+          test "$(git hash-object r80/R80_EQUIV_BOARDS.tsv)" = "$EQUIV_BOARDS_BLOB"
+          test "$(git hash-object r80/R80_EQUIV_140_EXPECTED.tsv.gz.b64)" = "$EQUIV_EXPECTED_BLOB"
+          node r80/R80_SAMPLER_MINI.cjs all r80/R80_EQUIV_BOARDS.tsv 20 equiv_input4.tsv
+          test "$(wc -l < equiv_input4.tsv)" -eq 140
+          base64 -d r80/R80_EQUIV_140_EXPECTED.tsv.gz.b64 > equiv_expected.tsv.gz
+          gzip -cd equiv_expected.tsv.gz > equiv_expected.tsv
+          test "$(wc -l < equiv_expected.tsv)" -eq 140
           /usr/bin/time -f 'elapsed_sec=%e maxrss_kb=%M' -o EQUIV_TIMING.txt runtime/dds_table_runner equiv_input4.tsv equiv_actual.tsv 2> EQUIV_RUN.log
           diff -u equiv_expected.tsv equiv_actual.tsv
           echo "EQUIVALENCE_140=PASS" | tee EQUIV_STATUS.txt
@@ -148,37 +120,9 @@ jobs:
         run: |
           set -euo pipefail
           chmod +x runtime/dds_table_runner
-          echo "$BOARDS_SHA256  r80/R80_BOARDS_51_100.tsv" | sha256sum -c -
-          node - "$SHARD" <<'NODE'
-          const fs=require('fs'), crypto=require('crypto');
-          const shard=Number(process.argv[2]);
-          if(!Number.isInteger(shard)||shard<1||shard>10) throw new Error('bad shard');
-          const SEATS=['N','E','S','W'], SUITS=['S','H','D','C'], RANKS='AKQJT98765432';
-          const SEED_VERSION='r66-par-distribution-precision-v12-sync-lineage-conditioning-epoch-seat-perspective-stability-auction-lineage-dealerpar-adaptive-public';
-          function parseHand(s){const z=String(s).split('.'); return {S:z[0]||'',H:z[1]||'',D:z[2]||'',C:z[3]||''};}
-          function xmur3(text){let h=1779033703^String(text).length;for(let i=0;i<String(text).length;i++){h=Math.imul(h^String(text).charCodeAt(i),3432918353);h=h<<13|h>>>19;}return function(){h=Math.imul(h^(h>>>16),2246822507);h=Math.imul(h^(h>>>13),3266489909);return(h^=h>>>16)>>>0;};}
-          function mulberry32(seed){let a=seed>>>0;return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
-          function standardDeck(){const d=[];for(const s of SUITS)for(const r of RANKS)d.push(s+r);return d;}
-          function cards(hand){const out=[];for(const s of SUITS)for(const r of String(hand[s]||''))out.push(s+r);return out;}
-          function shuffle(xs,rng){const out=xs.slice();for(let i=out.length-1;i>0;i--){const r=Number(rng());const b=Number.isFinite(r)?Math.min(Math.max(r,0),0.9999999999999999):0;const j=Math.floor(b*(i+1));[out[i],out[j]]=[out[j],out[i]];}return out;}
-          function handFromCards(xs){const h={S:'',H:'',D:'',C:''},ri=Object.fromEntries(Array.from(RANKS).map((r,i)=>[r,i]));for(const c of xs)h[c[0]]+=c.slice(1);for(const s of SUITS)h[s]=Array.from(h[s]).sort((a,b)=>ri[a]-ri[b]).join('');return h;}
-          function sample(d,i){
-            const known=`N:${SUITS.map(s=>d.hands.N[s]||'').join('.')}|S:${SUITS.map(s=>d.hands.S[s]||'').join('.')}`;
-            const material=[SEED_VERSION,String(d.board),String(d.dealer),String(d.vulnerable),'two-known-hands',known,String(i)].join('~');
-            const rng=mulberry32(xmur3(material)()); const seen=new Set([...cards(d.hands.N),...cards(d.hands.S)]);
-            const pool=shuffle(standardDeck().filter(c=>!seen.has(c)),rng);
-            return {N:{...d.hands.N},E:handFromCards(pool.slice(0,13)),S:{...d.hands.S},W:handFromCards(pool.slice(13,26))};
-          }
-          const hs=h=>`${h.S||''}.${h.H||''}.${h.D||''}.${h.C||''}`, pbn=h=>`N:${hs(h.N)} ${hs(h.E)} ${hs(h.S)} ${hs(h.W)}`;
-          const sha=s=>crypto.createHash('sha256').update(s).digest('hex');
-          const all=fs.readFileSync('r80/R80_BOARDS_51_100.tsv','utf8').trim().split(/\r?\n/).map(line=>{const z=line.split('\t');return{board:+z[0],dealer:z[1],vulnerable:z[2],hands:{N:parseHand(z[3]),S:parseHand(z[4])}};});
-          if(all.length!==50) throw new Error('board count');
-          const subset=all.slice((shard-1)*5,shard*5), lines=[];
-          for(const d of subset)for(let i=0;i<288;i++){const x=pbn(sample(d,i));lines.push([d.board,i,sha(x),x].join('\t'));}
-          if(lines.length!==1440)throw new Error('row count');
-          fs.writeFileSync('input4.tsv',lines.join('\n')+'\n');
-          console.log(JSON.stringify({shard,boards:subset.map(d=>d.board),rows:lines.length}));
-          NODE
+          test "$(git hash-object r80/R80_BOARDS_51_100.tsv)" = "$BOARDS_BLOB"
+          test "$(git hash-object r80/R80_SAMPLER_MINI.cjs)" = "$SAMPLER_BLOB"
+          node r80/R80_SAMPLER_MINI.cjs shard r80/R80_BOARDS_51_100.tsv "$SHARD" input4.tsv
           test "$(wc -l < input4.tsv)" -eq 1440
           /usr/bin/time -f 'elapsed_sec=%e maxrss_kb=%M' -o "R80_S${SHARD}_TIMING.txt" runtime/dds_table_runner input4.tsv "R80_S${SHARD}_TABLES.tsv" 2> "R80_S${SHARD}_RUN.log"
           test "$(wc -l < "R80_S${SHARD}_TABLES.tsv")" -eq 1440
@@ -215,8 +159,8 @@ jobs:
           gzip -cd incoming/R80_S*_TABLES.tsv.gz | sort -t $'\t' -k1,1n -k2,2n > final/R80_HOLDOUT_50x288_TABLES.tsv
           test "$(wc -l < final/R80_HOLDOUT_50x288_TABLES.tsv)" -eq 14400
           python3 - <<'PY'
-          import json
-          rows=[]; seen=set(); by_board={}
+          import json,glob,re
+          seen=set(); by_board={}
           for line in open('final/R80_HOLDOUT_50x288_TABLES.tsv',encoding='utf-8'):
               z=line.rstrip('\n').split('\t'); assert len(z)==4
               b,i=int(z[0]),int(z[1]); key=(b,i); assert key not in seen; seen.add(key)
@@ -226,8 +170,7 @@ jobs:
           assert all(n==288 for n in by_board.values()), by_board
           timings={}
           for s in range(1,11):
-              p=f'incoming/R80_S{s:02d}_TIMING.txt'
-              timings[f'S{s:02d}']=open(p,encoding='utf-8').read().strip()
+              p=f'incoming/R80_S{s:02d}_TIMING.txt'; timings[f'S{s:02d}']=open(p,encoding='utf-8').read().strip()
           json.dump({'status':'COMPLETE','rows':len(seen),'boards':len(by_board),'samplesPerBoard':288,'boardRange':[51,100],'timings':timings},open('final/R80_NATIVE_SUMMARY.json','w'),indent=2)
           PY
           gzip -9 final/R80_HOLDOUT_50x288_TABLES.tsv
