@@ -1,0 +1,136 @@
+{
+  "comparison": "MB08 FINAL GREEN vs MB09 FINAL",
+  "solver": "real pinned DDS static library",
+  "dds_static_sha256": "e5c7bcdcf96d3ed24b14b2840303a0d0936b05419de463809f68982c565c7f4c",
+  "input_rows": 10,
+  "solved": 10,
+  "failed": 0,
+  "counts": {
+    "BETTER": 6,
+    "WORSE": 0,
+    "EQUIVALENT": 4
+  },
+  "rows": [
+    {
+      "pair": 1,
+      "source_board": 1285,
+      "mb08_tricks": 11,
+      "mb08_ns_score": -460,
+      "mb09_tricks": 11,
+      "mb09_ns_score": -460,
+      "dealer_par_ns_score": -460,
+      "mb08_abs_par_gap": 0,
+      "mb09_abs_par_gap": 0,
+      "verdict": "EQUIVALENT"
+    },
+    {
+      "pair": 2,
+      "source_board": 5486,
+      "mb08_tricks": 3,
+      "mb08_ns_score": -1100,
+      "mb09_tricks": 7,
+      "mb09_ns_score": -50,
+      "dealer_par_ns_score": -130,
+      "mb08_abs_par_gap": 970,
+      "mb09_abs_par_gap": 80,
+      "verdict": "BETTER"
+    },
+    {
+      "pair": 3,
+      "source_board": 6486,
+      "mb08_tricks": 13,
+      "mb08_ns_score": -1460,
+      "mb09_tricks": 13,
+      "mb09_ns_score": -1460,
+      "dealer_par_ns_score": -2210,
+      "mb08_abs_par_gap": 750,
+      "mb09_abs_par_gap": 750,
+      "verdict": "EQUIVALENT"
+    },
+    {
+      "pair": 4,
+      "source_board": 7327,
+      "mb08_tricks": 11,
+      "mb08_ns_score": 650,
+      "mb09_tricks": 11,
+      "mb09_ns_score": 650,
+      "dealer_par_ns_score": 650,
+      "mb08_abs_par_gap": 0,
+      "mb09_abs_par_gap": 0,
+      "verdict": "EQUIVALENT"
+    },
+    {
+      "pair": 5,
+      "source_board": 7824,
+      "mb08_tricks": 4,
+      "mb08_ns_score": -800,
+      "mb09_tricks": 9,
+      "mb09_ns_score": -600,
+      "dealer_par_ns_score": -600,
+      "mb08_abs_par_gap": 200,
+      "mb09_abs_par_gap": 0,
+      "verdict": "BETTER"
+    },
+    {
+      "pair": 6,
+      "source_board": 8555,
+      "mb08_tricks": 3,
+      "mb08_ns_score": -1400,
+      "mb09_tricks": 9,
+      "mb09_ns_score": -400,
+      "dealer_par_ns_score": -400,
+      "mb08_abs_par_gap": 1000,
+      "mb09_abs_par_gap": 0,
+      "verdict": "BETTER"
+    },
+    {
+      "pair": 7,
+      "source_board": 8861,
+      "mb08_tricks": 2,
+      "mb08_ns_score": -1700,
+      "mb09_tricks": 9,
+      "mb09_ns_score": -600,
+      "dealer_par_ns_score": -630,
+      "mb08_abs_par_gap": 1070,
+      "mb09_abs_par_gap": 30,
+      "verdict": "BETTER"
+    },
+    {
+      "pair": 8,
+      "source_board": 8890,
+      "mb08_tricks": 9,
+      "mb08_ns_score": 600,
+      "mb09_tricks": 9,
+      "mb09_ns_score": 600,
+      "dealer_par_ns_score": 600,
+      "mb08_abs_par_gap": 0,
+      "mb09_abs_par_gap": 0,
+      "verdict": "EQUIVALENT"
+    },
+    {
+      "pair": 9,
+      "source_board": 9170,
+      "mb08_tricks": 3,
+      "mb08_ns_score": 1400,
+      "mb09_tricks": 9,
+      "mb09_ns_score": 600,
+      "dealer_par_ns_score": 300,
+      "mb08_abs_par_gap": 1100,
+      "mb09_abs_par_gap": 300,
+      "verdict": "BETTER"
+    },
+    {
+      "pair": 10,
+      "source_board": 9760,
+      "mb08_tricks": 12,
+      "mb08_ns_score": 480,
+      "mb09_tricks": 12,
+      "mb09_ns_score": 980,
+      "dealer_par_ns_score": 990,
+      "mb08_abs_par_gap": 510,
+      "mb09_abs_par_gap": 10,
+      "verdict": "BETTER"
+    }
+  ],
+  "failures": []
+}
