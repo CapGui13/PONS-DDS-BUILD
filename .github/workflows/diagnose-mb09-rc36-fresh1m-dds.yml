@@ -1,0 +1,84 @@
+name: Diagnose MB09-RC36 fresh1m DDS
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/diagnose-mb09-rc36-fresh1m-dds.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build pinned DDS
+        run: |
+          set -euo pipefail
+          git clone -q https://github.com/enerqi/odin-dds.git odin-dds
+          git -C odin-dds checkout -q 38fcd537dd6c7dec7ef596e861551f1b278f2f98
+          make -s -C odin-dds/src
+          test "$(sha256sum odin-dds/lib/dds.a | awk '{print $1}')" = e5c7bcdcf96d3ed24b14b2840303a0d0936b05419de463809f68982c565c7f4c
+      - name: Compile row solver
+        run: |
+          cat > score_one.cpp <<'CPP'
+          #include <cstring>
+          #include <iostream>
+          #include <string>
+          #include <vector>
+          #include "dll.h"
+          static std::vector<std::string> sp(const std::string&s){std::vector<std::string>v;size_t p=0;for(;;){auto q=s.find('\t',p);if(q==std::string::npos){v.push_back(s.substr(p));break;}v.push_back(s.substr(p,q-p));p=q+1;}return v;}
+          static int hc(char c){return c=='N'?0:c=='E'?1:c=='S'?2:3;}
+          static int sc(char c){return c=='S'?0:c=='H'?1:c=='D'?2:c=='C'?3:4;}
+          static int vc(const std::string&v){return v=="None"?0:v=="Both"?1:v=="NS"?2:3;}
+          static bool iv(char d,int v){if(v==1)return true;if(v==0)return false;bool ns=d=='N'||d=='S';return v==2?ns:!ns;}
+          struct C{bool po{};int l{};char s{'-'};char d{'-'};std::string x{"NONE"};};
+          static int ds(const C&c,int t,int v){if(c.po)return 0;int tar=c.l+6,del=t-tar;bool vu=iv(c.d,v);int m=c.x=="XX"?4:c.x=="X"?2:1;if(del>=0){int base=(c.s=='C'||c.s=='D')?20*c.l:(c.s=='H'||c.s=='S')?30*c.l:40+30*(c.l-1);int cp=base*m,z=cp;if(m==2)z+=50;else if(m==4)z+=100;if(del>0){if(m==1)z+=del*((c.s=='C'||c.s=='D')?20:30);else if(m==2)z+=del*(vu?200:100);else z+=del*(vu?400:200);}z+=cp>=100?(vu?500:300):50;if(c.l==6)z+=vu?750:500;else if(c.l==7)z+=vu?1500:1000;return z;}int u=-del,pen;if(m==1)pen=u*(vu?100:50);else{int q;if(vu)q=200+(u-1)*300;else q=u==1?100:u==2?300:u==3?500:500+(u-3)*300;pen=q*(m==4?2:1);}return -pen;}
+          static int ns(const C&c,int t,int v){int z=ds(c,t,v);return c.po?0:((c.d=='N'||c.d=='S')?z:-z);}
+          int main(){std::string l;std::getline(std::cin,l);auto f=sp(l);if(f.size()!=15)return 2;C a,b;auto pc=[&](int o,C&c){c.po=f[o]=="1";c.l=std::stoi(f[o+1]);c.s=f[o+2][0];c.d=f[o+3][0];c.x=f[o+4];};pc(5,a);pc(10,b);ddTableDealPBN d{};std::strncpy(d.cards,f[4].c_str(),sizeof(d.cards)-1);ddTableResults t{};SetMaxThreads(0);if(CalcDDtablePBN(d,&t)!=RETURN_NO_FAULT)return 3;int v=vc(f[3]);int ta=a.po?0:t.resTable[sc(a.s)][hc(a.d)],tb=b.po?0:t.resTable[sc(b.s)][hc(b.d)];int sa=ns(a,ta,v),sb=ns(b,tb,v);parResultsDealer pr{};if(DealerPar(&t,&pr,hc(f[2][0]),v)!=RETURN_NO_FAULT)return 4;std::cout<<f[0]<<'\t'<<f[1]<<'\t'<<ta<<'\t'<<sa<<'\t'<<tb<<'\t'<<sb<<'\t'<<pr.score<<'\n';FreeMemory();}
+          CPP
+          g++ -std=c++17 -O3 -I odin-dds/external/dds/include score_one.cpp odin-dds/lib/dds.a -pthread -o score_one
+      - name: Solve each RC36 fresh row
+        run: |
+          set +e
+          : > rowwise.tsv
+          : > failures.tsv
+          n=0
+          while IFS= read -r line; do
+            n=$((n+1))
+            out=$(printf '%s\n' "$line" | timeout 30s ./score_one 2>&1)
+            rc=$?
+            if [ $rc -eq 0 ]; then printf '%s\n' "$out" >> rowwise.tsv; else printf '%s\t%s\t%s\n' "$n" "$rc" "$out" >> failures.tsv; fi
+          done < inputs/mb09_rc36_fresh1m_changed20.tsv
+          echo "solved=$(wc -l < rowwise.tsv) failed=$(wc -l < failures.tsv)"
+      - name: Classify and persist RC36 diagnostic
+        if: always()
+        run: |
+          mkdir -p results/mb09-rc36-fresh1m
+          python3 - <<'PY'
+          import json,os
+          rows=[]; counts={'BETTER':0,'WORSE':0,'EQUIVALENT':0}
+          if os.path.exists('rowwise.tsv'):
+            for l in open('rowwise.tsv'):
+              z=l.rstrip().split('\t')
+              r={'index':int(z[0]),'seed':int(z[1]),'baseline_tricks':int(z[2]),'baseline_ns_score':int(z[3]),'candidate_tricks':int(z[4]),'candidate_ns_score':int(z[5]),'dealer_par_ns_score':int(z[6])}
+              r['baseline_abs_par_gap']=abs(r['baseline_ns_score']-r['dealer_par_ns_score'])
+              r['candidate_abs_par_gap']=abs(r['candidate_ns_score']-r['dealer_par_ns_score'])
+              if r['candidate_abs_par_gap'] < r['baseline_abs_par_gap']: v='BETTER'
+              elif r['candidate_abs_par_gap'] > r['baseline_abs_par_gap']: v='WORSE'
+              else: v='EQUIVALENT'
+              r['verdict']=v; counts[v]+=1; rows.append(r)
+          failures=open('failures.tsv').read().splitlines() if os.path.exists('failures.tsv') else []
+          out={'candidate':'MB09-RC36','scope':'1S-PASS responder S4-H3-D4-C2 exactly 16 HLD; restore direct fitted 2NT','solver':'real pinned DDS static library','dds_static_sha256':'e5c7bcdcf96d3ed24b14b2840303a0d0936b05419de463809f68982c565c7f4c','fresh_deals':1000000,'activations':62,'input_rows':20,'solved':len(rows),'failed':len(failures),'counts':counts,'zero_worse_gate_pass':len(rows)==20 and not failures and counts['WORSE']==0,'rows':rows,'failures':failures}
+          json.dump(out,open('results/mb09-rc36-fresh1m/ROWWISE_DIAGNOSTIC.json','w'),indent=2)
+          print(json.dumps(out,indent=2))
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git pull --rebase origin main
+          git add results/mb09-rc36-fresh1m/ROWWISE_DIAGNOSTIC.json
+          git diff --cached --quiet || git commit -m 'Record MB09 RC36 fresh1m DDS diagnostic'
+          git push
