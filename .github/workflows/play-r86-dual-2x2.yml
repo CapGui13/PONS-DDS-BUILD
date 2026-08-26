@@ -1,0 +1,126 @@
+name: PLAY R86 dual 2x2 effective workload
+
+on:
+  push:
+    branches: ["r86-thread-sweep"]
+    paths:
+      - "r86/R86_DUAL_2X2_TRIGGER.txt"
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  SOURCE_RUN_ID: 32950300221
+
+jobs:
+  dual:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: r86-runtime
+          path: runtime
+          repository: CapGui13/PONS-DDS-BUILD
+          run-id: ${{ env.SOURCE_RUN_ID }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: r86-corpus
+          path: corpus
+          repository: CapGui13/PONS-DDS-BUILD
+          run-id: ${{ env.SOURCE_RUN_ID }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Prepare corpus and start two persistent DDS engines
+        shell: bash
+        run: |
+          set -euo pipefail
+          chmod +x runtime/r86_dds_daemon
+          gzip -dc corpus/full_in.tsv.gz > full_in.tsv
+          gzip -dc corpus/full_exp.tsv.gz > full_exp.tsv
+          mkdir -p dual
+          echo "nproc=$(nproc)" | tee dual/RUNNER_CPU.txt
+
+          DDS_RUNNER="$PWD/runtime/r86_dds_daemon" DDS_THREADS=2 DDS_BATCH_SIZE=24 PORT=18086 python3 runtime/r86_dds_server.py > dual/server_a.log 2>&1 &
+          echo $! > dual/pid_a.txt
+          DDS_RUNNER="$PWD/runtime/r86_dds_daemon" DDS_THREADS=2 DDS_BATCH_SIZE=24 PORT=18087 python3 runtime/r86_dds_server.py > dual/server_b.log 2>&1 &
+          echo $! > dual/pid_b.txt
+
+          ready_a=0; ready_b=0
+          for i in $(seq 1 80); do
+            if curl -fsS http://127.0.0.1:18086/healthz >/dev/null 2>&1; then ready_a=1; fi
+            if curl -fsS http://127.0.0.1:18087/healthz >/dev/null 2>&1; then ready_b=1; fi
+            if [ "$ready_a" = 1 ] && [ "$ready_b" = 1 ]; then break; fi
+            sleep 0.25
+          done
+          test "$ready_a" = 1
+          test "$ready_b" = 1
+      - name: Run 50-board dual-engine benchmark with exact table verification
+        shell: bash
+        run: |
+          set -euo pipefail
+          trap 'kill "$(cat dual/pid_a.txt)" "$(cat dual/pid_b.txt)" >/dev/null 2>&1 || true' EXIT
+          python3 r86/r86_dual_effective.py \
+            --input full_in.tsv \
+            --expected full_exp.tsv \
+            --stops r86/R86_R81_EFFECTIVE_STOPS_51_100.json \
+            --url1 http://127.0.0.1:18086/api/dds \
+            --url2 http://127.0.0.1:18087/api/dds \
+            --output dual/R86_DUAL_2X2_EFFECTIVE.json
+          curl -fsS http://127.0.0.1:18086/healthz > dual/health_a.json
+          curl -fsS http://127.0.0.1:18087/healthz > dual/health_b.json
+      - name: Validate and compare against single-engine R86 baseline
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          r=json.load(open('dual/R86_DUAL_2X2_EFFECTIVE.json'))
+          a=json.load(open('dual/health_a.json'))
+          b=json.load(open('dual/health_b.json'))
+          assert r['status']=='PASS' and len(r['boards'])==50
+          assert a['restarts']==0 and b['restarts']==0, (a,b)
+          assert a['tables']+b['tables']==r['metrics']['requestedSamples'], (a,b,r['metrics'])
+          assert 0<a['maxChildRssKb']<450000 and 0<b['maxChildRssKb']<450000, (a,b)
+          baseline={
+            'medianMs':7046.231491999997,
+            'p90Ms':19050.43847600001,
+            'p95Ms':31441.162141999997,
+            'maxMs':43082.78597200001,
+            'meanMs':9360.860289540007,
+          }
+          m=r['metrics']
+          speed={k:baseline[k]/m[k] for k in baseline}
+          out={
+            'campaign':'PLAY_R86_DUAL_2X2_DECISION',
+            'status':'PASS',
+            'baselineSingle2Threads':baseline,
+            'dual2x2':m,
+            'speedup':speed,
+            'engineA':a,
+            'engineB':b,
+            'combinedMaxChildRssKb':a['maxChildRssKb']+b['maxChildRssKb'],
+            'runnerCpu':open('dual/RUNNER_CPU.txt').read().strip(),
+            'playChanged':False,
+            'ponsChanged':False,
+          }
+          json.dump(out,open('dual/R86_DUAL_2X2_DECISION.json','w'),indent=2,sort_keys=True)
+          with open('dual/R86_DUAL_2X2_REPORT.md','w') as f:
+            f.write('# PLAY R86 — dual DDS 2×2\n\n')
+            f.write('**Toutes les tables demandées ont été vérifiées exactement contre l’oracle R80.**\n\n')
+            f.write(f"- médiane : **{m['medianMs']/1000:.2f} s** (×{speed['medianMs']:.2f} vs 1 moteur) ;\n")
+            f.write(f"- P90 : **{m['p90Ms']/1000:.2f} s** (×{speed['p90Ms']:.2f}) ;\n")
+            f.write(f"- P95 : **{m['p95Ms']/1000:.2f} s** (×{speed['p95Ms']:.2f}) ;\n")
+            f.write(f"- max : **{m['maxMs']/1000:.2f} s** (×{speed['maxMs']:.2f}) ;\n")
+            f.write(f"- moyenne : **{m['meanMs']/1000:.2f} s** (×{speed['meanMs']:.2f}) ;\n")
+            f.write(f"- RSS max A+B : **{out['combinedMaxChildRssKb']/1024:.1f} MiB** ; restarts : **0**.\n")
+          print(json.dumps(out,indent=2,sort_keys=True))
+          PY
+          (cd dual && sha256sum R86_DUAL_2X2_EFFECTIVE.json R86_DUAL_2X2_DECISION.json R86_DUAL_2X2_REPORT.md > SHA256SUMS.txt)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PLAY_R86_DUAL_2X2_EFFECTIVE_50
+          path: dual/
+          retention-days: 30
