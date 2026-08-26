@@ -1,0 +1,164 @@
+name: PLAY R86 effective R81 workload sharded
+
+on:
+  push:
+    branches: ["r86-thread-sweep"]
+    paths:
+      - "r86/R86_EFFECTIVE_SHARDED_TRIGGER.txt"
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  SOURCE_RUN_ID: 32950300221
+
+jobs:
+  shard:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - id: 0
+            boards: "51-60"
+          - id: 1
+            boards: "61-70"
+          - id: 2
+            boards: "71-80"
+          - id: 3
+            boards: "81-90"
+          - id: 4
+            boards: "91-100"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: r86-runtime
+          path: runtime
+          repository: CapGui13/PONS-DDS-BUILD
+          run-id: ${{ env.SOURCE_RUN_ID }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: r86-corpus
+          path: corpus
+          repository: CapGui13/PONS-DDS-BUILD
+          run-id: ${{ env.SOURCE_RUN_ID }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Run exact effective workload shard
+        shell: bash
+        run: |
+          set -euo pipefail
+          chmod +x runtime/r86_dds_daemon
+          gzip -dc corpus/full_in.tsv.gz > full_in.tsv
+          gzip -dc corpus/full_exp.tsv.gz > full_exp.tsv
+          DDS_RUNNER="$PWD/runtime/r86_dds_daemon" DDS_THREADS=2 DDS_BATCH_SIZE=24 PORT=18086 python3 runtime/r86_dds_server.py > server.log 2>&1 &
+          pid=$!
+          trap 'kill "$pid" >/dev/null 2>&1 || true' EXIT
+          ready=0
+          for i in $(seq 1 80); do
+            if curl -fsS http://127.0.0.1:18086/healthz >/dev/null 2>&1; then ready=1; break; fi
+            sleep 0.25
+          done
+          test "$ready" = 1
+          mkdir out
+          python3 r86/r86_effective_workload.py \
+            --input full_in.tsv \
+            --expected full_exp.tsv \
+            --stops r86/R86_R81_EFFECTIVE_STOPS_51_100.json \
+            --threads 2 \
+            --boards "${{ matrix.boards }}" \
+            --output "out/shard_${{ matrix.id }}.json"
+          curl -fsS http://127.0.0.1:18086/healthz > "out/health_${{ matrix.id }}.json"
+          python3 - <<'PY'
+          import json,glob
+          r=json.load(open(glob.glob('out/shard_*.json')[0]))
+          h=json.load(open(glob.glob('out/health_*.json')[0]))
+          assert r['status']=='PASS' and len(r['boards'])==10
+          assert h['restarts']==0, h
+          assert h['tables']==r['metrics']['requestedSamples'], (h,r['metrics'])
+          assert 0 < h['maxChildRssKb'] < 450000, h
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: r86-effective-shard-${{ matrix.id }}
+          path: out/
+          retention-days: 30
+
+  aggregate:
+    needs: shard
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: r86-effective-shard-*
+          path: shards
+      - name: Aggregate 50-board user-facing metrics
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir final
+          python3 - <<'PY'
+          import glob,json,math,statistics,os
+          def pct(v,p):
+              s=sorted(v); return s[max(0,min(len(s)-1,math.ceil(p*len(s))-1))]
+          files=glob.glob('shards/**/shard_*.json',recursive=True)
+          healths=glob.glob('shards/**/health_*.json',recursive=True)
+          assert len(files)==5, files
+          assert len(healths)==5, healths
+          boards=[]; requested=logical=overshoot=0
+          for p in files:
+              x=json.load(open(p)); assert x['status']=='PASS'
+              boards.extend(x['boards'])
+              requested+=x['metrics']['requestedSamples']
+              logical+=x['metrics']['logicalSamples']
+              overshoot+=x['metrics']['httpChunkOvershootSamples']
+          boards.sort(key=lambda x:x['board'])
+          assert [b['board'] for b in boards]==list(range(51,101))
+          assert len({b['board'] for b in boards})==50
+          hs=[json.load(open(p)) for p in healths]
+          assert all(h['restarts']==0 for h in hs), hs
+          assert sum(h['tables'] for h in hs)==requested
+          vals=[b['elapsedMs'] for b in boards]
+          report={
+            'campaign':'PLAY_R86_R81_EFFECTIVE_HTTP_WORKLOAD_50_SHARDED',
+            'status':'PASS',
+            'threads':2,
+            'batchSize':24,
+            'boards':boards,
+            'metrics':{
+              'medianMs':statistics.median(vals),
+              'p90Ms':pct(vals,.90),
+              'p95Ms':pct(vals,.95),
+              'maxMs':max(vals),
+              'meanMs':statistics.mean(vals),
+              'logicalSamples':logical,
+              'requestedSamples':requested,
+              'httpChunkOvershootSamples':overshoot,
+            },
+            'slowest':sorted(boards,key=lambda x:x['elapsedMs'],reverse=True)[:10],
+            'maxChildRssKbAcrossShards':max(h['maxChildRssKb'] for h in hs),
+            'engineRestarts':sum(h['restarts'] for h in hs),
+            'sourceRuntimeRun':32950300221,
+            'identityPreviouslyQualifiedTables':14540,
+          }
+          json.dump(report,open('final/R86_EFFECTIVE_50.json','w'),indent=2,sort_keys=True)
+          m=report['metrics']
+          with open('final/R86_EFFECTIVE_50_REPORT.md','w') as f:
+              f.write('# PLAY R86 — charge HTTP réellement demandée par R81\n\n')
+              f.write('**PASS technique des 5 shards ; chaque table retournée est revalidée contre l’oracle R80.**\n\n')
+              f.write(f"- 50 boards held-out ; logique R81 : **{logical}** samples ; HTTP par lots de 24 : **{requested}** (+{overshoot}) ;\n")
+              f.write(f"- médiane : **{m['medianMs']/1000:.2f} s** ; P90 : **{m['p90Ms']/1000:.2f} s** ; P95 : **{m['p95Ms']/1000:.2f} s** ; max : **{m['maxMs']/1000:.2f} s** ;\n")
+              f.write(f"- moyenne : **{m['meanMs']/1000:.2f} s** ; RSS max observé : **{report['maxChildRssKbAcrossShards']/1024:.1f} MiB** ; restarts : **0**.\n\n")
+              f.write('Le benchmark mesure le volume DDS effectivement nécessaire selon les stops R81, et non 120 DDS forcés sur chaque donne.\n')
+          print(json.dumps(report,indent=2,sort_keys=True))
+          PY
+          (cd final && sha256sum * > SHA256SUMS.txt)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PLAY_R86_EFFECTIVE_R81_WORKLOAD_50_SHARDED
+          path: final/
+          retention-days: 30
