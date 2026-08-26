@@ -1,0 +1,268 @@
+name: PLAY R84 DDS staged benchmark
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "r84/R84_FAST_TRIGGER.txt"
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  ODIN_COMMIT: 38fcd537dd6c7dec7ef596e861551f1b278f2f98
+  DDS_UPSTREAM_COMMIT: 7219c956f4ed9a9f8d1585e9a1a2c57465745ac5
+  DDS_A_SHA256: e5c7bcdcf96d3ed24b14b2840303a0d0936b05419de463809f68982c565c7f4c
+  FULL_ROWS: 14540
+  BENCH_ROWS: 1580
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build pinned DDS and benchmark runner
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone https://github.com/enerqi/odin-dds.git odin-dds
+          git -C odin-dds checkout "$ODIN_COMMIT"
+          grep -q "$DDS_UPSTREAM_COMMIT" odin-dds/external/dds/VENDORED.md
+          make -C odin-dds/src
+          test "$(sha256sum odin-dds/lib/dds.a | awk '{print $1}')" = "$DDS_A_SHA256"
+          g++ -std=c++17 -O3 -I odin-dds/external/dds/include r84/dds_batch_bench.cpp odin-dds/lib/dds.a -pthread -o dds_batch_bench
+          mkdir runtime && cp dds_batch_bench runtime/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: r84-fast-runtime
+          path: runtime/
+          retention-days: 7
+
+  corpus:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: PLAY_R80_HOLDOUT_50x288_NATIVE_TABLES
+          path: r80oracle
+          repository: CapGui13/PONS-DDS-BUILD
+          run-id: 32899749130
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build exact full and benchmark corpora
+        shell: bash
+        run: |
+          set -euo pipefail
+          gzip -dc r80oracle/R80_HOLDOUT_50x288_TABLES.tsv.gz > h_exp.tsv
+          node r80/R80_SAMPLER_MINI.cjs all r80/R80_BOARDS_51_100.tsv 288 h_in.tsv
+          base64 -d r80/R80_EQUIV_140_EXPECTED.tsv.gz.b64 | gzip -dc > e_exp.tsv
+          node r80/R80_SAMPLER_MINI.cjs all r80/R80_EQUIV_BOARDS.tsv 20 e_in.tsv
+          cmp <(cut -f1-3 h_in.tsv) <(cut -f1-3 h_exp.tsv)
+          cmp <(cut -f1-3 e_in.tsv) <(cut -f1-3 e_exp.tsv)
+          cat e_in.tsv h_in.tsv > full_in.tsv
+          cat e_exp.tsv h_exp.tsv > full_exp.tsv
+          test "$(wc -l < full_in.tsv)" -eq "$FULL_ROWS"
+          head -n "$BENCH_ROWS" full_in.tsv > bench_in.tsv
+          head -n "$BENCH_ROWS" full_exp.tsv > bench_exp.tsv
+          mkdir corpus
+          gzip -9 -c full_in.tsv > corpus/full_in.tsv.gz
+          gzip -9 -c full_exp.tsv > corpus/full_exp.tsv.gz
+          gzip -9 -c bench_in.tsv > corpus/bench_in.tsv.gz
+          gzip -9 -c bench_exp.tsv > corpus/bench_exp.tsv.gz
+          sha256sum corpus/* > corpus/SHA256SUMS.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: r84-fast-corpus
+          path: corpus/
+          compression-level: 0
+          retention-days: 7
+
+  benchmark:
+    needs: [build, corpus]
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {key: seq-t1, mode: seq, threads: 1, batch: 1}
+          - {key: seq-t2, mode: seq, threads: 2, batch: 1}
+          - {key: b06-t1, mode: batch, threads: 1, batch: 6}
+          - {key: b06-t2, mode: batch, threads: 2, batch: 6}
+          - {key: b12-t1, mode: batch, threads: 1, batch: 12}
+          - {key: b12-t2, mode: batch, threads: 2, batch: 12}
+          - {key: b24-t1, mode: batch, threads: 1, batch: 24}
+          - {key: b24-t2, mode: batch, threads: 2, batch: 24}
+          - {key: b40-t1, mode: batch, threads: 1, batch: 40}
+          - {key: b40-t2, mode: batch, threads: 2, batch: 40}
+    steps:
+      - uses: actions/download-artifact@v4
+        with: {name: r84-fast-runtime, path: runtime}
+      - uses: actions/download-artifact@v4
+        with: {name: r84-fast-corpus, path: corpus}
+      - name: Benchmark ${{ matrix.key }} on sealed 1,580-table corpus
+        shell: bash
+        env:
+          KEY: ${{ matrix.key }}
+          MODE: ${{ matrix.mode }}
+          THREADS: ${{ matrix.threads }}
+          BATCH: ${{ matrix.batch }}
+        run: |
+          set -euo pipefail
+          chmod +x runtime/dds_batch_bench
+          gzip -dc corpus/bench_in.tsv.gz > in.tsv
+          gzip -dc corpus/bench_exp.tsv.gz > exp.tsv
+          /usr/bin/time -f 'elapsed_sec=%e\nuser_sec=%U\nsys_sec=%S\nmaxrss_kb=%M' -o timing.txt \
+            runtime/dds_batch_bench "$MODE" "$THREADS" "$BATCH" in.tsv out.tsv meta.txt
+          cmp exp.tsv out.tsv
+          python3 - <<'PY'
+          import json,os
+          t={}; m={}
+          for x in open('timing.txt'):
+              k,v=x.strip().split('=',1); t[k]=float(v)
+          for x in open('meta.txt'):
+              k,v=x.strip().split('=',1); m[k]=v
+          n=int(m['rows']); e=t['elapsed_sec']
+          r={'key':os.environ['KEY'],'mode':os.environ['MODE'],'threads':int(os.environ['THREADS']),'batch':int(os.environ['BATCH']),
+             'rows':n,'identity':'PASS','elapsedSec':e,'userSec':t['user_sec'],'sysSec':t['sys_sec'],'maxRssKb':int(t['maxrss_kb']),
+             'ddsPerSec':n/e,'estimated24Sec':24*e/n,'estimated72Sec':72*e/n,'estimated120Sec':120*e/n,'calls':int(m['calls'])}
+          json.dump(r,open('R84_PERF.json','w'),indent=2,sort_keys=True)
+          print(json.dumps(r,indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: r84-fast-perf-${{ matrix.key }}
+          path: R84_PERF.json
+          retention-days: 30
+
+  select:
+    needs: benchmark
+    runs-on: ubuntu-22.04
+    outputs:
+      mode: ${{ steps.pick.outputs.mode }}
+      threads: ${{ steps.pick.outputs.threads }}
+      batch: ${{ steps.pick.outputs.batch }}
+      key: ${{ steps.pick.outputs.key }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: r84-fast-perf-*
+          path: perf
+      - id: pick
+        name: Select fastest identity-clean configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import glob,json,os
+          rs=[json.load(open(p)) for p in glob.glob('perf/**/R84_PERF.json',recursive=True)]
+          assert len(rs)==10
+          assert all(r['identity']=='PASS' and r['rows']==1580 for r in rs)
+          rs.sort(key=lambda r:r['elapsedSec'])
+          b=rs[0]; base=next(r for r in rs if r['key']=='seq-t1')
+          for r in rs:r['speedupVsSeqT1']=base['elapsedSec']/r['elapsedSec']
+          json.dump({'best':b,'results':rs},open('R84_SELECTION.json','w'),indent=2,sort_keys=True)
+          with open(os.environ['GITHUB_OUTPUT'],'a') as f:
+              f.write(f"mode={b['mode']}\nthreads={b['threads']}\nbatch={b['batch']}\nkey={b['key']}\n")
+          print(json.dumps({'best':b},indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: r84-fast-selection
+          path: R84_SELECTION.json
+          retention-days: 30
+
+  exhaustive-identity:
+    needs: [build, corpus, select]
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0,1,2,3,4,5,6,7,8,9]
+    steps:
+      - uses: actions/download-artifact@v4
+        with: {name: r84-fast-runtime, path: runtime}
+      - uses: actions/download-artifact@v4
+        with: {name: r84-fast-corpus, path: corpus}
+      - name: Validate selected engine on full corpus shard
+        shell: bash
+        env:
+          SHARD: ${{ matrix.shard }}
+          MODE: ${{ needs.select.outputs.mode }}
+          THREADS: ${{ needs.select.outputs.threads }}
+          BATCH: ${{ needs.select.outputs.batch }}
+          KEY: ${{ needs.select.outputs.key }}
+        run: |
+          set -euo pipefail
+          chmod +x runtime/dds_batch_bench
+          gzip -dc corpus/full_in.tsv.gz > full_in.tsv
+          gzip -dc corpus/full_exp.tsv.gz > full_exp.tsv
+          python3 - <<'PY'
+          import os
+          s=int(os.environ['SHARD']); n=1454; a=s*n; b=a+n
+          for src,dst in [('full_in.tsv','in.tsv'),('full_exp.tsv','exp.tsv')]:
+              lines=open(src).readlines()[a:b]
+              assert len(lines)==n
+              open(dst,'w').writelines(lines)
+          PY
+          /usr/bin/time -f 'elapsed_sec=%e\nmaxrss_kb=%M' -o timing.txt \
+            runtime/dds_batch_bench "$MODE" "$THREADS" "$BATCH" in.tsv out.tsv meta.txt
+          cmp exp.tsv out.tsv
+          printf 'shard=%s\nrows=1454\nidentity=PASS\nkey=%s\n' "$SHARD" "$KEY" > identity.txt
+          mkdir result && mv identity.txt timing.txt result/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: r84-fast-identity-${{ matrix.shard }}
+          path: result/
+          retention-days: 30
+
+  final:
+    needs: [select, exhaustive-identity]
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/download-artifact@v4
+        with: {name: r84-fast-selection, path: selection}
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: r84-fast-identity-*
+          path: identity
+      - name: Produce final R84 report
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import glob,json,os,re
+          sel=json.load(open('selection/R84_SELECTION.json'))
+          ids=glob.glob('identity/**/identity.txt',recursive=True)
+          assert len(ids)==10,len(ids)
+          total=0
+          for p in ids:
+              d={}
+              for x in open(p):
+                  k,v=x.strip().split('=',1);d[k]=v
+              assert d['identity']=='PASS'; total+=int(d['rows'])
+          assert total==14540,total
+          b=sel['best']; rs=sel['results']
+          os.makedirs('final',exist_ok=True)
+          summary={'campaign':'PLAY_R84_DDS_STAGED_NATIVE_BATCH_BENCHMARK','status':'PASS','performanceCorpusTables':1580,
+                   'exhaustiveIdentityTables':total,'best':b,'results':rs,
+                   'note':'Compute-only benchmark on GitHub Actions; excludes HTTP latency and cold start.'}
+          json.dump(summary,open('final/R84_SUMMARY.json','w'),indent=2,sort_keys=True)
+          with open('final/R84_REPORT.md','w') as f:
+              f.write('# PLAY R84 — DDS native batch benchmark\n\n')
+              f.write('**PASS** — fastest configuration selected on a sealed 1,580-table performance corpus, then reproduced **14,540 / 14,540** reference DD tables in an independent exhaustive sharded gate.\n\n')
+              f.write('R83 / PLAY runtime: **unchanged**. PONS: **unchanged**.\n\n')
+              f.write('| Config | Threads | Batch | DDS/s | 24 est. | 72 est. | 120 est. | RSS MiB | Speedup |\n|---|---:|---:|---:|---:|---:|---:|---:|---:|\n')
+              for r in sorted(rs,key=lambda x:x['elapsedSec']):
+                  f.write(f"| {r['key']} | {r['threads']} | {r['batch']} | {r['ddsPerSec']:.2f} | {r['estimated24Sec']:.2f}s | {r['estimated72Sec']:.2f}s | {r['estimated120Sec']:.2f}s | {r['maxRssKb']/1024:.1f} | {r['speedupVsSeqT1']:.2f}x |\n")
+              f.write('\n## Selected configuration\n\n')
+              f.write(f"**{b['key']}** — {b['ddsPerSec']:.2f} DDS/s. Compute-only estimates: **24={b['estimated24Sec']:.2f}s, 72={b['estimated72Sec']:.2f}s, 120={b['estimated120Sec']:.2f}s**. Max RSS {b['maxRssKb']/1024:.1f} MiB.\n\n")
+              f.write('These are server compute estimates only; R85 must measure HTTP round-trip, cold start and real mobile end-to-end latency before any PLAY runtime change.\n')
+          PY
+          sha256sum final/* > final/SHA256SUMS.txt
+          cat final/R84_REPORT.md
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PLAY_R84_DDS_STAGED_BENCHMARK_RESULT
+          path: final/
+          retention-days: 30
