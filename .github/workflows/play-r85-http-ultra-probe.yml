@@ -1,0 +1,29 @@
+name: PLAY R85 HTTP DDS ultra probe
+on:
+  push:
+    branches: ["main"]
+    paths: ["r85/R85_ULTRA_TRIGGER.txt"]
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Generate exact inputs and probe 1 10 24
+        run: |
+          node r80/R80_SAMPLER_MINI.cjs all r80/R80_EQUIV_BOARDS.tsv 20 equiv_input.tsv
+          node - <<'NODE' | tee R85_ULTRA_PROBE.json
+          const fs=require('fs'),{performance}=require('perf_hooks');
+          const rows=fs.readFileSync('equiv_input.tsv','utf8').trim().split(/\r?\n/).slice(0,24).map((l,i)=>({id:i,pbn:l.split('\t').slice(3).join('\t')}));
+          async function run(n){const t=performance.now();try{const r=await fetch('https://api-gen-beta.vercel.app/api/dds',{method:'POST',headers:{'content-type':'application/json','origin':'https://capgui13.github.io'},body:JSON.stringify({items:rows.slice(0,n)}),signal:AbortSignal.timeout(8000)});const tx=await r.text();let d=null;try{d=JSON.parse(tx)}catch{};return{n,status:r.status,ok:r.ok&&Array.isArray(d?.results)&&d.results.filter(x=>x?.table).length===n,results:Array.isArray(d?.results)?d.results.length:null,tables:Array.isArray(d?.results)?d.results.filter(x=>x?.table).length:null,ms:Math.round(performance.now()-t),body:(!r.ok||!d?.results)?tx.slice(0,160):undefined}}catch(e){return{n,ok:false,error:String(e?.message||e),ms:Math.round(performance.now()-t)}}}
+          (async()=>{const out=[];for(const n of [1,10,24])out.push(await run(n));console.log(JSON.stringify(out,null,2));})();
+          NODE
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PLAY_R85_HTTP_ULTRA_PROBE
+          path: R85_ULTRA_PROBE.json
+          retention-days: 30
