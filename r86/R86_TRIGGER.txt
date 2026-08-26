@@ -1,2 +1,2 @@
 PLAY_R86_NATIVE_HTTP_DDS_QUALIFICATION
-trigger=2026-08-26-r2-ubuntu2204
+trigger=2026-08-26-r3-buffered-pipe-fix
