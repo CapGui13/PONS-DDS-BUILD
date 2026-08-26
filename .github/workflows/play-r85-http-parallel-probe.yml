@@ -1,0 +1,30 @@
+name: PLAY R85 HTTP parallel probe
+on:
+  push:
+    branches: ["main"]
+    paths: ["r85/R85_PARALLEL_TRIGGER.txt"]
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Build 72 exact witness inputs
+        run: |
+          set -euo pipefail
+          base64 -d r80/R80_EQUIV_140_EXPECTED.tsv.gz.b64 | gzip -dc > expected.tsv
+          node r80/R80_SAMPLER_MINI.cjs all r80/R80_EQUIV_BOARDS.tsv 20 input.tsv
+          test "$(wc -l < input.tsv)" -eq 140
+      - name: Run 3x24 concurrent HTTP probe
+        run: node r85/http_parallel_probe.mjs input.tsv R85_PARALLEL_PROBE.json | tee R85_PARALLEL_CONSOLE.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PLAY_R85_HTTP_PARALLEL_PROBE
+          path: |
+            R85_PARALLEL_PROBE.json
+            R85_PARALLEL_CONSOLE.txt
+          retention-days: 30
