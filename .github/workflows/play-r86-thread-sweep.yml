@@ -1,0 +1,115 @@
+name: PLAY R86 DDS thread sweep
+
+on:
+  push:
+    branches: ["r86-thread-sweep"]
+    paths:
+      - "r86/R86_THREAD_SWEEP_TRIGGER.txt"
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  SOURCE_RUN_ID: 32950300221
+  ODIN_COMMIT: 38fcd537dd6c7dec7ef596e861551f1b278f2f98
+  DDS_UPSTREAM_COMMIT: 7219c956f4ed9a9f8d1585e9a1a2c57465745ac5
+  DDS_A_SHA256: e5c7bcdcf96d3ed24b14b2840303a0d0936b05419de463809f68982c565c7f4c
+
+jobs:
+  sweep:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: r86-corpus
+          path: corpus
+          repository: CapGui13/PONS-DDS-BUILD
+          run-id: ${{ env.SOURCE_RUN_ID }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build same pinned DDS with 1-4 thread daemon
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update >/dev/null
+          sudo apt-get install -y build-essential >/dev/null
+          git clone -q https://github.com/enerqi/odin-dds.git odin-dds
+          git -C odin-dds checkout -q "$ODIN_COMMIT"
+          grep -q "$DDS_UPSTREAM_COMMIT" odin-dds/external/dds/VENDORED.md
+          make -C odin-dds/src >/dev/null
+          test "$(sha256sum odin-dds/lib/dds.a | awk '{print $1}')" = "$DDS_A_SHA256"
+          g++ -std=c++17 -O3 -I odin-dds/external/dds/include r86/r86_dds_daemon.cpp odin-dds/lib/dds.a -pthread -o r86_dds_daemon
+          echo "nproc=$(nproc)" | tee RUNNER_CPU.txt
+          gzip -dc corpus/full_in.tsv.gz > full_in.tsv
+          gzip -dc corpus/full_exp.tsv.gz > full_exp.tsv
+      - name: Sweep 1 2 3 4 DDS threads on identical boards
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p sweep
+          for t in 1 2 3 4; do
+            port=$((18086+t))
+            DDS_RUNNER="$PWD/r86_dds_daemon" DDS_THREADS="$t" DDS_BATCH_SIZE=24 PORT="$port" python3 r86/r86_dds_server.py > "sweep/server_t${t}.log" 2>&1 &
+            pid=$!
+            ready=0
+            for i in $(seq 1 80); do
+              if curl -fsS "http://127.0.0.1:${port}/healthz" >/dev/null 2>&1; then ready=1; break; fi
+              sleep 0.25
+            done
+            test "$ready" = 1
+            python3 r86/r86_thread_sweep.py --url "http://127.0.0.1:${port}/api/dds" --input full_in.tsv --expected full_exp.tsv --boards 51,66,81,96 --threads "$t" --output "sweep/thread_${t}.json"
+            curl -fsS "http://127.0.0.1:${port}/healthz" > "sweep/health_${t}.json"
+            kill "$pid" >/dev/null 2>&1 || true
+            wait "$pid" >/dev/null 2>&1 || true
+          done
+      - name: Aggregate comparison
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, statistics
+          rows={}
+          for t in (1,2,3,4):
+              x=json.load(open(f'sweep/thread_{t}.json'))
+              h=json.load(open(f'sweep/health_{t}.json'))
+              assert x['status']=='PASS'
+              assert h['restarts']==0, h
+              total=sum(b['t120Ms'] for b in x['boards'])
+              by={b['board']:b for b in x['boards']}
+              rows[t]={
+                'threads':t,
+                'total120MsFourBoards':total,
+                'medianBoard120Ms':statistics.median(b['t120Ms'] for b in x['boards']),
+                'board51Ms':by[51]['t120Ms'],
+                'board66Ms':by[66]['t120Ms'],
+                'board81Ms':by[81]['t120Ms'],
+                'board96Ms':by[96]['t120Ms'],
+                'maxChildRssKb':h['maxChildRssKb'],
+                'requests':h['requests'],
+                'tables':h['tables'],
+                'restarts':h['restarts'],
+              }
+          base=rows[2]['total120MsFourBoards']
+          for t in rows:
+              rows[t]['speedupVs2Threads']=base/rows[t]['total120MsFourBoards']
+          best=min(rows, key=lambda t: rows[t]['total120MsFourBoards'])
+          report={
+            'campaign':'PLAY_R86_DDS_THREAD_SWEEP',
+            'status':'PASS',
+            'samePbnAndExpectedTables':True,
+            'boards':[51,66,81,96],
+            'samplesPerBoard':120,
+            'rows':[rows[t] for t in (1,2,3,4)],
+            'bestThreadsByAggregateLatency':best,
+            'runnerCpu':open('RUNNER_CPU.txt').read().strip(),
+          }
+          json.dump(report,open('sweep/R86_THREAD_SWEEP.json','w'),indent=2,sort_keys=True)
+          print(json.dumps(report,indent=2,sort_keys=True))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PLAY_R86_DDS_THREAD_SWEEP
+          path: sweep/
+          retention-days: 30
