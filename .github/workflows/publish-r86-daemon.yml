@@ -1,0 +1,63 @@
+name: Publish R86 daemon blob
+
+on:
+  push:
+    branches: ["r86-thread-sweep"]
+    paths:
+      - "r86/PUBLISH_DAEMON_TRIGGER.txt"
+
+permissions:
+  contents: write
+  actions: read
+
+env:
+  SOURCE_RUN_ID: 32950300221
+  EXPECTED_BIN_SHA256: 7148b3ee4ecd19b3a9b5205b7a6c23ccb2f42735f80a889e7c95a68af851943a
+
+jobs:
+  publish:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: r86-thread-sweep
+      - uses: actions/download-artifact@v4
+        with:
+          name: r86-runtime
+          path: runtime
+          repository: CapGui13/PONS-DDS-BUILD
+          run-id: ${{ env.SOURCE_RUN_ID }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Verify and publish Brotli/base64 daemon
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(sha256sum runtime/r86_dds_daemon | awk '{print $1}')" = "$EXPECTED_BIN_SHA256"
+          mkdir -p r86/public
+          python3 - <<'PY'
+          import base64, hashlib, pathlib
+          try:
+              import brotli
+          except Exception:
+              raise SystemExit('python brotli module unavailable')
+          src=pathlib.Path('runtime/r86_dds_daemon').read_bytes()
+          br=brotli.compress(src, quality=11, mode=brotli.MODE_GENERIC)
+          pathlib.Path('r86/public/r86_dds_daemon.br.b64').write_text(base64.b64encode(br).decode(), encoding='ascii')
+          pathlib.Path('r86/public/R86_DAEMON_MANIFEST.json').write_text(__import__('json').dumps({
+              'binarySha256': hashlib.sha256(src).hexdigest(),
+              'brotliSha256': hashlib.sha256(br).hexdigest(),
+              'binaryBytes': len(src),
+              'brotliBytes': len(br),
+              'sourceRunId': 32950300221,
+              'release': 'R86'
+          }, indent=2, sort_keys=True)+'\n')
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add r86/public/r86_dds_daemon.br.b64 r86/public/R86_DAEMON_MANIFEST.json
+          if git diff --cached --quiet; then
+            echo "No changes"
+          else
+            git commit -m "Publish qualified R86 DDS daemon blob"
+            git push origin HEAD:r86-thread-sweep
+          fi
