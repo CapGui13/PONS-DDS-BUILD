@@ -28,33 +28,29 @@ jobs:
           repository: CapGui13/PONS-DDS-BUILD
           run-id: ${{ env.SOURCE_RUN_ID }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Verify and publish Brotli/base64 daemon
+      - name: Verify and publish gzip/base64 daemon
         shell: bash
         run: |
           set -euo pipefail
           test "$(sha256sum runtime/r86_dds_daemon | awk '{print $1}')" = "$EXPECTED_BIN_SHA256"
           mkdir -p r86/public
           python3 - <<'PY'
-          import base64, hashlib, pathlib
-          try:
-              import brotli
-          except Exception:
-              raise SystemExit('python brotli module unavailable')
+          import base64, gzip, hashlib, json, pathlib
           src=pathlib.Path('runtime/r86_dds_daemon').read_bytes()
-          br=brotli.compress(src, quality=11, mode=brotli.MODE_GENERIC)
-          pathlib.Path('r86/public/r86_dds_daemon.br.b64').write_text(base64.b64encode(br).decode(), encoding='ascii')
-          pathlib.Path('r86/public/R86_DAEMON_MANIFEST.json').write_text(__import__('json').dumps({
+          gz=gzip.compress(src, compresslevel=9, mtime=0)
+          pathlib.Path('r86/public/r86_dds_daemon.gz.b64').write_text(base64.b64encode(gz).decode(), encoding='ascii')
+          pathlib.Path('r86/public/R86_DAEMON_MANIFEST.json').write_text(json.dumps({
               'binarySha256': hashlib.sha256(src).hexdigest(),
-              'brotliSha256': hashlib.sha256(br).hexdigest(),
+              'gzipSha256': hashlib.sha256(gz).hexdigest(),
               'binaryBytes': len(src),
-              'brotliBytes': len(br),
+              'gzipBytes': len(gz),
               'sourceRunId': 32950300221,
               'release': 'R86'
           }, indent=2, sort_keys=True)+'\n')
           PY
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add r86/public/r86_dds_daemon.br.b64 r86/public/R86_DAEMON_MANIFEST.json
+          git add r86/public/r86_dds_daemon.gz.b64 r86/public/R86_DAEMON_MANIFEST.json
           if git diff --cached --quiet; then
             echo "No changes"
           else
