@@ -49,7 +49,7 @@ class Engine:
             bufsize=1,
         )
         self._write('PING\n')
-        pong = self._readline(5.0)
+        pong = self._readline_wait(5.0)
         if pong != 'PONG':
             self.stop()
             raise RuntimeError(f'DDS daemon failed startup handshake: {pong!r}')
@@ -76,12 +76,23 @@ class Engine:
         self.proc.stdin.write(data)
         self.proc.stdin.flush()
 
-    def _readline(self, timeout):
+    def _readline_wait(self, timeout):
+        """Wait for the first line of one daemon response.
+
+        Do not use select() for the following table lines: TextIOWrapper may
+        already have read them into its own buffer, making the OS fd appear
+        empty even though readline() can return immediately.
+        """
         if not self.proc or not self.proc.stdout:
             raise RuntimeError('DDS daemon unavailable')
         ready, _, _ = select.select([self.proc.stdout], [], [], timeout)
         if not ready:
             raise TimeoutError('DDS daemon response timeout')
+        return self._readline_buffered()
+
+    def _readline_buffered(self):
+        if not self.proc or not self.proc.stdout:
+            raise RuntimeError('DDS daemon unavailable')
         line = self.proc.stdout.readline()
         if line == '':
             err = ''
@@ -117,12 +128,16 @@ class Engine:
                         self.start()
                     payload = str(len(pbns)) + '\n' + ''.join(p + '\n' for p in pbns)
                     self._write(payload)
-                    head = self._readline(REQUEST_TIMEOUT)
+                    # The daemon writes the header + every result, then flushes once.
+                    # Apply the timeout to arrival of that response only; once the
+                    # header is visible, remaining lines can already live in Python's
+                    # TextIOWrapper buffer and must be consumed directly.
+                    head = self._readline_wait(REQUEST_TIMEOUT)
                     if head.startswith('ERR\t'):
                         raise RuntimeError(head[4:])
                     if head != f'OK\t{len(pbns)}':
                         raise RuntimeError(f'unexpected DDS header {head!r}')
-                    tables = [self.decode_canonical(self._readline(REQUEST_TIMEOUT)) for _ in pbns]
+                    tables = [self.decode_canonical(self._readline_buffered()) for _ in pbns]
                     elapsed_ms = (time.perf_counter() - started) * 1000.0
                     self.requests += 1
                     self.tables += len(pbns)
