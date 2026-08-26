@@ -26,7 +26,7 @@ int main(int argc, char** argv) {
   }
   const int threads = std::stoi(argv[1]);
   const int batchSize = std::stoi(argv[2]);
-  if (threads < 1 || threads > 2 || batchSize < 1 || batchSize > 40) return 3;
+  if (threads < 1 || threads > 4 || batchSize < 1 || batchSize > 40) return 3;
   SetMaxThreads(threads);
 
   std::string line;
