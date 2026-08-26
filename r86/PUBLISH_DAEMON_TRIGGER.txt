@@ -1,1 +1,1 @@
-publish-qualified-r86-daemon
+publish-qualified-r86-daemon-gzip-v2
