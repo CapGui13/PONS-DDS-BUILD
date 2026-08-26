@@ -4,6 +4,7 @@ on:
   push:
     branches: ["main"]
     paths:
+      - ".github/workflows/play-r88-vercel-dual-lane-smoke.yml"
       - "r88/VERCEL_DUAL_LANE_TRIGGER.txt"
 
 permissions:
