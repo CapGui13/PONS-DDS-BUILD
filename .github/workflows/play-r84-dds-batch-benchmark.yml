@@ -1,0 +1,262 @@
+name: PLAY R84 DDS native batch benchmark
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "r84/R84_TRIGGER.txt"
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  ODIN_COMMIT: 38fcd537dd6c7dec7ef596e861551f1b278f2f98
+  DDS_UPSTREAM_COMMIT: 7219c956f4ed9a9f8d1585e9a1a2c57465745ac5
+  DDS_A_SHA256: e5c7bcdcf96d3ed24b14b2840303a0d0936b05419de463809f68982c565c7f4c
+  R80_RUN_ID: 32899749130
+  TOTAL_ROWS: 14540
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build pinned DDS and R84 runner
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone https://github.com/enerqi/odin-dds.git odin-dds
+          git -C odin-dds checkout "$ODIN_COMMIT"
+          test "$(git -C odin-dds rev-parse HEAD)" = "$ODIN_COMMIT"
+          grep -q "$DDS_UPSTREAM_COMMIT" odin-dds/external/dds/VENDORED.md
+          make -C odin-dds/src
+          test "$(sha256sum odin-dds/lib/dds.a | awk '{print $1}')" = "$DDS_A_SHA256"
+          g++ -std=c++17 -O3 -I odin-dds/external/dds/include r84/dds_batch_bench.cpp odin-dds/lib/dds.a -pthread -o dds_batch_bench
+          mkdir runtime
+          cp dds_batch_bench runtime/
+          cp odin-dds/lib/dds.a runtime/
+          sha256sum runtime/* > runtime/SHA256SUMS.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: r84-runtime
+          path: runtime/
+          if-no-files-found: error
+          compression-level: 9
+          retention-days: 7
+
+  prepare-corpus:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download sealed R80 14,400-table oracle
+        uses: actions/download-artifact@v4
+        with:
+          name: PLAY_R80_HOLDOUT_50x288_NATIVE_TABLES
+          path: r80oracle
+          repository: CapGui13/PONS-DDS-BUILD
+          run-id: 32899749130
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Rebuild exact R79 inputs and seal 14,540-row corpus
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s r80oracle/R80_HOLDOUT_50x288_TABLES.tsv.gz
+          gzip -dc r80oracle/R80_HOLDOUT_50x288_TABLES.tsv.gz > holdout_expected.tsv
+          test "$(wc -l < holdout_expected.tsv)" -eq 14400
+
+          node r80/R80_SAMPLER_MINI.cjs all r80/R80_BOARDS_51_100.tsv 288 holdout_input.tsv
+          test "$(wc -l < holdout_input.tsv)" -eq 14400
+          cmp <(cut -f1-3 holdout_input.tsv) <(cut -f1-3 holdout_expected.tsv)
+
+          base64 -d r80/R80_EQUIV_140_EXPECTED.tsv.gz.b64 | gzip -dc > equiv_expected.tsv
+          node r80/R80_SAMPLER_MINI.cjs all r80/R80_EQUIV_BOARDS.tsv 20 equiv_input.tsv
+          test "$(wc -l < equiv_expected.tsv)" -eq 140
+          test "$(wc -l < equiv_input.tsv)" -eq 140
+          cmp <(cut -f1-3 equiv_input.tsv) <(cut -f1-3 equiv_expected.tsv)
+
+          cat equiv_input.tsv holdout_input.tsv > R84_INPUT_14540.tsv
+          cat equiv_expected.tsv holdout_expected.tsv > R84_EXPECTED_14540.tsv
+          test "$(wc -l < R84_INPUT_14540.tsv)" -eq "$TOTAL_ROWS"
+          test "$(wc -l < R84_EXPECTED_14540.tsv)" -eq "$TOTAL_ROWS"
+          {
+            sha256sum R84_INPUT_14540.tsv
+            sha256sum R84_EXPECTED_14540.tsv
+          } > R84_CORPUS_SHA256.txt
+          gzip -9 R84_INPUT_14540.tsv R84_EXPECTED_14540.tsv
+          mkdir corpus
+          mv R84_INPUT_14540.tsv.gz R84_EXPECTED_14540.tsv.gz R84_CORPUS_SHA256.txt corpus/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: r84-corpus-14540
+          path: corpus/
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 7
+
+  benchmark:
+    needs: [build, prepare-corpus]
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - key: seq-t1
+            mode: seq
+            threads: 1
+            batch: 1
+          - key: seq-t2
+            mode: seq
+            threads: 2
+            batch: 1
+          - key: b06-t1
+            mode: batch
+            threads: 1
+            batch: 6
+          - key: b06-t2
+            mode: batch
+            threads: 2
+            batch: 6
+          - key: b12-t1
+            mode: batch
+            threads: 1
+            batch: 12
+          - key: b12-t2
+            mode: batch
+            threads: 2
+            batch: 12
+          - key: b24-t1
+            mode: batch
+            threads: 1
+            batch: 24
+          - key: b24-t2
+            mode: batch
+            threads: 2
+            batch: 24
+          - key: b40-t1
+            mode: batch
+            threads: 1
+            batch: 40
+          - key: b40-t2
+            mode: batch
+            threads: 2
+            batch: 40
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: r84-runtime
+          path: runtime
+      - uses: actions/download-artifact@v4
+        with:
+          name: r84-corpus-14540
+          path: corpus
+      - name: Run and validate ${{ matrix.key }}
+        shell: bash
+        env:
+          KEY: ${{ matrix.key }}
+          MODE: ${{ matrix.mode }}
+          THREADS: ${{ matrix.threads }}
+          BATCH: ${{ matrix.batch }}
+        run: |
+          set -euo pipefail
+          chmod +x runtime/dds_batch_bench
+          gzip -dc corpus/R84_INPUT_14540.tsv.gz > input.tsv
+          gzip -dc corpus/R84_EXPECTED_14540.tsv.gz > expected.tsv
+          test "$(wc -l < input.tsv)" -eq "$TOTAL_ROWS"
+          /usr/bin/time -f 'elapsed_sec=%e\nuser_sec=%U\nsys_sec=%S\nmaxrss_kb=%M' -o timing.txt \
+            runtime/dds_batch_bench "$MODE" "$THREADS" "$BATCH" input.tsv actual.tsv meta.txt
+          test "$(wc -l < actual.tsv)" -eq "$TOTAL_ROWS"
+          cmp expected.tsv actual.tsv
+          echo "IDENTITY_14540=PASS" > identity.txt
+          python3 - <<'PY'
+          import json,os
+          timing={}
+          for line in open('timing.txt'):
+              k,v=line.strip().split('=',1); timing[k]=float(v)
+          meta={}
+          for line in open('meta.txt'):
+              k,v=line.strip().split('=',1); meta[k]=v
+          rows=int(meta['rows']); elapsed=timing['elapsed_sec']
+          out={
+            'key':os.environ['KEY'],'mode':os.environ['MODE'],'threads':int(os.environ['THREADS']),
+            'batch':int(os.environ['BATCH']),'rows':rows,'identity14540':'PASS',
+            'elapsedSec':elapsed,'userSec':timing['user_sec'],'sysSec':timing['sys_sec'],
+            'maxRssKb':int(timing['maxrss_kb']),'ddsPerSec':rows/elapsed,
+            'estimated24Sec':24*elapsed/rows,'estimated72Sec':72*elapsed/rows,'estimated120Sec':120*elapsed/rows,
+            'calls':int(meta['calls'])
+          }
+          json.dump(out,open('R84_RESULT.json','w'),indent=2,sort_keys=True)
+          print(json.dumps(out,indent=2,sort_keys=True))
+          PY
+          sha256sum actual.tsv > actual_sha256.txt
+          mkdir result
+          mv R84_RESULT.json timing.txt meta.txt identity.txt actual_sha256.txt result/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: r84-result-${{ matrix.key }}
+          path: result/
+          if-no-files-found: error
+          compression-level: 9
+          retention-days: 30
+
+  aggregate:
+    needs: benchmark
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: r84-result-*
+          path: incoming
+      - name: Aggregate benchmark and write verdict
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import glob,json,os,statistics
+          rs=[]
+          for p in glob.glob('incoming/**/R84_RESULT.json',recursive=True): rs.append(json.load(open(p)))
+          assert len(rs)==10,len(rs)
+          assert all(r['identity14540']=='PASS' and r['rows']==14540 for r in rs)
+          rs.sort(key=lambda r:r['elapsedSec'])
+          baseline=next(r for r in rs if r['key']=='seq-t1')
+          for r in rs:
+              r['speedupVsSeqT1']=baseline['elapsedSec']/r['elapsedSec']
+          best=rs[0]
+          summary={
+            'campaign':'PLAY_R84_DDS_NATIVE_BATCH_BENCHMARK',
+            'status':'PASS',
+            'identityTables':14540,
+            'configurations':len(rs),
+            'bestKey':best['key'],
+            'bestDdsPerSec':best['ddsPerSec'],
+            'bestEstimated24Sec':best['estimated24Sec'],
+            'bestEstimated72Sec':best['estimated72Sec'],
+            'bestEstimated120Sec':best['estimated120Sec'],
+            'bestMaxRssKb':best['maxRssKb'],
+            'bestSpeedupVsSeqT1':best['speedupVsSeqT1'],
+            'results':rs
+          }
+          os.makedirs('final',exist_ok=True)
+          json.dump(summary,open('final/R84_SUMMARY.json','w'),indent=2,sort_keys=True)
+          with open('final/R84_REPORT.md','w') as f:
+              f.write('# PLAY R84 — DDS native batch benchmark\n\n')
+              f.write('Status: **PASS** — all 10 configurations reproduced **14,540 / 14,540** reference DD tables exactly.\n\n')
+              f.write('R83 / PLAY runtime was not modified. This benchmark measures native DDS only.\n\n')
+              f.write('| Config | Threads | Batch | Elapsed s | DDS/s | 24 est. | 72 est. | 120 est. | Max RSS MiB | Speedup vs seq-1 |\n')
+              f.write('|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|\n')
+              for r in rs:
+                  f.write(f"| {r['key']} | {r['threads']} | {r['batch']} | {r['elapsedSec']:.2f} | {r['ddsPerSec']:.2f} | {r['estimated24Sec']:.2f}s | {r['estimated72Sec']:.2f}s | {r['estimated120Sec']:.2f}s | {r['maxRssKb']/1024:.1f} | {r['speedupVsSeqT1']:.2f}x |\n")
+              f.write('\n## Best configuration\n\n')
+              f.write(f"**{best['key']}**: {best['ddsPerSec']:.2f} DDS/s; estimated compute-only latency {best['estimated24Sec']:.2f}s / {best['estimated72Sec']:.2f}s / {best['estimated120Sec']:.2f}s for 24/72/120 tables; max RSS {best['maxRssKb']/1024:.1f} MiB.\n\n")
+              f.write('These latency figures are compute-only linear estimates on the GitHub Actions runner. They exclude network latency, server cold start and request overhead.\n')
+          PY
+          cp incoming/**/R84_RESULT.json final/ 2>/dev/null || true
+          sha256sum final/* > final/SHA256SUMS.txt
+          cat final/R84_REPORT.md
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PLAY_R84_DDS_NATIVE_BATCH_BENCHMARK_RESULT
+          path: final/
+          if-no-files-found: error
+          compression-level: 9
+          retention-days: 30
