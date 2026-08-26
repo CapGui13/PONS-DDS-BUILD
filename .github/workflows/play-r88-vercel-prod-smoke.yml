@@ -13,6 +13,8 @@ permissions:
 env:
   SOURCE_RUN_ID: 32950300221
   ENDPOINT: https://play-dds-native.vercel.app/api/dds
+  ENDPOINT_A: https://play-dds-native.vercel.app/api/dds-a
+  ENDPOINT_B: https://play-dds-native.vercel.app/api/dds-b
 
 jobs:
   smoke:
@@ -27,15 +29,16 @@ jobs:
           repository: CapGui13/PONS-DDS-BUILD
           run-id: ${{ env.SOURCE_RUN_ID }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Production 24/72 DDS exactness and latency
+      - name: Production dual-lane 24/72 DDS exactness and latency
         shell: bash
         run: |
           set -euo pipefail
           gzip -dc corpus/full_in.tsv.gz > full_in.tsv
           gzip -dc corpus/full_exp.tsv.gz > full_exp.tsv
           python3 - <<'PY'
-          import json,time,urllib.request
-          endpoint='https://play-dds-native.vercel.app/api/dds'
+          import concurrent.futures,json,time,urllib.request
+          A='https://play-dds-native.vercel.app/api/dds-a'
+          B='https://play-dds-native.vercel.app/api/dds-b'
           STRAINS=('N','S','H','D','C'); SEATS=('N','S','E','W')
           ins=[x.rstrip('\n').split('\t',3) for x in open('full_in.tsv',encoding='utf-8') if x.strip()]
           exs=[x.rstrip('\n').split('\t',3) for x in open('full_exp.tsv',encoding='utf-8') if x.strip()]
@@ -48,26 +51,38 @@ jobs:
           for r in rows: by.setdefault(r['board'],[]).append(r)
           for v in by.values(): v.sort(key=lambda r:r['sample'])
           def canonical(t): return ','.join(str(int(t[s][p])) for s in STRAINS for p in SEATS)
-          def post(chunk):
+          def get_selftest(url):
+              started=time.perf_counter()
+              with urllib.request.urlopen(url+'?selftest=1',timeout=20) as resp:
+                  data=json.loads(resp.read()); status=resp.status
+              assert status==200 and data.get('ok') and data.get('selftest',{}).get('ok')
+              return {'wallMs':(time.perf_counter()-started)*1000,'release':data.get('release'),'lastMs':data.get('lastMs'),'restarts':data.get('restarts')}
+          def post(url,chunk):
               body=json.dumps({'items':[{'id':r['idx'],'pbn':r['pbn']} for r in chunk]},separators=(',',':')).encode()
-              req=urllib.request.Request(endpoint,data=body,headers={'Content-Type':'application/json','Origin':'https://capgui13.github.io'},method='POST')
+              req=urllib.request.Request(url,data=body,headers={'Content-Type':'application/json','Origin':'https://capgui13.github.io'},method='POST')
               started=time.perf_counter()
               with urllib.request.urlopen(req,timeout=45) as resp:
-                  raw=resp.read(); status=resp.status
-                  hdr_elapsed=resp.headers.get('X-DDS-Elapsed-Ms')
-                  release=resp.headers.get('X-Play-DDS-Release')
-              elapsed=(time.perf_counter()-started)*1000
+                  raw=resp.read(); status=resp.status; hdr=resp.headers.get('X-DDS-Elapsed-Ms'); rel=resp.headers.get('X-Play-DDS-Release')
+              wall=(time.perf_counter()-started)*1000
               assert status==200
-              data=json.loads(raw)
-              got={int(x['id']):x['table'] for x in data['results']}
-              assert len(got)==len(chunk)
-              for r in chunk: assert canonical(got[r['idx']])==r['expected'], (r['board'],r['sample'])
-              return {'wallMs':elapsed,'serverMs':int(hdr_elapsed) if hdr_elapsed else None,'release':release,'count':len(chunk)}
-          # Board 59 is a normal 24-stop case; board 57 supplies 72 consecutive tables.
-          r24=post(by[59][:24])
-          r72=[]
-          for i in range(0,72,24): r72.append(post(by[57][i:i+24]))
-          report={'status':'PASS','endpoint':endpoint,'exactTables':96,'run24':r24,'run72Chunks':r72,'run72WallMs':sum(x['wallMs'] for x in r72),'run72ServerMs':sum(x['serverMs'] or 0 for x in r72)}
+              data=json.loads(raw); got={int(x['id']):x['table'] for x in data['results']}; assert len(got)==len(chunk)
+              for r in chunk: assert canonical(got[r['idx']])==r['expected'],(r['board'],r['sample'])
+              return {'count':len(chunk),'wallMs':wall,'serverMs':int(hdr) if hdr else None,'release':rel}
+          def dual(chunk24):
+              left=chunk24[:12]; right=chunk24[12:]
+              started=time.perf_counter()
+              with concurrent.futures.ThreadPoolExecutor(max_workers=2) as ex:
+                  fa=ex.submit(post,A,left); fb=ex.submit(post,B,right)
+                  lanes=[fa.result(),fb.result()]
+              return {'wallMs':(time.perf_counter()-started)*1000,'lanes':lanes}
+          with concurrent.futures.ThreadPoolExecutor(max_workers=2) as ex:
+              fa=ex.submit(get_selftest,A); fb=ex.submit(get_selftest,B)
+              selftests=[fa.result(),fb.result()]
+          r24=dual(by[59][:24])
+          rounds=[]; started=time.perf_counter()
+          for i in range(0,72,24): rounds.append(dual(by[57][i:i+24]))
+          r72=(time.perf_counter()-started)*1000
+          report={'status':'PASS','exactTables':96,'selftests':selftests,'run24':r24,'run72Rounds':rounds,'run72WallMs':r72,'laneA':A,'laneB':B}
           print(json.dumps(report,indent=2,sort_keys=True))
           open('R88_VERCEL_PROD_SMOKE.json','w').write(json.dumps(report,indent=2,sort_keys=True)+'\n')
           PY
