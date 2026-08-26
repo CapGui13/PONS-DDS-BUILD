@@ -1,0 +1,32 @@
+name: PLAY R85 HTTP DDS correctness
+on:
+  push:
+    branches: ["main"]
+    paths: ["r85/R85_CORRECTNESS_TRIGGER.txt"]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Verify 10 remote tables against R80 oracle
+        run: |
+          base64 -d r80/R80_EQUIV_140_EXPECTED.tsv.gz.b64 | gzip -dc > expected.tsv
+          node r80/R80_SAMPLER_MINI.cjs all r80/R80_EQUIV_BOARDS.tsv 20 input.tsv
+          node - <<'NODE' | tee R85_CORRECTNESS.json
+          const fs=require('fs'),{performance}=require('perf_hooks');
+          const il=fs.readFileSync('input.tsv','utf8').trim().split(/\r?\n/).slice(0,10);
+          const el=fs.readFileSync('expected.tsv','utf8').trim().split(/\r?\n/).slice(0,10);
+          const rows=il.map((l,i)=>{const z=l.split('\t'),e=el[i].split('\t');return{id:i,pbn:z.slice(3).join('\t'),expected:e[3]}});
+          function canonical(t){const ss=['N','S','H','D','C'],pp=['N','S','E','W'];if(ss.every(s=>t?.[s]))return ss.flatMap(s=>pp.map(p=>Number(t[s][p]))).join(',');const rt=t?.resTable;if(Array.isArray(rt)){const si=[4,0,1,2,3],hi=[0,2,1,3];return si.flatMap(s=>hi.map(h=>Number(rt[s][h]))).join(',')}return null}
+          (async()=>{const st=performance.now();const r=await fetch('https://api-gen-beta.vercel.app/api/dds',{method:'POST',headers:{'content-type':'application/json','origin':'https://capgui13.github.io'},body:JSON.stringify({items:rows.map(x=>({id:x.id,pbn:x.pbn}))}),signal:AbortSignal.timeout(12000)});const d=await r.json();const by=new Map((d.results||[]).map(x=>[Number(x.id),x]));const mm=[];for(const x of rows){const got=by.get(x.id);const c=canonical(got?.table);if(c!==x.expected)mm.push({id:x.id,expected:x.expected,actual:c,error:got?.error})}const out={httpStatus:r.status,elapsedMs:Math.round(performance.now()-st),tables:(d.results||[]).filter(x=>x?.table).length,checked:10,ddValuesChecked:200,mismatches:mm.length,pass:r.ok&&mm.length===0};console.log(JSON.stringify(out,null,2));if(!out.pass)process.exit(1)})();
+          NODE
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PLAY_R85_HTTP_CORRECTNESS
+          path: R85_CORRECTNESS.json
+          retention-days: 30
