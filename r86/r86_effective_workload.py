@@ -38,21 +38,27 @@ def main():
     ap.add_argument('--expected',required=True)
     ap.add_argument('--stops',required=True)
     ap.add_argument('--threads',type=int,default=2)
+    ap.add_argument('--boards',default='51-100')
     ap.add_argument('--output',required=True)
     a=ap.parse_args()
     rows=load_rows(a.input,a.expected)
     stop_doc=json.load(open(a.stops,encoding='utf-8'))
     stops={int(k):int(v) for k,v in stop_doc['stops'].items()}
+    if '-' in a.boards and ',' not in a.boards:
+        lo,hi=(int(x) for x in a.boards.split('-',1)); selected=list(range(lo,hi+1))
+    else:
+        selected=[int(x) for x in a.boards.split(',') if x.strip()]
+    assert selected and all(b in stops for b in selected), selected
     by={}
     for r in rows:
-        if r['board'] in stops: by.setdefault(r['board'],[]).append(r)
+        if r['board'] in selected: by.setdefault(r['board'],[]).append(r)
     for v in by.values(): v.sort(key=lambda x:x['sample'])
-    assert sorted(by)==list(range(51,101)), sorted(by)
+    assert sorted(by)==sorted(selected), (sorted(by),selected)
 
     board_results=[]
     total_requested=0
     total_logical=0
-    for board in range(51,101):
+    for board in selected:
         logical=stops[board]
         requested=min(120, int(math.ceil(logical/24.0))*24)
         assert requested in (24,48,72,96,120)
@@ -73,10 +79,11 @@ def main():
 
     vals=[x['elapsedMs'] for x in board_results]
     report={
-        'campaign':'PLAY_R86_R81_EFFECTIVE_HTTP_WORKLOAD_50',
+        'campaign':'PLAY_R86_R81_EFFECTIVE_HTTP_WORKLOAD',
         'status':'PASS',
         'threads':a.threads,
         'batchSize':24,
+        'selectedBoards':selected,
         'boards':board_results,
         'metrics':{
             'medianMs':statistics.median(vals),
