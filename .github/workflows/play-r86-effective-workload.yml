@@ -1,0 +1,107 @@
+name: PLAY R86 effective R81 workload
+
+on:
+  push:
+    branches: ["r86-thread-sweep"]
+    paths:
+      - "r86/R86_EFFECTIVE_TRIGGER.txt"
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  SOURCE_RUN_ID: 32950300221
+  ODIN_COMMIT: 38fcd537dd6c7dec7ef596e861551f1b278f2f98
+  DDS_UPSTREAM_COMMIT: 7219c956f4ed9a9f8d1585e9a1a2c57465745ac5
+  DDS_A_SHA256: e5c7bcdcf96d3ed24b14b2840303a0d0936b05419de463809f68982c565c7f4c
+
+jobs:
+  effective:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: r86-corpus
+          path: corpus
+          repository: CapGui13/PONS-DDS-BUILD
+          run-id: ${{ env.SOURCE_RUN_ID }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build pinned DDS daemon
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update >/dev/null
+          sudo apt-get install -y build-essential >/dev/null
+          git clone -q https://github.com/enerqi/odin-dds.git odin-dds
+          git -C odin-dds checkout -q "$ODIN_COMMIT"
+          grep -q "$DDS_UPSTREAM_COMMIT" odin-dds/external/dds/VENDORED.md
+          make -C odin-dds/src >/dev/null
+          test "$(sha256sum odin-dds/lib/dds.a | awk '{print $1}')" = "$DDS_A_SHA256"
+          g++ -std=c++17 -O3 -I odin-dds/external/dds/include r86/r86_dds_daemon.cpp odin-dds/lib/dds.a -pthread -o r86_dds_daemon
+          gzip -dc corpus/full_in.tsv.gz > full_in.tsv
+          gzip -dc corpus/full_exp.tsv.gz > full_exp.tsv
+      - name: Benchmark actual R81 adaptive workload over HTTP
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p effective
+          DDS_RUNNER="$PWD/r86_dds_daemon" DDS_THREADS=2 DDS_BATCH_SIZE=24 PORT=18086 python3 r86/r86_dds_server.py > effective/server.log 2>&1 &
+          pid=$!
+          trap 'kill "$pid" >/dev/null 2>&1 || true' EXIT
+          ready=0
+          for i in $(seq 1 80); do
+            if curl -fsS http://127.0.0.1:18086/healthz >/dev/null 2>&1; then ready=1; break; fi
+            sleep 0.25
+          done
+          test "$ready" = 1
+          python3 r86/r86_effective_workload.py \
+            --input full_in.tsv \
+            --expected full_exp.tsv \
+            --stops r86/R86_R81_EFFECTIVE_STOPS_51_100.json \
+            --threads 2 \
+            --output effective/R86_EFFECTIVE_WORKLOAD.json
+          curl -fsS http://127.0.0.1:18086/healthz > effective/R86_EFFECTIVE_HEALTH.json
+      - name: Validate invariants and write concise report
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          r=json.load(open('effective/R86_EFFECTIVE_WORKLOAD.json'))
+          h=json.load(open('effective/R86_EFFECTIVE_HEALTH.json'))
+          assert r['status']=='PASS'
+          assert len(r['boards'])==50
+          assert h['restarts']==0, h
+          assert h['tables']==r['metrics']['requestedSamples'], (h,r['metrics'])
+          assert 0 < h['maxChildRssKb'] < 450000, h
+          m=r['metrics']
+          lines=[
+            '# PLAY R86 — effective R81 workload on R80 holdout',
+            '',
+            '**Benchmark completed with exact DDS verification for every requested table.**',
+            '',
+            f"- boards: **50** (R80 holdout 51–100)",
+            f"- logical R81 samples: **{m['logicalSamples']}**",
+            f"- HTTP-requested samples (chunks of 24): **{m['requestedSamples']}**",
+            f"- chunk overshoot: **{m['httpChunkOvershootSamples']}**",
+            f"- median user-facing DDS time: **{m['medianMs']/1000:.2f} s**",
+            f"- P90: **{m['p90Ms']/1000:.2f} s**",
+            f"- P95: **{m['p95Ms']/1000:.2f} s**",
+            f"- max: **{m['maxMs']/1000:.2f} s**",
+            f"- mean: **{m['meanMs']/1000:.2f} s**",
+            f"- max DDS child RSS: **{h['maxChildRssKb']/1024:.1f} MiB**",
+            f"- engine restarts: **{h['restarts']}**",
+            '',
+            'This measures the actual amount of DDS work implied by the R81 adaptive stopping rule, rounded up to HTTP chunks of 24, rather than forcing every board to 120 samples.',
+          ]
+          open('effective/R86_EFFECTIVE_REPORT.md','w').write('\n'.join(lines)+'\n')
+          print('\n'.join(lines))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PLAY_R86_EFFECTIVE_R81_WORKLOAD_50
+          path: effective/
+          retention-days: 30
