@@ -1,0 +1,78 @@
+name: PLAY R88 Vercel production smoke
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "r88/VERCEL_PROD_SMOKE_TRIGGER.txt"
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  SOURCE_RUN_ID: 32950300221
+  ENDPOINT: https://play-dds-native.vercel.app/api/dds
+
+jobs:
+  smoke:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: r86-corpus
+          path: corpus
+          repository: CapGui13/PONS-DDS-BUILD
+          run-id: ${{ env.SOURCE_RUN_ID }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Production 24/72 DDS exactness and latency
+        shell: bash
+        run: |
+          set -euo pipefail
+          gzip -dc corpus/full_in.tsv.gz > full_in.tsv
+          gzip -dc corpus/full_exp.tsv.gz > full_exp.tsv
+          python3 - <<'PY'
+          import json,time,urllib.request
+          endpoint='https://play-dds-native.vercel.app/api/dds'
+          STRAINS=('N','S','H','D','C'); SEATS=('N','S','E','W')
+          ins=[x.rstrip('\n').split('\t',3) for x in open('full_in.tsv',encoding='utf-8') if x.strip()]
+          exs=[x.rstrip('\n').split('\t',3) for x in open('full_exp.tsv',encoding='utf-8') if x.strip()]
+          assert len(ins)==len(exs)
+          rows=[]
+          for i,(a,e) in enumerate(zip(ins,exs)):
+              assert a[:3]==e[:3]
+              rows.append({'idx':i,'board':int(a[0]),'sample':int(a[1]),'pbn':a[3],'expected':e[3]})
+          by={}
+          for r in rows: by.setdefault(r['board'],[]).append(r)
+          for v in by.values(): v.sort(key=lambda r:r['sample'])
+          def canonical(t): return ','.join(str(int(t[s][p])) for s in STRAINS for p in SEATS)
+          def post(chunk):
+              body=json.dumps({'items':[{'id':r['idx'],'pbn':r['pbn']} for r in chunk]},separators=(',',':')).encode()
+              req=urllib.request.Request(endpoint,data=body,headers={'Content-Type':'application/json','Origin':'https://capgui13.github.io'},method='POST')
+              started=time.perf_counter()
+              with urllib.request.urlopen(req,timeout=45) as resp:
+                  raw=resp.read(); status=resp.status
+                  hdr_elapsed=resp.headers.get('X-DDS-Elapsed-Ms')
+                  release=resp.headers.get('X-Play-DDS-Release')
+              elapsed=(time.perf_counter()-started)*1000
+              assert status==200
+              data=json.loads(raw)
+              got={int(x['id']):x['table'] for x in data['results']}
+              assert len(got)==len(chunk)
+              for r in chunk: assert canonical(got[r['idx']])==r['expected'], (r['board'],r['sample'])
+              return {'wallMs':elapsed,'serverMs':int(hdr_elapsed) if hdr_elapsed else None,'release':release,'count':len(chunk)}
+          # Board 59 is a normal 24-stop case; board 57 supplies 72 consecutive tables.
+          r24=post(by[59][:24])
+          r72=[]
+          for i in range(0,72,24): r72.append(post(by[57][i:i+24]))
+          report={'status':'PASS','endpoint':endpoint,'exactTables':96,'run24':r24,'run72Chunks':r72,'run72WallMs':sum(x['wallMs'] for x in r72),'run72ServerMs':sum(x['serverMs'] or 0 for x in r72)}
+          print(json.dumps(report,indent=2,sort_keys=True))
+          open('R88_VERCEL_PROD_SMOKE.json','w').write(json.dumps(report,indent=2,sort_keys=True)+'\n')
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PLAY_R88_VERCEL_PROD_SMOKE
+          path: R88_VERCEL_PROD_SMOKE.json
+          retention-days: 30
