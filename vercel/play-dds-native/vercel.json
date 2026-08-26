@@ -1,0 +1,10 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "regions": ["cdg1"],
+  "functions": {
+    "api/dds.js": {
+      "memory": 1024,
+      "maxDuration": 60
+    }
+  }
+}
