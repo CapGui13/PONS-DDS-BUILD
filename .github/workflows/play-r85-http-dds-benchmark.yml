@@ -1,0 +1,56 @@
+name: PLAY R85 HTTP DDS benchmark
+on:
+  push:
+    branches: ["main"]
+    paths: ["r85/R85_TRIGGER.txt"]
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Build exact 140 witness corpus
+        run: |
+          set -euxo pipefail
+          base64 -d r80/R80_EQUIV_140_EXPECTED.tsv.gz.b64 | gzip -dc > equiv_expected.tsv
+          node r80/R80_SAMPLER_MINI.cjs all r80/R80_EQUIV_BOARDS.tsv 20 equiv_input.tsv
+          test "$(wc -l < equiv_expected.tsv)" -eq 140
+          test "$(wc -l < equiv_input.tsv)" -eq 140
+          cut -f1-3 equiv_expected.tsv > expected_keys.tsv
+          cut -f1-3 equiv_input.tsv > input_keys.tsv
+          diff -u expected_keys.tsv input_keys.tsv
+      - name: Benchmark existing PLAY Vercel DDS endpoint
+        env:
+          DDS_URL: https://api-gen-beta.vercel.app/api/dds
+        run: |
+          set -euxo pipefail
+          node r85/http_benchmark.mjs equiv_input.tsv equiv_expected.tsv R85_HTTP_BENCHMARK.json | tee R85_CONSOLE.txt
+      - name: Build report
+        run: |
+          node - <<'NODE'
+          const fs=require('fs');
+          const r=JSON.parse(fs.readFileSync('R85_HTTP_BENCHMARK.json','utf8'));
+          const fmt=x=>x==null?'—':`${(x/1000).toFixed(2)} s`;
+          let md='# PLAY R85 — benchmark HTTP du backend DDS actuel\n\n';
+          md+=`Endpoint : \`${r.endpoint}\`\n\n`;
+          md+='## Capacité par requête\n\n| items | OK | HTTP | temps |\n|---:|:---:|---:|---:|\n';
+          for(const x of r.capacity) md+=`| ${x.n} | ${x.ok?'PASS':'FAIL'} | ${x.httpStatus??'—'} | ${fmt(x.elapsedMs)} |\n`;
+          md+='\n## Scénarios bout-en-bout\n\n| scénario | médiane | DDS/s |\n|---|---:|---:|\n';
+          for(const s of r.series){
+            md+=`| ${s.label} | ${s.skipped?'SKIP':fmt(s.medianMs)} | ${s.ddsPerSecond?s.ddsPerSecond.toFixed(2):'—'} |\n`;
+          }
+          md+='\nLe premier appel observé est mesuré séparément, mais ne constitue pas une garantie de cold start Vercel. Toutes les réponses réussies sont comparées aux tables DD témoins R80.\n';
+          fs.writeFileSync('R85_REPORT.md',md);
+          NODE
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PLAY_R85_HTTP_DDS_BENCHMARK_RESULT
+          path: |
+            R85_HTTP_BENCHMARK.json
+            R85_REPORT.md
+            R85_CONSOLE.txt
+          retention-days: 30
