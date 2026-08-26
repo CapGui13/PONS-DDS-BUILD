@@ -5,6 +5,14 @@
     "api/dds.js": {
       "memory": 1024,
       "maxDuration": 60
+    },
+    "api/dds-a.js": {
+      "memory": 1024,
+      "maxDuration": 60
+    },
+    "api/dds-b.js": {
+      "memory": 1024,
+      "maxDuration": 60
     }
   }
 }
