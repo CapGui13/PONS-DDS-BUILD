@@ -1,0 +1,101 @@
+name: PLAY R131 Vercel adaptive 24-wave benchmark
+
+on:
+  push:
+    branches: ["bench/vercel-dds-parallel-r131"]
+    paths:
+      - "r131/R131_WAVE24_TRIGGER.txt"
+      - ".github/workflows/r131-vercel-wave24-benchmark.yml"
+
+jobs:
+  wave24:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      SOURCE_RUN_ID: "32950300221"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: r86-corpus
+          path: corpus
+          repository: CapGui13/PONS-DDS-BUILD
+          run-id: ${{ env.SOURCE_RUN_ID }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Benchmark one adaptive wave of 24 DDS
+        shell: bash
+        run: |
+          set -euo pipefail
+          gzip -dc corpus/full_in.tsv.gz > full_in.tsv
+          gzip -dc corpus/full_exp.tsv.gz > full_exp.tsv
+          python3 - <<'PY'
+          import concurrent.futures, json, statistics, time, urllib.request
+          ENDPOINTS=('https://play-dds-native.vercel.app/api/dds-a','https://play-dds-native.vercel.app/api/dds-b')
+          ORIGIN='https://capgui13.github.io'
+          STRAINS=('N','S','H','D','C'); SEATS=('N','S','E','W')
+          ins=[x.rstrip('\n').split('\t',3) for x in open('full_in.tsv',encoding='utf-8') if x.strip()]
+          exs=[x.rstrip('\n').split('\t',3) for x in open('full_exp.tsv',encoding='utf-8') if x.strip()]
+          rows=[]
+          for i,(a,e) in enumerate(zip(ins,exs)):
+              assert a[:3]==e[:3]
+              if int(a[0])==57:
+                  rows.append({'idx':i,'sample':int(a[1]),'pbn':a[3],'expected':e[3]})
+          rows=sorted(rows,key=lambda r:r['sample'])[:24]
+          assert len(rows)==24
+          def canonical(t): return ','.join(str(int(t[s][p])) for s in STRAINS for p in SEATS)
+          def post(chunk_index, chunk):
+              endpoint=ENDPOINTS[chunk_index%2]
+              body=json.dumps({'items':[{'id':r['idx'],'pbn':r['pbn']} for r in chunk]},separators=(',',':')).encode()
+              req=urllib.request.Request(endpoint,data=body,headers={'Content-Type':'application/json','Origin':ORIGIN},method='POST')
+              t0=time.perf_counter()
+              with urllib.request.urlopen(req,timeout=60) as resp:
+                  raw=resp.read(); status=resp.status
+                  server=resp.headers.get('X-DDS-Elapsed-Ms')
+              wall=(time.perf_counter()-t0)*1000
+              assert status==200
+              data=json.loads(raw); got={int(x['id']):x['table'] for x in data['results']}
+              assert len(got)==len(chunk)
+              for r in chunk: assert canonical(got[r['idx']])==r['expected']
+              return {'endpoint':endpoint,'count':len(chunk),'wallMs':wall,'serverMs':int(server) if server else None}
+          # warm A+B
+          post(0,rows[:1]); post(1,rows[1:2])
+          configs={2:12,4:6,6:4}
+          orders=((2,4,6),(6,4,2),(4,2,6),(6,2,4))
+          runs=[]
+          for round_no,order in enumerate(orders,1):
+              for lanes in order:
+                  size=configs[lanes]
+                  chunks=[rows[i:i+size] for i in range(0,24,size)]
+                  assert len(chunks)==lanes
+                  t0=time.perf_counter()
+                  with concurrent.futures.ThreadPoolExecutor(max_workers=lanes) as pool:
+                      details=[f.result() for f in [pool.submit(post,i,c) for i,c in enumerate(chunks)]]
+                  wall=(time.perf_counter()-t0)*1000
+                  rec={'round':round_no,'lanes':lanes,'chunkSize':size,'wallMs':wall,'ddsPerSecond':24/(wall/1000),'requests':details}
+                  runs.append(rec)
+                  print(json.dumps({k:rec[k] for k in ('round','lanes','chunkSize','wallMs','ddsPerSecond')},sort_keys=True),flush=True)
+                  time.sleep(1)
+          summary=[]
+          for lanes in (2,4,6):
+              xs=[r for r in runs if r['lanes']==lanes]
+              walls=[r['wallMs'] for r in xs]
+              summary.append({'lanes':lanes,'chunkSize':configs[lanes],'medianWallMs':statistics.median(walls),'minWallMs':min(walls),'maxWallMs':max(walls),'medianDdsPerSecond':statistics.median(r['ddsPerSecond'] for r in xs)})
+          base=next(x for x in summary if x['lanes']==2)
+          for x in summary: x['speedupVs2Lanes']=base['medianWallMs']/x['medianWallMs']
+          best=min(summary,key=lambda x:x['medianWallMs'])
+          report={'status':'PASS','population':24,'runs':runs,'summary':summary,'recommendation':best}
+          open('R131_WAVE24_BENCHMARK.json','w').write(json.dumps(report,indent=2,sort_keys=True)+'\n')
+          with open('R131_WAVE24_REPORT.md','w') as f:
+              f.write('# PLAY R131 — vague adaptative de 24 DDS\n\n')
+              f.write('| Voies | Taille/lot | Médiane | DDS/s | Gain vs 2 |\n|---:|---:|---:|---:|---:|\n')
+              for x in summary: f.write(f"| {x['lanes']} | {x['chunkSize']} | {x['medianWallMs']/1000:.2f} s | {x['medianDdsPerSecond']:.2f} | ×{x['speedupVs2Lanes']:.2f} |\n")
+              f.write(f"\nRecommandation : {best['lanes']} voies de {best['chunkSize']} DDS.\n")
+          print('=== SUMMARY ==='); print(json.dumps(report['recommendation'],indent=2,sort_keys=True))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PLAY_R131_VERCEL_WAVE24_BENCHMARK
+          path: |
+            R131_WAVE24_BENCHMARK.json
+            R131_WAVE24_REPORT.md
+          retention-days: 30
