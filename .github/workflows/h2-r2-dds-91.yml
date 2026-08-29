@@ -1,0 +1,92 @@
+name: H2 R2 DDS 91
+
+on:
+  push:
+    branches:
+      - audit/h2-r2-dds-81100k
+    paths:
+      - 'h2-r2/dds_cases.tsv'
+      - '.github/workflows/h2-r2-dds-91.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  solve:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build pinned DDS 2.9.1 distribution
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --branch 2026-08 https://github.com/enerqi/odin-dds.git odin-dds
+          grep -qi '7219c95' odin-dds/external/dds/VENDORED.md
+          make -C odin-dds/src
+          test -s odin-dds/lib/dds.a
+          sha256sum odin-dds/lib/dds.a > DDS_LIBRARY_SHA256.txt
+          cat odin-dds/external/dds/VENDORED.md > DDS_VENDORED.md
+
+      - name: Compile deterministic table scorer
+        shell: bash
+        run: |
+          cat > /tmp/h2_dds.cpp <<'CPP'
+          #include <cstring>
+          #include <fstream>
+          #include <iostream>
+          #include <string>
+          #include "dll.h"
+          int main() {
+            SetMaxThreads(1);
+            DDSInfo info{}; GetDDSInfo(&info);
+            std::cerr << "DDS_VERSION=" << info.versionString << "\n";
+            std::ifstream in("h2-r2/dds_cases.tsv");
+            if (!in) return 10;
+            std::string line; std::getline(in, line);
+            std::cout << "seed\tS_N\tS_E\tS_S\tS_W\tH_N\tH_E\tH_S\tH_W\tD_N\tD_E\tD_S\tD_W\tC_N\tC_E\tC_S\tC_W\tNT_N\tNT_E\tNT_S\tNT_W\n";
+            int count=0;
+            while (std::getline(in,line)) {
+              if (line.empty()) continue;
+              auto tab=line.find('\t'); if (tab==std::string::npos) return 11;
+              std::string seed=line.substr(0,tab), pbn=line.substr(tab+1);
+              ddTableDealPBN deal{}; if (pbn.size()>=sizeof(deal.cards)) return 12;
+              std::strncpy(deal.cards,pbn.c_str(),sizeof(deal.cards)-1);
+              ddTableResults table{}; int rc=CalcDDtablePBN(deal,&table);
+              if (rc!=RETURN_NO_FAULT) { char msg[80]{}; ErrorMessage(rc,msg); std::cerr<<"DDS_ERROR seed="<<seed<<" rc="<<rc<<" msg="<<msg<<"\n"; return 20; }
+              std::cout<<seed;
+              for(int strain=0;strain<5;++strain) for(int seat=0;seat<4;++seat) std::cout<<'\t'<<table.resTable[strain][seat];
+              std::cout<<'\n'; ++count;
+            }
+            std::cerr<<"DDS_CASES="<<count<<"\n"; FreeMemory();
+            return count==91 ? 0 : 30;
+          }
+          CPP
+          g++ -std=c++20 -O2 -I odin-dds/external/dds/include /tmp/h2_dds.cpp odin-dds/lib/dds.a -pthread -o /tmp/h2_dds
+
+      - name: Solve all 91 cases
+        shell: bash
+        run: |
+          set -euo pipefail
+          /tmp/h2_dds > h2-r2/dds_tables.tsv 2> h2-r2/dds_run.log
+          test "$(($(wc -l < h2-r2/dds_tables.tsv)-1))" -eq 91
+          grep -q 'DDS_CASES=91' h2-r2/dds_run.log
+          sha256sum h2-r2/dds_cases.tsv h2-r2/dds_tables.tsv h2-r2/dds_run.log DDS_LIBRARY_SHA256.txt DDS_VENDORED.md > h2-r2/SHA256SUMS.txt
+          cat h2-r2/dds_run.log
+          cat DDS_LIBRARY_SHA256.txt
+
+      - name: Upload H2 DDS evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: h2-r2-dds-91
+          path: |
+            h2-r2/dds_cases.tsv
+            h2-r2/dds_tables.tsv
+            h2-r2/dds_run.log
+            h2-r2/SHA256SUMS.txt
+            DDS_LIBRARY_SHA256.txt
+            DDS_VENDORED.md
+          if-no-files-found: error
+          compression-level: 9
+          retention-days: 30
