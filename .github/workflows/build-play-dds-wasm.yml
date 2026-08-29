@@ -1,0 +1,165 @@
+name: Build PLAY browser DDS WASM
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "main" ]
+    paths:
+      - ".github/workflows/build-play-dds-wasm.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  build-browser-wasm:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout build repository
+        uses: actions/checkout@v4
+
+      - name: Free runner disk space
+        uses: jlumbroso/free-disk-space@v1.3.1
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          docker-images: true
+          swap-storage: true
+
+      - name: Fetch pinned upstream DDS
+        shell: bash
+        run: |
+          set -euo pipefail
+          DDS_SHA="70e33a4bb63214cda40b7471a214c5ea07b47662"
+          git init dds-src
+          git -C dds-src remote add origin https://github.com/dds-bridge/dds.git
+          git -C dds-src fetch --depth 1 origin "${DDS_SHA}"
+          git -C dds-src checkout --detach FETCH_HEAD
+          test "$(git -C dds-src rev-parse HEAD)" = "${DDS_SHA}"
+          echo "DDS upstream: ${DDS_SHA}"
+
+      - name: Patch DDS Web build for PLAY single-thread mode
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          build = Path("dds-src/web/BUILD.bazel")
+          text = build.read_text(encoding="utf-8")
+          needle = 'threads = "emscripten",'
+          if text.count(needle) != 1:
+              raise SystemExit(f"Unexpected web/BUILD.bazel: {text.count(needle)} pthread target(s)")
+          text = text.replace(needle, 'threads = "off",', 1)
+          build.write_text(text, encoding="utf-8")
+
+          compat = Path("dds-src/wasm_compat.bzl")
+          text = compat.read_text(encoding="utf-8")
+          # PLAY runs the module inside its own Web Worker. Emscripten pthreads would
+          # require SharedArrayBuffer + COOP/COEP, which GitHub Pages cannot provide
+          # natively and which would interfere with PLAY's existing service worker.
+          text = "\n".join(
+              line for line in text.splitlines()
+              if '"-Wno-pthreads-mem-growth"' not in line
+              and '"-sPTHREAD_POOL_SIZE=8"' not in line
+          ) + "\n"
+          # Official browser wrapper uses a Small TT (20 MB default / 30 MB max).
+          # Start at 64 MB and keep ALLOW_MEMORY_GROWTH enabled.
+          old_mem = '"-sINITIAL_MEMORY=268435456",'
+          new_mem = '"-sINITIAL_MEMORY=67108864",'
+          if old_mem not in text:
+              raise SystemExit("Expected DDS WASM initial-memory flag not found")
+          text = text.replace(old_mem, new_mem, 1)
+          compat.write_text(text, encoding="utf-8")
+
+          if 'threads = "off",' not in build.read_text(encoding="utf-8"):
+              raise SystemExit("Single-thread patch did not apply")
+          final = compat.read_text(encoding="utf-8")
+          if "PTHREAD_POOL_SIZE" in final or "Wno-pthreads-mem-growth" in final:
+              raise SystemExit("A pthread-only link flag remains")
+          PY
+
+      - name: Setup Bazelisk
+        uses: bazel-contrib/setup-bazel@0.19.0
+        with:
+          bazelisk-version: "1.29.0"
+          repository-cache: true
+          disk-cache: "play-dds-browser-wasm"
+
+      - name: Build DDS Web WASM
+        shell: bash
+        working-directory: dds-src
+        run: |
+          set -euo pipefail
+          max=3
+          for i in $(seq 1 "$max"); do
+            if bazelisk build --verbose_failures //web:dds_web_wasm; then
+              exit 0
+            fi
+            if [ "$i" -lt "$max" ]; then
+              echo "Build failed (attempt $i/$max), retrying..."
+              bazelisk shutdown || true
+              sleep 20
+            fi
+          done
+          exit 1
+
+      - name: Apply upstream browser-loader patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 dds-src/web/patch_web_wasm.py dds-src/bazel-bin/web/dds_web_wasm.js
+
+      - name: Smoke-test real CalcDDtablePBN under Node
+        shell: bash
+        run: |
+          set -euo pipefail
+          node dds-src/web/tests/dds_web_wasm_node.mjs \
+            dds-src/bazel-bin/web/dds_web_wasm.js \
+            dds-src/bazel-bin/web/dds_web_wasm.wasm
+
+      - name: Prepare reproducible PLAY artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifact
+          cp dds-src/bazel-bin/web/dds_web_wasm.js artifact/
+          cp dds-src/bazel-bin/web/dds_web_wasm.wasm artifact/
+          cp dds-src/LICENSE artifact/DDS_LICENSE.txt
+
+          # Hard gate: this PLAY build must not need cross-origin isolation.
+          if grep -q "SharedArrayBuffer" artifact/dds_web_wasm.js; then
+            echo "ERROR: generated loader still references SharedArrayBuffer"
+            exit 1
+          fi
+
+          {
+            echo "DDS_UPSTREAM=https://github.com/dds-bridge/dds"
+            echo "DDS_UPSTREAM_COMMIT=$(git -C dds-src rev-parse HEAD)"
+            echo "DDS_BROWSER_WRAPPER=web/dds_web_wasm.cpp"
+            echo "THREADING=single-thread (wasm_cc_binary threads=off)"
+            echo "INITIAL_MEMORY=67108864"
+            echo "ALLOW_MEMORY_GROWTH=1"
+            echo "STACK_SIZE=8388608"
+            echo "PURPOSE=PLAY local statistical double-dummy tables"
+          } > artifact/BUILD_INFO.txt
+
+          (
+            cd artifact
+            sha256sum dds_web_wasm.js dds_web_wasm.wasm DDS_LICENSE.txt BUILD_INFO.txt \
+              > SHA256SUMS.txt
+            cat SHA256SUMS.txt
+          )
+
+      - name: Upload PLAY DDS WASM artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: play-dds-wasm-singlethread
+          path: artifact/
+          if-no-files-found: error
+          compression-level: 9
+          retention-days: 30
