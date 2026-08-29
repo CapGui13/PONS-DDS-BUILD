@@ -1,0 +1,5 @@
+PLAY_R131_VERCEL_WAVE24_BENCHMARK
+population=24
+lanes=2,4,6
+chunks=12,6,4
+corpus=R86-board57-exact
