@@ -1,0 +1,5 @@
+PLAY_R131_VERCEL_PARALLEL_BENCHMARK
+population=48,72
+lanes=2,4,6
+chunk=12
+corpus=R86-board57-exact
