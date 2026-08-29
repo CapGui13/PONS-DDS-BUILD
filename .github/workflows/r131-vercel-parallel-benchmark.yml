@@ -1,0 +1,207 @@
+name: PLAY R131 Vercel DDS parallel benchmark
+
+on:
+  push:
+    branches: ["bench/vercel-dds-parallel-r131"]
+    paths:
+      - "r131/R131_TRIGGER.txt"
+      - ".github/workflows/r131-vercel-parallel-benchmark.yml"
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      SOURCE_RUN_ID: "32950300221"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download validated R86 DDS corpus
+        uses: actions/download-artifact@v4
+        with:
+          name: r86-corpus
+          path: corpus
+          repository: CapGui13/PONS-DDS-BUILD
+          run-id: ${{ env.SOURCE_RUN_ID }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Benchmark 2 / 4 / 6 concurrent Vercel lanes
+        shell: bash
+        run: |
+          set -euo pipefail
+          gzip -dc corpus/full_in.tsv.gz > full_in.tsv
+          gzip -dc corpus/full_exp.tsv.gz > full_exp.tsv
+          python3 - <<'PY'
+          import concurrent.futures
+          import json
+          import statistics
+          import time
+          import urllib.request
+
+          ENDPOINTS = (
+              'https://play-dds-native.vercel.app/api/dds-a',
+              'https://play-dds-native.vercel.app/api/dds-b',
+          )
+          ORIGIN = 'https://capgui13.github.io'
+          STRAINS = ('N', 'S', 'H', 'D', 'C')
+          SEATS = ('N', 'S', 'E', 'W')
+          CHUNK = 12
+
+          ins = [x.rstrip('\n').split('\t', 3) for x in open('full_in.tsv', encoding='utf-8') if x.strip()]
+          exs = [x.rstrip('\n').split('\t', 3) for x in open('full_exp.tsv', encoding='utf-8') if x.strip()]
+          assert len(ins) == len(exs)
+
+          rows = []
+          for i, (a, e) in enumerate(zip(ins, exs)):
+              assert a[:3] == e[:3]
+              rows.append({
+                  'idx': i,
+                  'board': int(a[0]),
+                  'sample': int(a[1]),
+                  'pbn': a[3],
+                  'expected': e[3],
+              })
+
+          board57 = sorted((r for r in rows if r['board'] == 57), key=lambda r: r['sample'])[:72]
+          assert len(board57) == 72, len(board57)
+
+          def canonical(table):
+              return ','.join(str(int(table[s][p])) for s in STRAINS for p in SEATS)
+
+          def post(chunk_index, chunk):
+              endpoint = ENDPOINTS[chunk_index % len(ENDPOINTS)]
+              body = json.dumps({
+                  'items': [{'id': r['idx'], 'pbn': r['pbn']} for r in chunk]
+              }, separators=(',', ':')).encode()
+              req = urllib.request.Request(
+                  endpoint,
+                  data=body,
+                  headers={'Content-Type': 'application/json', 'Origin': ORIGIN},
+                  method='POST',
+              )
+              started = time.perf_counter()
+              with urllib.request.urlopen(req, timeout=60) as resp:
+                  raw = resp.read()
+                  status = resp.status
+                  server_ms = resp.headers.get('X-DDS-Elapsed-Ms')
+                  release = resp.headers.get('X-Play-DDS-Release')
+              wall_ms = (time.perf_counter() - started) * 1000
+              assert status == 200, status
+              data = json.loads(raw)
+              got = {int(x['id']): x['table'] for x in data['results']}
+              assert len(got) == len(chunk), (len(got), len(chunk))
+              for r in chunk:
+                  assert r['idx'] in got
+                  assert canonical(got[r['idx']]) == r['expected'], (r['board'], r['sample'], endpoint)
+              return {
+                  'chunk': chunk_index,
+                  'endpoint': endpoint,
+                  'count': len(chunk),
+                  'wallMs': wall_ms,
+                  'serverMs': int(server_ms) if server_ms else None,
+                  'release': release,
+              }
+
+          # Warm both endpoint routes outside measured runs.
+          warm = []
+          for i, endpoint in enumerate(ENDPOINTS):
+              warm.append(post(i, board57[i:i+1]))
+
+          def run_population(population, lanes):
+              selected = board57[:population]
+              chunks = [selected[i:i+CHUNK] for i in range(0, len(selected), CHUNK)]
+              started = time.perf_counter()
+              with concurrent.futures.ThreadPoolExecutor(max_workers=lanes) as pool:
+                  futs = [pool.submit(post, i, chunk) for i, chunk in enumerate(chunks)]
+                  details = [f.result() for f in futs]
+              wall_ms = (time.perf_counter() - started) * 1000
+              return {
+                  'population': population,
+                  'lanes': lanes,
+                  'effectiveLanes': min(lanes, len(chunks)),
+                  'chunks': len(chunks),
+                  'chunkSize': CHUNK,
+                  'wallMs': wall_ms,
+                  'ddsPerSecond': population / (wall_ms / 1000.0),
+                  'sumServerMs': sum(x['serverMs'] or 0 for x in details),
+                  'maxRequestWallMs': max(x['wallMs'] for x in details),
+                  'requests': sorted(details, key=lambda x: x['chunk']),
+              }
+
+          # Rotated orders reduce bias from transient warm/cold conditions.
+          plans = [
+              [(48, 2), (48, 4), (72, 2), (72, 4), (72, 6)],
+              [(72, 6), (72, 4), (72, 2), (48, 4), (48, 2)],
+              [(72, 4), (48, 2), (72, 6), (48, 4), (72, 2)],
+          ]
+          runs = []
+          for round_index, plan in enumerate(plans, 1):
+              for population, lanes in plan:
+                  r = run_population(population, lanes)
+                  r['round'] = round_index
+                  print(json.dumps({k: r[k] for k in ('round','population','lanes','effectiveLanes','wallMs','ddsPerSecond')}, sort_keys=True), flush=True)
+                  runs.append(r)
+                  time.sleep(1.0)
+
+          summary = []
+          for population, lanes in ((48,2),(48,4),(72,2),(72,4),(72,6)):
+              xs = [r for r in runs if r['population'] == population and r['lanes'] == lanes]
+              walls = [r['wallMs'] for r in xs]
+              speeds = [r['ddsPerSecond'] for r in xs]
+              summary.append({
+                  'population': population,
+                  'lanes': lanes,
+                  'medianWallMs': statistics.median(walls),
+                  'minWallMs': min(walls),
+                  'maxWallMs': max(walls),
+                  'medianDdsPerSecond': statistics.median(speeds),
+              })
+
+          baseline48 = next(x for x in summary if x['population'] == 48 and x['lanes'] == 2)
+          baseline72 = next(x for x in summary if x['population'] == 72 and x['lanes'] == 2)
+          for x in summary:
+              base = baseline48 if x['population'] == 48 else baseline72
+              x['speedupVs2Lanes'] = base['medianWallMs'] / x['medianWallMs']
+
+          best48 = min((x for x in summary if x['population'] == 48), key=lambda x: x['medianWallMs'])
+          best72 = min((x for x in summary if x['population'] == 72), key=lambda x: x['medianWallMs'])
+          report = {
+              'status': 'PASS',
+              'endpointRoutes': list(ENDPOINTS),
+              'corpus': 'R86 board 57 exact DDS witness',
+              'chunkSize': CHUNK,
+              'warmup': warm,
+              'runs': runs,
+              'summary': summary,
+              'recommendation': {
+                  '48': {'lanes': best48['lanes'], 'medianWallMs': best48['medianWallMs'], 'speedupVs2Lanes': best48['speedupVs2Lanes']},
+                  '72': {'lanes': best72['lanes'], 'medianWallMs': best72['medianWallMs'], 'speedupVs2Lanes': best72['speedupVs2Lanes']},
+              },
+          }
+          with open('R131_VERCEL_PARALLEL_BENCHMARK.json', 'w', encoding='utf-8') as f:
+              json.dump(report, f, indent=2, sort_keys=True)
+              f.write('\n')
+
+          with open('R131_REPORT.md', 'w', encoding='utf-8') as f:
+              f.write('# PLAY R131 — benchmark parallélisme DDS Vercel\n\n')
+              f.write('Toutes les réponses ont été vérifiées table DD par table DD sur le corpus témoin R86.\n\n')
+              f.write('| Population | Voies | Médiane | DDS/s | Gain vs 2 voies |\n')
+              f.write('|---:|---:|---:|---:|---:|\n')
+              for x in summary:
+                  f.write(f"| {x['population']} | {x['lanes']} | {x['medianWallMs']/1000:.2f} s | {x['medianDdsPerSecond']:.2f} | ×{x['speedupVs2Lanes']:.2f} |\n")
+              f.write('\n')
+              f.write(f"Recommandation 48 : {best48['lanes']} voies.  \\n")
+              f.write(f"Recommandation 72 : {best72['lanes']} voies.\n")
+
+          print('\n=== SUMMARY ===')
+          print(json.dumps(report['recommendation'], indent=2, sort_keys=True))
+          PY
+
+      - name: Upload benchmark result
+        uses: actions/upload-artifact@v4
+        with:
+          name: PLAY_R131_VERCEL_PARALLEL_BENCHMARK
+          path: |
+            R131_VERCEL_PARALLEL_BENCHMARK.json
+            R131_REPORT.md
+          retention-days: 30
