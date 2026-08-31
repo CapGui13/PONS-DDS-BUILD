@@ -1,0 +1,273 @@
+name: Generic DDS runner
+
+on:
+  workflow_dispatch:
+    inputs:
+      pbn:
+        description: 'Full PBN deal, e.g. N:...'
+        required: true
+        type: string
+      dealer:
+        description: 'Dealer'
+        required: true
+        default: 'N'
+        type: choice
+        options: [N, E, S, W]
+      vulnerability:
+        description: 'Vulnerability'
+        required: true
+        default: 'NONE'
+        type: choice
+        options: [NONE, NS, EW, BOTH]
+      seed:
+        description: 'Optional source seed / deal id (metadata only)'
+        required: false
+        default: ''
+        type: string
+  issues:
+    types: [opened]
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  solve:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'issues' &&
+       startsWith(github.event.issue.title, '[DDS]') &&
+       github.event.issue.user.login == github.repository_owner)
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+
+    steps:
+      - name: Prepare and validate request
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_PBN: ${{ inputs.pbn }}
+          INPUT_DEALER: ${{ inputs.dealer }}
+          INPUT_VULNERABILITY: ${{ inputs.vulnerability }}
+          INPUT_SEED: ${{ inputs.seed }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, os, re
+          from pathlib import Path
+
+          if os.environ['EVENT_NAME'] == 'issues':
+              event = json.loads(Path(os.environ['GITHUB_EVENT_PATH']).read_text())
+              body = event.get('issue', {}).get('body') or ''
+              fields = {}
+              for raw in body.splitlines():
+                  line = raw.strip()
+                  if line.startswith('- '):
+                      line = line[2:].lstrip()
+                  if ':' not in line:
+                      continue
+                  k, v = line.split(':', 1)
+                  key = k.strip().upper()
+                  if key in {'PBN', 'DEALER', 'VULNERABILITY', 'VUL', 'SEED'}:
+                      fields[key] = v.strip()
+              pbn = fields.get('PBN', '')
+              dealer = fields.get('DEALER', 'N')
+              vulnerability = fields.get('VULNERABILITY', fields.get('VUL', 'NONE'))
+              seed = fields.get('SEED', '')
+          else:
+              pbn = os.environ.get('INPUT_PBN', '').strip()
+              dealer = os.environ.get('INPUT_DEALER', 'N').strip()
+              vulnerability = os.environ.get('INPUT_VULNERABILITY', 'NONE').strip()
+              seed = os.environ.get('INPUT_SEED', '').strip()
+
+          dealer = dealer.upper()
+          vulnerability = vulnerability.upper().replace('-', '').replace('_', '')
+          vul_aliases = {
+              '': 'NONE', 'NONE': 'NONE', 'LOVE': 'NONE', '0': 'NONE',
+              'NS': 'NS', 'N/S': 'NS',
+              'EW': 'EW', 'E/W': 'EW',
+              'BOTH': 'BOTH', 'ALL': 'BOTH', '1': 'BOTH',
+          }
+          vulnerability = vul_aliases.get(vulnerability, vulnerability)
+
+          if dealer not in {'N', 'E', 'S', 'W'}:
+              raise SystemExit(f'Invalid DEALER={dealer!r}; expected N/E/S/W')
+          if vulnerability not in {'NONE', 'NS', 'EW', 'BOTH'}:
+              raise SystemExit(f'Invalid VULNERABILITY={vulnerability!r}; expected NONE/NS/EW/BOTH')
+          if not re.match(r'^[NESW]:', pbn):
+              raise SystemExit('PBN must start with N:, E:, S: or W:')
+          if len(pbn.encode()) >= 80:
+              raise SystemExit(f'PBN is too long for DDS ddTableDealPBN.cards: {len(pbn.encode())} bytes')
+
+          env_path = Path(os.environ['GITHUB_ENV'])
+          with env_path.open('a') as f:
+              for key, value in {
+                  'DDS_PBN': pbn,
+                  'DDS_DEALER': dealer,
+                  'DDS_VULNERABILITY': vulnerability,
+                  'DDS_SEED': seed,
+              }.items():
+                  f.write(f'{key}={value}\n')
+
+          print(f'PBN={pbn}')
+          print(f'DEALER={dealer}')
+          print(f'VULNERABILITY={vulnerability}')
+          if seed:
+              print(f'SEED={seed}')
+          PY
+
+      - name: Fetch and build validated DDS
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --branch 2026-08 https://github.com/enerqi/odin-dds.git odin-dds
+          grep -qi "7219c95" odin-dds/external/dds/VENDORED.md
+          rm -f odin-dds/lib/dds.a
+          make -C odin-dds/src
+          test -s odin-dds/lib/dds.a
+
+      - name: Solve deal and compute dealer PAR
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > /tmp/generic_dds.cpp <<'CPP'
+          #include <cstdlib>
+          #include <cstring>
+          #include <iostream>
+          #include <string>
+          #include "dll.h"
+
+          static int dealerIndex(const std::string& d) {
+            if (d == "N") return 0;
+            if (d == "E") return 1;
+            if (d == "S") return 2;
+            if (d == "W") return 3;
+            return -1;
+          }
+
+          static int vulnIndex(const std::string& v) {
+            if (v == "NONE") return 0;
+            if (v == "BOTH") return 1;
+            if (v == "NS") return 2;
+            if (v == "EW") return 3;
+            return -1;
+          }
+
+          int main() {
+            const char* pbnEnv = std::getenv("DDS_PBN");
+            const char* dealerEnv = std::getenv("DDS_DEALER");
+            const char* vulnEnv = std::getenv("DDS_VULNERABILITY");
+            const char* seedEnv = std::getenv("DDS_SEED");
+            if (!pbnEnv || !dealerEnv || !vulnEnv) {
+              std::cerr << "Missing DDS request environment\n";
+              return 2;
+            }
+
+            const std::string pbn(pbnEnv), dealer(dealerEnv), vuln(vulnEnv);
+            const int dealerIdx = dealerIndex(dealer);
+            const int vulnIdx = vulnIndex(vuln);
+            if (dealerIdx < 0 || vulnIdx < 0 || pbn.size() >= 80) return 2;
+
+            SetMaxThreads(1);
+            DDSInfo info{};
+            GetDDSInfo(&info);
+            std::cout << "DDS_VERSION=" << info.versionString << "\n";
+            std::cout << "DDS_UPSTREAM_COMMIT=7219c95\n";
+            if (seedEnv && *seedEnv) std::cout << "SEED=" << seedEnv << "\n";
+            std::cout << "DEALER=" << dealer << "\n";
+            std::cout << "VULNERABILITY=" << vuln << "\n";
+            std::cout << "PBN=" << pbn << "\n";
+
+            ddTableDealPBN deal{};
+            std::strncpy(deal.cards, pbn.c_str(), sizeof(deal.cards) - 1);
+            ddTableResults table{};
+            const int rc = CalcDDtablePBN(deal, &table);
+            std::cout << "CALC_RC=" << rc << "\n";
+            if (rc != RETURN_NO_FAULT) {
+              char msg[80]{};
+              ErrorMessage(rc, msg);
+              std::cerr << "DDS_ERROR=" << msg << "\n";
+              FreeMemory();
+              return 3;
+            }
+
+            const char* strains[5] = {"S", "H", "D", "C", "N"};
+            const char* seats[4] = {"N", "E", "S", "W"};
+            for (int s = 0; s < 5; ++s) {
+              std::cout << "DD_" << strains[s] << "=";
+              for (int h = 0; h < 4; ++h) {
+                if (h) std::cout << ",";
+                std::cout << seats[h] << ":" << table.resTable[s][h];
+              }
+              std::cout << "\n";
+            }
+
+            parResultsDealer par{};
+            const int prc = DealerPar(&table, &par, dealerIdx, vulnIdx);
+            std::cout << "DEALER_PAR_RC=" << prc << "\n";
+            if (prc == RETURN_NO_FAULT) {
+              std::cout << "PAR_SCORE=" << par.score << "\n";
+              std::cout << "PAR_NUMBER=" << par.number << "\n";
+              for (int i = 0; i < par.number; ++i)
+                std::cout << "PAR_CONTRACT_" << i << "=" << par.contracts[i] << "\n";
+            } else {
+              char msg[80]{};
+              ErrorMessage(prc, msg);
+              std::cout << "PAR_ERROR=" << msg << "\n";
+            }
+
+            FreeMemory();
+            return 0;
+          }
+          CPP
+
+          g++ -std=c++20 -O2 \
+            -I odin-dds/external/dds/include \
+            /tmp/generic_dds.cpp odin-dds/lib/dds.a -pthread \
+            -o /tmp/generic_dds
+
+          /tmp/generic_dds | tee /tmp/dds_result.txt
+
+      - name: Publish step summary
+        shell: bash
+        run: |
+          {
+            echo '## DDS result'
+            echo
+            echo '```text'
+            cat /tmp/dds_result.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Reply to agent request and close issue
+        if: ${{ success() && github.event_name == 'issues' }}
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          {
+            echo 'DDS calculation completed.'
+            echo
+            echo '```text'
+            cat /tmp/dds_result.txt
+            echo '```'
+            echo
+            echo "Run: $RUN_URL"
+          } > /tmp/dds_comment.md
+          gh issue comment "$ISSUE_NUMBER" --body-file /tmp/dds_comment.md
+          gh issue close "$ISSUE_NUMBER"
+
+      - name: Report failed agent request
+        if: ${{ failure() && github.event_name == 'issues' }}
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          gh issue comment "$ISSUE_NUMBER" --body "DDS calculation failed. Inspect: $RUN_URL"
