@@ -5,7 +5,7 @@ on:
   push:
     branches: [ "main" ]
     paths:
-      - ".github/workflows/build-dds-static.yml"
+      - ".github/workflows/build-dds.yml"
 
 permissions:
   contents: read
