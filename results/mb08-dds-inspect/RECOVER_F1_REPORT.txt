@@ -1,2 +1,0 @@
-searched_boundary_positions=99
-valid_candidates=0

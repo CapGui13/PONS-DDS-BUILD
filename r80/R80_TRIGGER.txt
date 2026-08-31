@@ -1,2 +1,0 @@
-R80 FINAL HOLDOUT TRIGGER 2026-08-25T22:41+02:00
-Workflow: sealed sampler + 140 witness equivalence + 50x288 holdout

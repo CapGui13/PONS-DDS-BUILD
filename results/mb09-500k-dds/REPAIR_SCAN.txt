@@ -1,3 +1,0 @@
-bytes=49056 current_b64_sha=a662b2a98e22ba4ac57faf58ab51f2aabbff30d8918f28522253080dd65e3ca6 target=15a8fbaa147906bf197f168a49764fb3cd7fd4b98c75dd2d470b35a9c9ce602d
-sizes=[10000, 10000, 10000, 10000, 9056] boundaries=[10000, 20000, 30000, 40000] positions_scanned=10245 radius=1024
-FOUND=NO
