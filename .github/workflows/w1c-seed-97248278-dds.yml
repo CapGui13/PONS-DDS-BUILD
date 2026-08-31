@@ -1,0 +1,84 @@
+name: W1C seed 97248278 DDS
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - ".github/workflows/w1c-seed-97248278-dds.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  solve:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Fetch validated DDS source wrapper
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --branch 2026-08 https://github.com/enerqi/odin-dds.git odin-dds
+          test -s odin-dds/lib/dds.a
+          grep -qi "7219c95" odin-dds/external/dds/VENDORED.md
+      - name: Solve seed 97248278
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > /tmp/solve.cpp <<'CPP'
+          #include <cstring>
+          #include <iostream>
+          #include "dll.h"
+
+          static int spadeScore(int level, int tricks, bool vul) {
+            const int target = level + 6;
+            if (tricks < target) return -(vul ? 100 : 50) * (target - tricks);
+            const int trickPoints = 30 * level;
+            const int bonus = trickPoints >= 100 ? (vul ? 500 : 300) : 50;
+            return trickPoints + bonus + 30 * (tricks - target);
+          }
+
+          int main() {
+            SetMaxThreads(1);
+            DDSInfo info{};
+            GetDDSInfo(&info);
+            std::cout << "DDS_VERSION=" << info.versionString << "\n";
+            std::cout << "DDS_UPSTREAM_COMMIT=7219c95\n";
+            std::cout << "SEED=97248278\nDEALER=S\nVULNERABILITY=NS\n";
+            const char *pbn = "N:.97643.KQ643.T95 JT.AQT8.T975.A43 KQ952.J.A.KQJ872 A87643.K52.J82.6";
+            std::cout << "PBN=" << pbn << "\n";
+            ddTableDealPBN deal{};
+            std::strncpy(deal.cards, pbn, sizeof(deal.cards)-1);
+            ddTableResults table{};
+            int rc = CalcDDtablePBN(deal, &table);
+            std::cout << "CALC_RC=" << rc << "\n";
+            if (rc != RETURN_NO_FAULT) {
+              char msg[80]{}; ErrorMessage(rc, msg); std::cerr << "DDS_ERROR=" << msg << "\n"; FreeMemory(); return 2;
+            }
+            const char *strains[5] = {"S","H","D","C","N"};
+            const char *seats[4] = {"N","E","S","W"};
+            for (int s=0;s<5;s++) {
+              std::cout << "DD_" << strains[s] << "=";
+              for (int h=0;h<4;h++) {
+                if (h) std::cout << ",";
+                std::cout << seats[h] << ":" << table.resTable[s][h];
+              }
+              std::cout << "\n";
+            }
+            int spadeTricksS = table.resTable[0][2];
+            int baselineScore = spadeScore(3, spadeTricksS, true);
+            int candidateScore = spadeScore(2, spadeTricksS, true);
+            std::cout << "SOUTH_SPADE_TRICKS=" << spadeTricksS << "\n";
+            std::cout << "BASELINE_3S_SCORE_NS=" << baselineScore << "\n";
+            std::cout << "CANDIDATE_2S_SCORE_NS=" << candidateScore << "\n";
+            std::cout << "CLASSIFICATION=" << (candidateScore>baselineScore?"BETTER":candidateScore<baselineScore?"WORSE":"EQUAL") << "\n";
+            parResultsDealer par{};
+            int prc = DealerPar(&table, &par, 2, 2); // dealer South, vulnerability NS
+            std::cout << "DEALER_PAR_RC=" << prc << "\n";
+            std::cout << "PAR_SCORE=" << par.score << "\n";
+            std::cout << "PAR_NUMBER=" << par.number << "\n";
+            for (int i=0;i<par.number;i++) std::cout << "PAR_CONTRACT_" << i << "=" << par.contracts[i] << "\n";
+            FreeMemory();
+            return 0;
+          }
+          CPP
+          g++ -std=c++20 -O2 -I odin-dds/external/dds/include /tmp/solve.cpp odin-dds/lib/dds.a -pthread -o /tmp/solve
+          /tmp/solve
