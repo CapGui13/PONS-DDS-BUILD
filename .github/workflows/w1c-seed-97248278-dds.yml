@@ -13,12 +13,14 @@ jobs:
   solve:
     runs-on: ubuntu-22.04
     steps:
-      - name: Fetch validated DDS source wrapper
+      - name: Fetch and build validated DDS
         run: |
           set -euo pipefail
           git clone --depth 1 --branch 2026-08 https://github.com/enerqi/odin-dds.git odin-dds
-          test -s odin-dds/lib/dds.a
           grep -qi "7219c95" odin-dds/external/dds/VENDORED.md
+          rm -f odin-dds/lib/dds.a
+          make -C odin-dds/src
+          test -s odin-dds/lib/dds.a
       - name: Solve seed 97248278
         shell: bash
         run: |
@@ -71,7 +73,7 @@ jobs:
             std::cout << "CANDIDATE_2S_SCORE_NS=" << candidateScore << "\n";
             std::cout << "CLASSIFICATION=" << (candidateScore>baselineScore?"BETTER":candidateScore<baselineScore?"WORSE":"EQUAL") << "\n";
             parResultsDealer par{};
-            int prc = DealerPar(&table, &par, 2, 2); // dealer South, vulnerability NS
+            int prc = DealerPar(&table, &par, 2, 2);
             std::cout << "DEALER_PAR_RC=" << prc << "\n";
             std::cout << "PAR_SCORE=" << par.score << "\n";
             std::cout << "PAR_NUMBER=" << par.number << "\n";
