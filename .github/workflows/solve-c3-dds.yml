@@ -1,0 +1,104 @@
+name: Solve PONS PBN03 WS01 C3 DDS82
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - "c3/DDS_C3_INPUT.tsv"
+      - ".github/workflows/solve-c3-dds.yml"
+
+permissions:
+  contents: write
+
+env:
+  ODIN_COMMIT: 38fcd537dd6c7dec7ef596e861551f1b278f2f98
+  DDS_UPSTREAM_COMMIT: 7219c956f4ed9a9f8d1585e9a1a2c57465745ac5
+  DDS_A_SHA256: e5c7bcdcf96d3ed24b14b2840303a0d0936b05419de463809f68982c565c7f4c
+  INPUT_SHA256: 6d02485880378d950d8e0aec4e2a8605b6c57caceab48f5ee298a00811f0ebd7
+  EXPECTED_ROWS: "82"
+
+jobs:
+  solve:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify input
+        run: |
+          set -euo pipefail
+          test "$(sha256sum c3/DDS_C3_INPUT.tsv | awk '{print $1}')" = "$INPUT_SHA256"
+          test "$(wc -l < c3/DDS_C3_INPUT.tsv)" = "$EXPECTED_ROWS"
+      - name: Fetch pinned DDS vendor
+        run: |
+          set -euo pipefail
+          git clone https://github.com/enerqi/odin-dds.git odin-dds
+          git -C odin-dds checkout "$ODIN_COMMIT"
+          test "$(git -C odin-dds rev-parse HEAD)" = "$ODIN_COMMIT"
+          grep -q "$DDS_UPSTREAM_COMMIT" odin-dds/external/dds/VENDORED.md
+      - name: Build pinned DDS
+        run: |
+          set -euo pipefail
+          make -C odin-dds/src
+          test -s odin-dds/lib/dds.a
+          test "$(sha256sum odin-dds/lib/dds.a | awk '{print $1}')" = "$DDS_A_SHA256"
+      - name: Build batch runner
+        run: |
+          cat > /tmp/dds_c3.cpp <<'CPP'
+          #include <algorithm>
+          #include <cstring>
+          #include <fstream>
+          #include <iostream>
+          #include <string>
+          #include <vector>
+          #include "dll.h"
+          struct C { bool pass{}; int level{}; char strain{'-'}; char declarer{'-'}; std::string dbl{"NONE"}; };
+          struct R { unsigned long long seed{}; char dealer{}; std::string vul,pbn; C c,p; };
+          static std::vector<std::string> split(const std::string&s){std::vector<std::string>v;size_t p=0;for(;;){size_t q=s.find('\t',p);if(q==std::string::npos){v.push_back(s.substr(p));break;}v.push_back(s.substr(p,q-p));p=q+1;}return v;}
+          static int hand(char c){return c=='N'?0:c=='E'?1:c=='S'?2:3;}
+          static int strain(char c){return c=='S'?0:c=='H'?1:c=='D'?2:c=='C'?3:4;}
+          static int vul(const std::string&v){return v=="None"?0:v=="Both"?1:v=="NS"?2:3;}
+          static bool isV(char d,int v){if(v==1)return true;if(v==0)return false;bool ns=(d=='N'||d=='S');return v==2?ns:!ns;}
+          static int declScore(const C&c,int tricks,int v){if(c.pass)return 0;int target=c.level+6,delta=tricks-target;bool vv=isV(c.declarer,v);int mult=c.dbl=="XX"?4:(c.dbl=="X"?2:1);if(delta>=0){int base=(c.strain=='C'||c.strain=='D')?20*c.level:(c.strain=='H'||c.strain=='S')?30*c.level:40+30*(c.level-1);int cp=base*mult,sc=cp;if(mult==2)sc+=50;else if(mult==4)sc+=100;if(delta>0){if(mult==1)sc+=delta*((c.strain=='C'||c.strain=='D')?20:30);else if(mult==2)sc+=delta*(vv?200:100);else sc+=delta*(vv?400:200);}sc+=(cp>=100?(vv?500:300):50);if(c.level==6)sc+=vv?750:500;else if(c.level==7)sc+=vv?1500:1000;return sc;}int u=-delta,pen=0;if(mult==1)pen=u*(vv?100:50);else{int d;if(vv)d=200+(u-1)*300;else if(u==1)d=100;else if(u==2)d=300;else if(u==3)d=500;else d=500+(u-3)*300;pen=d*(mult==4?2:1);}return -pen;}
+          static int nsScore(const C&c,int t,int v){int s=declScore(c,t,v);return (c.declarer=='N'||c.declarer=='S')?s:-s;}
+          static C pc(const std::vector<std::string>&f,int o){C c;c.pass=f[o]=="1";c.level=std::stoi(f[o+1]);c.strain=f[o+2][0];c.declarer=f[o+3][0];c.dbl=f[o+4];return c;}
+          static std::string pars(const parResultsDealer&p){std::string s;for(int i=0;i<p.number;i++){if(i)s+='|';s+=p.contracts[i];}return s;}
+          int main(){std::ifstream in("c3/DDS_C3_INPUT.tsv");std::ofstream out("c3/DDS_C3_RESULTS.tsv");std::string line;std::vector<R> rows;while(std::getline(in,line)){auto f=split(line);if(f.size()!=14){std::cerr<<"bad fields="<<f.size()<<"\n";return 2;}R r;r.seed=std::stoull(f[0]);r.dealer=f[1][0];r.vul=f[2];r.pbn=f[3];r.c=pc(f,4);r.p=pc(f,9);rows.push_back(r);}SetMaxThreads(0);DDSInfo info{};GetDDSInfo(&info);std::cerr<<"DDS="<<info.versionString<<" rows="<<rows.size()<<"\n";int errors=0;for(size_t i=0;i<rows.size();i++){auto&r=rows[i];ddTableDealPBN d{};std::strncpy(d.cards,r.pbn.c_str(),sizeof(d.cards)-1);ddTableResults t{};int rc=CalcDDtablePBN(d,&t);if(rc!=RETURN_NO_FAULT){errors++;continue;}int vv=vul(r.vul);int tc=r.c.pass?0:t.resTable[strain(r.c.strain)][hand(r.c.declarer)];int tp=r.p.pass?0:t.resTable[strain(r.p.strain)][hand(r.p.declarer)];int sc=nsScore(r.c,tc,vv),sp=nsScore(r.p,tp,vv);parResultsDealer pr{};int prc=DealerPar(&t,&pr,hand(r.dealer),vv);if(prc!=RETURN_NO_FAULT)errors++;out<<r.seed<<'\t'<<tc<<'\t'<<sc<<'\t'<<tp<<'\t'<<sp<<'\t'<<prc<<'\t'<<pr.score<<'\t'<<pars(pr)<<'\t';for(int s=0;s<5;s++)for(int h=0;h<4;h++){if(s||h)out<<',';out<<t.resTable[s][h];}out<<'\n';}FreeMemory();std::cerr<<"complete="<<rows.size()<<" errors="<<errors<<"\n";return errors?4:0;}
+          CPP
+          g++ -std=c++17 -O3 -I odin-dds/external/dds/include /tmp/dds_c3.cpp odin-dds/lib/dds.a -pthread -o /tmp/dds_c3
+      - name: Solve DDS and DealerPar
+        run: |
+          set -euo pipefail
+          /tmp/dds_c3 2> c3/DDS_C3_RUN.log
+          test "$(wc -l < c3/DDS_C3_RESULTS.tsv)" = "$EXPECTED_ROWS"
+          grep -q "errors=0" c3/DDS_C3_RUN.log
+          python3 - <<'PY'
+          import hashlib,json,os
+          inp='c3/DDS_C3_INPUT.tsv'; res='c3/DDS_C3_RESULTS.tsv'
+          keys=[]; dirs={'CANDIDATE_CLOSER_TO_PAR':0,'PARENT_CLOSER_TO_PAR':0,'PAR_GAP_TIE':0}
+          cand_better=parent_better=score_tie=0; par_worse=0
+          for line in open(res):
+              z=line.rstrip('\n').split('\t'); assert len(z)==9
+              seed=int(z[0]); tc,sc,tp,sp,prc,par=map(int,z[1:7]); assert prc==1
+              table=list(map(int,z[8].split(','))); assert len(table)==20 and all(0<=x<=13 for x in table)
+              gc, gp = abs(sc-par), abs(sp-par)
+              if gc<gp: dirs['CANDIDATE_CLOSER_TO_PAR']+=1
+              elif gp<gc: dirs['PARENT_CLOSER_TO_PAR']+=1; par_worse+=1
+              else: dirs['PAR_GAP_TIE']+=1
+              if sc>sp: cand_better+=1
+              elif sp>sc: parent_better+=1
+              else: score_tie+=1
+              keys.append(seed)
+          assert len(keys)==82 and len(set(keys))==82
+          summary={'status':'DDS_COMPLETE','rows':82,'unique_seeds':82,'input_sha256':hashlib.sha256(open(inp,'rb').read()).hexdigest(),'dds_upstream_commit':os.environ['DDS_UPSTREAM_COMMIT'],'dds_static_sha256':os.environ['DDS_A_SHA256'],'dealer_par':'computed for every row','direction_counts_by_abs_par_gap':dirs,'candidate_ns_score_better':cand_better,'parent_ns_score_better':parent_better,'ns_score_tie':score_tie,'candidate_par_worse_rows':par_worse,'dds_errors':0}
+          open('c3/DDS_C3_SUMMARY.json','w').write(json.dumps(summary,indent=2,sort_keys=True)+'\n')
+          print(json.dumps(summary,indent=2))
+          PY
+          sha256sum c3/DDS_C3_INPUT.tsv c3/DDS_C3_RESULTS.tsv c3/DDS_C3_SUMMARY.json c3/DDS_C3_RUN.log > c3/DDS_C3_SHA256SUMS.txt
+      - name: Commit results
+        run: |
+          set -euo pipefail
+          git config user.name "PONS DDS Actions"
+          git config user.email "actions@users.noreply.github.com"
+          git add c3/DDS_C3_RESULTS.tsv c3/DDS_C3_SUMMARY.json c3/DDS_C3_RUN.log c3/DDS_C3_SHA256SUMS.txt
+          git commit -m "Add PBN03 WS01 C3 DDS82 adjudication"
+          git push
