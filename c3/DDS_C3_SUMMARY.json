@@ -1,0 +1,19 @@
+{
+  "candidate_ns_score_better": 37,
+  "candidate_par_worse_rows": 38,
+  "dds_errors": 0,
+  "dds_static_sha256": "e5c7bcdcf96d3ed24b14b2840303a0d0936b05419de463809f68982c565c7f4c",
+  "dds_upstream_commit": "7219c956f4ed9a9f8d1585e9a1a2c57465745ac5",
+  "dealer_par": "computed for every row",
+  "direction_counts_by_abs_par_gap": {
+    "CANDIDATE_CLOSER_TO_PAR": 35,
+    "PARENT_CLOSER_TO_PAR": 38,
+    "PAR_GAP_TIE": 9
+  },
+  "input_sha256": "6d02485880378d950d8e0aec4e2a8605b6c57caceab48f5ee298a00811f0ebd7",
+  "ns_score_tie": 9,
+  "parent_ns_score_better": 36,
+  "rows": 82,
+  "status": "DDS_COMPLETE",
+  "unique_seeds": 82
+}
