@@ -18,7 +18,7 @@
   const db=await inflate(await r.text());
   if(!db||!Array.isArray(db.records)||!db.meta||db.meta.records!==2920||db.records.length!==2920)throw Error('Base invalide');
   window.BRIDGE_DB=db;
-  const app=document.createElement('script');app.src='/maniements/app.js?v=5';
+  const app=document.createElement('script');app.src='/maniements/app.js?v=6';
   app.onerror=()=>{box.textContent='Impossible de charger le moteur de l’app.';};
   document.body.appendChild(app);
  }catch(e){console.error('MANIEMENTS LOAD ERROR',e);stats.textContent='Erreur de chargement';box.textContent=`Impossible de charger la base de maniements. (${e.message})`;}
