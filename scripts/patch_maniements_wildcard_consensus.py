@@ -1,0 +1,187 @@
+from pathlib import Path
+
+app_path = Path('vercel/play-dds-native/maniements/app.js')
+idx_path = Path('vercel/play-dds-native/maniements/index.html')
+app = app_path.read_text(encoding='utf-8')
+idx = idx_path.read_text(encoding='utf-8')
+
+if 'function wildcardConsensus' in app:
+    raise SystemExit('wildcard consensus already present')
+
+marker = "  function setInvalid(flag) {\n"
+if marker not in app:
+    raise SystemExit('setInvalid marker not found')
+
+helper = r'''  function chooseSubsets(arr, k, start = 0, pick = [], out = []) {
+    if (pick.length === k) { out.push([...pick]); return out; }
+    const need = k - pick.length;
+    for (let i = start; i <= arr.length - need; i++) {
+      pick.push(arr[i]); chooseSubsets(arr, k, i + 1, pick, out); pick.pop();
+    }
+    return out;
+  }
+
+  function expandWildcardWorlds(h1, h2) {
+    const n1 = h1.filter(c => c === 'x').length, n2 = h2.filter(c => c === 'x').length;
+    if (!n1 && !n2) return [];
+    const fixed1 = h1.filter(c => c !== 'x'), fixed2 = h2.filter(c => c !== 'x');
+    const knownLow = new Set([...fixed1, ...fixed2].filter(c => LOW_RANKS.has(c)));
+    const free = [...LOW_RANKS].filter(c => !knownLow.has(c));
+    if (n1 + n2 > free.length) return [];
+    const worlds = [];
+    for (const a of chooseSubsets(free, n1)) {
+      const aset = new Set(a), rest = free.filter(c => !aset.has(c));
+      for (const b of chooseSubsets(rest, n2)) {
+        worlds.push({
+          h1: [...fixed1, ...a].sort((x, y) => ORDER.get(x) - ORDER.get(y)),
+          h2: [...fixed2, ...b].sort((x, y) => ORDER.get(x) - ORDER.get(y))
+        });
+      }
+    }
+    return worlds;
+  }
+
+  function effectivePlay(hit) {
+    const r = hit.rec;
+    return r.kind === 'published' && STRATEGY_SUSPECT_IDS.has(r.id)
+      ? '__STRATEGY_SUSPECT__'
+      : orient(r.strategy, hit.m.orientation);
+  }
+
+  function resolvedMode(mode, h1, h2) {
+    const hs = matches(mode, h1, h2);
+    if (!hs.length) return { status: 'missing', signature: 'MISSING', selected: [] };
+    if (mode === 'safety') {
+      const byTarget = new Map();
+      for (const h of hs) { if (!byTarget.has(h.rec.target)) byTarget.set(h.rec.target, []); byTarget.get(h.rec.target).push(h); }
+      const selected = [];
+      for (const target of [...byTarget.keys()].sort((a, b) => b - a)) {
+        const ties = topTies(byTarget.get(target));
+        if (divergent(ties)) return { status: 'ambiguous', signature: 'AMBIGU', selected: [] };
+        selected.push(ties[0]);
+      }
+      const signature = selected.map(h => `${h.rec.target}|${Number(h.rec.prob).toPrecision(15)}|${effectivePlay(h)}`).join('||');
+      return { status: 'resolved', signature, selected };
+    }
+    const ties = topTies(hs);
+    if (divergent(ties)) return { status: 'ambiguous', signature: 'AMBIGU', selected: [] };
+    const chosen = [...ties].sort((a, b) => b.rec.target - a.rec.target)[0];
+    return {
+      status: 'resolved',
+      signature: `${chosen.rec.target}|${Number(chosen.rec.prob).toPrecision(15)}|${effectivePlay(chosen)}`,
+      selected: [chosen]
+    };
+  }
+
+  function consensusMode(mode, worlds) {
+    if (!worlds.length) return { compatible: false, selected: [], status: 'empty' };
+    const first = resolvedMode(mode, worlds[0].h1, worlds[0].h2);
+    if (first.status === 'ambiguous') return { compatible: false, selected: [], status: 'ambiguous' };
+    for (let i = 1; i < worlds.length; i++) {
+      const cur = resolvedMode(mode, worlds[i].h1, worlds[i].h2);
+      if (cur.status === 'ambiguous' || cur.signature !== first.signature) {
+        return { compatible: false, selected: [], status: 'varies' };
+      }
+    }
+    return { compatible: true, selected: first.selected, status: first.status };
+  }
+
+  function wildcardConsensus(h1, h2) {
+    const worlds = expandWildcardWorlds(h1, h2);
+    return {
+      worlds,
+      safety: consensusMode('safety', worlds),
+      max: consensusMode('max', worlds)
+    };
+  }
+
+  function robustCard(hit, worldCount) {
+    const c = card(hit);
+    const q = c.querySelector('.meta-chip.exact, .meta-chip.pattern');
+    if (q) {
+      q.classList.remove('exact'); q.classList.add('pattern');
+      q.textContent = `Résultat identique sur ${worldCount} réalisation${worldCount > 1 ? 's' : ''}`;
+    }
+    [...c.querySelectorAll('.meta-chip')].forEach(chip => {
+      if (/^Exact pour les petites cartes/i.test(chip.textContent || '')) chip.remove();
+    });
+    return c;
+  }
+
+  function setNoResultMessage(title, text) {
+    const h = els.noResult.querySelector('h2'), p = els.noResult.querySelector('p');
+    if (h) h.textContent = title;
+    if (p) p.textContent = text;
+  }
+
+'''
+app = app.replace(marker, helper + marker, 1)
+
+old = """    // Canonicalise without leaving a stale result: set values directly, then refresh buttons/previews after result construction.\n    els.h1.value = inputTxt(h1); els.h2.value = inputTxt(h2);\n    const sf = matches('safety', h1, h2), mx = matches('max', h1, h2);\n"""
+if old not in app:
+    raise SystemExit('analyze insertion marker not found')
+
+new = r'''    // Canonicalise without leaving a stale result: set values directly, then refresh buttons/previews after result construction.
+    els.h1.value = inputTxt(h1); els.h2.value = inputTxt(h2);
+
+    // Avec un x utilisateur, ne jamais choisir un motif sur une hypothèse implicite.
+    // On énumère toutes les petites cartes concrètes possibles et on n'affiche que ce qui est invariant.
+    if (h1.includes('x') || h2.includes('x')) {
+      const wc = wildcardConsensus(h1, h2), count = wc.worlds.length;
+      const safetyHas = wc.safety.compatible && wc.safety.selected.length > 0;
+      const maxHas = wc.max.compatible && wc.max.selected.length > 0;
+      const params = new URLSearchParams(); if (h1.length) params.set('h1', inputTxt(h1)); if (h2.length) params.set('h2', inputTxt(h2));
+      history.replaceState(null, '', params.toString() ? `${location.pathname}?${params}` : location.pathname);
+
+      if (!safetyHas && !maxHas) {
+        els.result.classList.add('hidden'); els.noResult.classList.remove('hidden');
+        if (!count) {
+          setNoResultMessage('Pas de réalisation possible', 'Les x ne peuvent pas être remplacés par des petites cartes distinctes du 2 au 9 avec les cartes déjà indiquées.');
+        } else if (!wc.safety.compatible || !wc.max.compatible) {
+          setNoResultMessage('Résultat dépendant des petites cartes exactes', `Les ${count} réalisations possibles des x ne conduisent pas toutes au même maniement. Précise une ou plusieurs petites cartes pour obtenir un résultat fiable.`);
+        } else {
+          setNoResultMessage('Pas de résultat robuste', `Les ${count} réalisations possibles ont été vérifiées, mais aucune conclusion commune n’est couverte par la base.`);
+        }
+        refresh(); moveTo(els.noResult); return;
+      }
+
+      els.noResult.classList.add('hidden'); els.result.classList.remove('hidden');
+      els.matchHolding.textContent = `${txt(h1)} / ${txt(h2)}`;
+      els.matchBadge.textContent = `ROBUSTE · ${count} CAS`;
+      els.safetyResults.innerHTML = '';
+      if (wc.safety.compatible) {
+        if (wc.safety.selected.length) wc.safety.selected.forEach(h => els.safetyResults.appendChild(robustCard(h, count)));
+        else els.safetyResults.innerHTML = '<p class="lead">Aucune cible de sécurité commune n’est référencée pour toutes les réalisations.</p>';
+      } else {
+        els.safetyResults.innerHTML = `<p class="lead">La ligne de sécurité dépend des petites cartes exactes parmi les ${count} réalisations possibles.</p>`;
+      }
+      els.maxResults.innerHTML = '';
+      if (wc.max.compatible) {
+        if (wc.max.selected.length) els.maxResults.appendChild(robustCard(wc.max.selected[0], count));
+        else els.maxResults.innerHTML = '<p class="lead">Aucun résultat Max commun n’est référencé pour toutes les réalisations.</p>';
+      } else {
+        els.maxResults.innerHTML = `<p class="lead">Le jeu pour le maximum dépend des petites cartes exactes parmi les ${count} réalisations possibles.</p>`;
+      }
+      refresh(); switchMode(safetyHas ? 'safety' : 'max'); moveTo(els.result); return;
+    }
+
+    const sf = matches('safety', h1, h2), mx = matches('max', h1, h2);
+'''
+app = app.replace(old, new, 1)
+
+generic = """    if (!sf.length && !mx.length) {\n      els.result.classList.add('hidden'); els.noResult.classList.remove('hidden');\n"""
+generic_new = """    if (!sf.length && !mx.length) {\n      setNoResultMessage('Pas de résultat fiable', 'Cette combinaison n’est pas référencée, ou les seules données disponibles sont actuellement mises en quarantaine. Aucun résultat incertain n’est choisi silencieusement.');\n      els.result.classList.add('hidden'); els.noResult.classList.remove('hidden');\n"""
+if generic not in app:
+    raise SystemExit('generic no-result marker not found')
+app = app.replace(generic, generic_new, 1)
+
+if 'app.js?v=5' in idx:
+    idx = idx.replace('app.js?v=5', 'app.js?v=6')
+elif 'app.js?v=4' in idx:
+    idx = idx.replace('app.js?v=4', 'app.js?v=6')
+else:
+    raise SystemExit('app cache-buster marker not found')
+
+app_path.write_text(app, encoding='utf-8')
+idx_path.write_text(idx, encoding='utf-8')
+print('patched app.js and index.html')
