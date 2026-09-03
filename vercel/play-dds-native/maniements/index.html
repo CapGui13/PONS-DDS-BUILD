@@ -4,8 +4,11 @@
   try{
     if(stats) stats.textContent='Chargement de la base…';
     const urls=['/maniements/data0.txt','/maniements/data1.txt','/maniements/data2.txt','/maniements/data3.txt'];
-    const parts=await Promise.all(urls.map(u=>fetch(u,{cache:'force-cache'}).then(r=>{if(!r.ok) throw new Error(`${u}: HTTP ${r.status}`); return r.text();})));
-    const b64=parts.join('').replace(/\s+/g,'');
+    const rawParts=await Promise.all(urls.map(u=>fetch(u,{cache:'no-cache'}).then(r=>{if(!r.ok) throw new Error(`${u}: HTTP ${r.status}`); return r.text();})));
+    const parts=rawParts.map((p,i)=>p.replace(/\s+/g,'').slice(0,14659));
+    if(parts.some(p=>p.length!==14659)) throw new Error(`Chunk incomplet : ${parts.map(p=>p.length).join('/')}`);
+    const b64=parts.join('');
+    if(b64.length!==58636 || b64.length%4!==0) throw new Error(`Base64 invalide : ${b64.length}`);
     const bin=atob(b64);
     const bytes=new Uint8Array(bin.length);
     for(let i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i);
@@ -14,13 +17,14 @@
     const js=await new Response(stream).text();
     if(/^\s*window\.BRIDGE_DB\s*=/.test(js)) (0,eval)(js);
     else window.BRIDGE_DB=JSON.parse(js);
+    if(!window.BRIDGE_DB || !Array.isArray(window.BRIDGE_DB.records)) throw new Error('Base reconstruite invalide.');
     const app=document.createElement('script');
-    app.src='/maniements/app.js?v=1';
+    app.src='/maniements/app.js?v=2';
     app.onload=()=>document.documentElement.classList.add('app-ready');
     app.onerror=()=>{throw new Error('Impossible de charger app.js');};
     document.body.appendChild(app);
   }catch(err){
-    console.error(err);
+    console.error('MANIEMENTS LOAD ERROR',err);
     if(stats) stats.textContent='Erreur de chargement';
     const box=document.getElementById('validation');
     if(box) box.textContent='Impossible de charger la base de maniements. Recharge la page.';
