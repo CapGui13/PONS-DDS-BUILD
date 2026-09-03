@@ -1,0 +1,116 @@
+name: Build Maniements single DB preview
+
+on:
+  push:
+    branches: [maniements-v2-single-db]
+
+permissions:
+  contents: write
+
+jobs:
+  build-single-db:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: maniements-v2-single-db
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Rebuild canonical DB and single-file loader
+        shell: python
+        run: |
+          from pathlib import Path
+          import base64, gzip, json, re
+
+          root = Path('vercel/play-dds-native/maniements')
+          L = 14659
+          parts = [(root / f'data{i}.txt').read_text(encoding='utf-8') for i in range(4)]
+          p = [''.join(x.split()) for x in parts]
+          if len(p[0]) != L or len(p[1]) != L or len(p[3]) != L or len(p[2]) < L:
+              raise SystemExit(f'Unexpected chunk sizes: {[len(x) for x in p]}')
+
+          def decode_db(b64):
+              try:
+                  raw = gzip.decompress(base64.b64decode(b64, validate=True)).decode('utf-8')
+                  m = re.match(r'^\s*window\.BRIDGE_DB\s*=\s*(\{[\s\S]*\})\s*;?\s*$', raw)
+                  db = json.loads(m.group(1) if m else raw)
+                  if db.get('meta', {}).get('records') == 2920 and len(db.get('records', [])) == 2920:
+                      return db
+              except Exception:
+                  return None
+
+          candidates = []
+          def add(x):
+              if x and len(x) == L and x not in candidates:
+                  candidates.append(x)
+          add(p[2][:L]); add(p[2][-L:])
+          prev = p[1][-48:]; nxt = p[3][:48]
+          k = p[2].find(prev)
+          if k >= 0: add(p[2][k+48:k+48+L])
+          k = p[2].find(nxt)
+          if k >= L: add(p[2][k-L:k])
+
+          chosen = None
+          for c in candidates:
+              if decode_db(p[0] + p[1] + c + p[3]):
+                  chosen = c; break
+          if chosen is None:
+              extra = len(p[2]) - L
+              for off in range(1, max(1, extra)):
+                  c = p[2][off:off+L]
+                  if len(c) == L and decode_db(p[0] + p[1] + c + p[3]):
+                      chosen = c; break
+          if chosen is None:
+              raise SystemExit('Unable to recover a canonical DB window from data2')
+
+          canonical = p[0] + p[1] + chosen + p[3]
+          db = decode_db(canonical)
+          assert db and len(canonical) == 4 * L
+          (root / 'db.txt').write_text(canonical, encoding='ascii')
+
+          index = (root / 'index.html').read_text(encoding='utf-8')
+          loader = r'''<script>
+          (async()=>{
+           const stats=document.getElementById('dbStats'),box=document.getElementById('validation');
+           async function inflate(b64){
+            const clean=b64.replace(/\s+/g,'');
+            if(!clean||clean.length%4) throw Error('Base encodée invalide');
+            const bin=atob(clean),bytes=new Uint8Array(bin.length);
+            for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);
+            const stream=new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
+            const js=await new Response(stream).text();
+            const m=js.match(/^\s*window\.BRIDGE_DB\s*=\s*(\{[\s\S]*\})\s*;?\s*$/);
+            return JSON.parse(m?m[1]:js);
+           }
+           try{
+            stats.textContent='Chargement de la base…';
+            const r=await fetch('/maniements/db.txt?v=5');
+            if(!r.ok)throw Error(`db.txt: ${r.status}`);
+            const db=await inflate(await r.text());
+            if(!db||!Array.isArray(db.records)||!db.meta||db.meta.records!==2920||db.records.length!==2920)throw Error('Base invalide');
+            window.BRIDGE_DB=db;
+            const app=document.createElement('script');app.src='/maniements/app.js?v=5';
+            app.onerror=()=>{box.textContent='Impossible de charger le moteur de l’app.';};
+            document.body.appendChild(app);
+           }catch(e){console.error('MANIEMENTS LOAD ERROR',e);stats.textContent='Erreur de chargement';box.textContent=`Impossible de charger la base de maniements. (${e.message})`;}
+          })();
+          </script>'''
+          index2, n = re.subn(r'<script>[\s\S]*?</script>\s*</body>', lambda _: loader + '</body>', index, count=1)
+          if n != 1:
+              raise SystemExit('Could not replace existing loader')
+          if 'data0.txt' in index2 or 'data1.txt' in index2 or 'data2.txt' in index2 or 'data3.txt' in index2:
+              raise SystemExit('Old chunk loader still referenced')
+          (root / 'index.html').write_text(index2, encoding='utf-8')
+          print('DB records:', len(db['records']))
+          print('db.txt chars:', len(canonical))
+      - name: Commit generated preview files
+        run: |
+          git config user.name "PONS DDS Actions"
+          git config user.email "actions@users.noreply.github.com"
+          git add vercel/play-dds-native/maniements/db.txt vercel/play-dds-native/maniements/index.html
+          git diff --cached --quiet && exit 0
+          git commit -m "Use single Maniements DB payload"
+          git push origin HEAD:maniements-v2-single-db
