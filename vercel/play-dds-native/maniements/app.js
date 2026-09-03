@@ -12,15 +12,44 @@
     maxResults: $('maxResults'), safetyPanel: $('safetyPanel'), maxPanel: $('maxPanel'), stats: $('dbStats')
   };
 
+  // Runtime parity patch: the production loader still reads the frozen V1 DB chunks.
+  // Apply the 20 audited Wave1-G data corrections before any matching/indexing.
+  const DB_PATCHES = [
+    ['4-RV-008','safety',5,'prob',0.007],['4-RV-018','safety',3,'prob',0.007],
+    ['4-RV-020','safety',3,'prob',0.005],['4-RV-004','safety',3,'prob',0.002],
+    ['4-RV-018','max',3,'prob',0.007],['3-R-002','max',5,'prob',0.007],
+    ['4-RV-004','max',3,'prob',0.002],['4-RV-020','max',3,'prob',0.005],
+    ['4-RV-008','max',5,'prob',0.007],['4-RV-001','max',4,'prob',0.003],
+    ['3-R-002','safety',5,'prob',0.007],['3-R-001','max',4,'prob',0.003],
+    ['3-R-001','safety',4,'prob',0.003],['4-RV-006','max',3,'prob',0.002],
+    ['4-RV-001','safety',4,'prob',0.003],['4-RV-006','safety',3,'prob',0.002],
+    ['4-RV-025','max',4,'strategy','Faire l’impasse au Valet et au 10 ; si elle perd, faire ensuite l’impasse au Roi.'],
+    ['4-RV-025','safety',3,'strategy','Répéter l’impasse au Valet et au 10.'],
+    ['4-RV-025','safety',4,'strategy','Faire l’impasse au Valet et au 10 ; si elle perd, faire ensuite l’impasse au Roi.'],
+    ['4-RV-025','safety',2,'strategy','Soit répéter l’impasse au Valet et au 10, soit faire cette impasse puis, si elle perd, l’impasse au Roi.']
+  ];
+  for (const [id,mode,target,field,value] of DB_PATCHES) {
+    const r=DB.records.find(x=>x.id===id&&x.mode===mode&&x.target===target); if(r) r[field]=value;
+  }
+  DB.meta.version='V2 HARDENED · WAVE1-G';
+  DB.meta.wave1G={publishedProbabilityRecordsCorrected:16,publishedStrategyRecordsCorrected:4,auditWorkers:6};
+
   let activeInput = els.h1;
   els.stats.textContent = `${DB.meta.records.toLocaleString('fr-FR')} entrées indexées`;
 
   // IMPORTANT : la casse de x/X a un sens dans l'entrée utilisateur.
   // X = 10 ; x = petite carte quelconque du 2 au 9.
+  function validateSuitSymbols(a, b) {
+    const suits = [...String(a || '') + String(b || '')].filter(c => '♠♥♦♣'.includes(c));
+    if (new Set(suits).size > 1) throw Error('Une analyse doit concerner une seule couleur : les symboles de couleur saisis sont contradictoires.');
+  }
+
   function normalizeUser(s) {
     return String(s || '')
       .replace(/♠|♥|♦|♣/g, '')
-      .replace(/K/g, 'R').replace(/Q/g, 'D').replace(/J/g, 'V').replace(/T/g, '10')
+      // Honneurs insensibles à la casse ; seule la paire X/x garde volontairement deux sens.
+      .replace(/[Aa]/g, 'A').replace(/[RrKk]/g, 'R').replace(/[DdQq]/g, 'D').replace(/[VvJj]/g, 'V')
+      .replace(/[Tt]/g, '10')
       .replace(/X/g, '10')
       .replace(/[\s,;_.-]/g, '');
   }
@@ -47,6 +76,8 @@
     return String(s || '')
       .replace(/♠|♥|♦|♣/g, '')
       .replace(/K/g, 'R').replace(/Q/g, 'D').replace(/J/g, 'V').replace(/T/g, '10')
+      // Dans la table source, l'unique X de DB est une spot-card, pas le 10 (déjà écrit 10).
+      .replace(/X/g, 'x')
       .replace(/[\s,;_-]/g, '');
   }
 
@@ -70,7 +101,7 @@
   const inputTxt = cards => cards.length ? cards.map(c => c === '10' ? 'X' : c).join('') : '';
 
   function validatePair(h1, h2) {
-    if (!h1.length || !h2.length) throw Error('Entre les deux mains de la couleur.');
+    if (!h1.length && !h2.length) throw Error('Entre au moins une carte de la couleur. Une main vide est acceptée pour une chicane.');
     const e1 = h1.filter(c => c !== 'x');
     const e2 = h2.filter(c => c !== 'x');
     const common = e1.filter(c => e2.includes(c));
@@ -86,7 +117,13 @@
     }
   }
 
+  function invalidateResult() {
+    els.result.classList.add('hidden');
+    els.noResult.classList.add('hidden');
+  }
+
   function preview() {
+    invalidateResult();
     for (const [input, p] of [[els.h1, els.p1], [els.h2, els.p2]]) {
       try {
         const cards = tokUser(input.value);
@@ -183,8 +220,14 @@
     function dfs(i, selected) {
       if (i === choices.length) {
         if (new Set(selected).size !== selected.length) return;
-        if (!selected.every(c => queryExact.includes(c))) return;
-        // Tout ce qui n'est pas une carte explicite du motif est absorbé par les x du motif.
+        const remaining = [...queryExact];
+        for (const c of selected) {
+          const at = remaining.indexOf(c);
+          if (at < 0) return;
+          remaining.splice(at, 1);
+        }
+        // Invariant V2 : un x de motif est une petite carte 2–9, jamais A/R/D/V/10.
+        if (remaining.some(c => !LOW_RANKS.has(c))) return;
         if (query.length - selected.length !== wildcardSlots) return;
         const specificity = selected.length;
         if (!best || specificity > best.specificity) best = { specificity };
@@ -228,15 +271,39 @@
     else t = t.replace(/Nord/g, 'Main 2').replace(/Sud/g, 'Main 1');
     t = t.replace(/__M1__/g, orientation === 'normal' ? 'Main 1' : 'Main 2')
          .replace(/__M2__/g, orientation === 'normal' ? 'Main 2' : 'Main 1');
-    return t.replace(/\blow\b/gi, 'petit').replace(/\bto\b/gi, 'vers').replace(/\bthen\b/gi, 'puis')
-      .replace(/\bPlay\b/gi, 'Jouer').replace(/\bor\b/gi, 'ou').replace(/\band\b/gi, 'et').replace(/Finesse/gi, 'Impasse');
+    return t.replace(/Vouer/g, 'Jouer')
+      .replace(/\blow\b/gi, 'petit').replace(/\bto\b/gi, 'vers').replace(/\bthen\b/gi, 'puis')
+      .replace(/\bPlay\b/gi, 'Jouer').replace(/\bLead\b/gi, 'Partir de').replace(/\bor\b/gi, 'ou').replace(/\band\b/gi, 'et')
+      .replace(/\bif\b/gi, 'si').replace(/\bEast\b/gi, 'Est').replace(/\bWest\b/gi, 'Ouest')
+      .replace(/\brepeatedly\b/gi, 'à répétition').replace(/\bvice versa\b/gi, 'ou inversement')
+      .replace(/\bcover(?:ed)?\b/gi, 'couvrir').replace(/\btowards?\b/gi, 'vers').replace(/Finesse/gi, 'Impasse');
   }
 
   const score = (r, m) => (r.priority || 0) * 100 + m.specificity * 10 + (m.exact ? 10000 : 0);
+  // Incohérences physiques/source prouvées par les audits indépendants A/B/C.
+  const SOURCE_SUSPECT_IDS = new Set(['3-R-024', '3-R-065', '4-A-024', '3-R-005', '6-AD-010']);
+  // Ces IDs gardent leurs probabilités mais leur texte publié est signalé, car la relation cible→remarque a été aplatie à l'import.
+  const STRATEGY_SUSPECT_IDS = new Set(['2-D-027','2-D-029','3-DV-012','3-DV-020','3-R-055','3-R-056','3-R-061','3-R-063','4-RV-054','4-RV-055','4-RV-056','4-RV-066','4-RV-071','4-RV-086','4-RV-089','4-RV-091','4-RV-099','4-RV-101','5-AV-010','5-AV-015','5-AV-025','5-AV-027','5-AV-032','5-RD-019','5-RD-020','5-RD-025','5-RD-039','5-RD-060','6-AD-008','7-AR-023','7-AR-032','8-ARV-018']);
+
+  const LEN_INDEX = { safety: new Map(), max: new Map() };
+  function recLengths(r) {
+    if (r.nExact !== undefined && r.sExact !== undefined) return [tokDbExact(r.nExact).length, tokDbExact(r.sExact).length];
+    const a = Number.isFinite(r.nlen) ? r.nlen : parsePat(r.n).expectedLen;
+    const b = Number.isFinite(r.slen) ? r.slen : parsePat(r.s).expectedLen;
+    return [a,b];
+  }
+  for (const r of DB.records) {
+    if (!LEN_INDEX[r.mode]) continue;
+    const [a,b] = recLengths(r), key = [a,b].sort((x,y)=>x-y).join('-');
+    if (!LEN_INDEX[r.mode].has(key)) LEN_INDEX[r.mode].set(key, []);
+    LEN_INDEX[r.mode].get(key).push(r);
+  }
+
   function matches(mode, h1, h2) {
-    const out = [];
-    for (const r of DB.records) {
-      if (r.mode !== mode) continue;
+    const out = [], key = [h1.length,h2.length].sort((a,b)=>a-b).join('-');
+    const candidates = LEN_INDEX[mode].get(key) || [];
+    for (const r of candidates) {
+      if (r.kind === 'published' && SOURCE_SUSPECT_IDS.has(r.id)) continue;
       const m = matchRec(r, h1, h2);
       if (m) out.push({ rec: r, m, score: score(r, m) });
     }
@@ -244,32 +311,66 @@
   }
 
   const esc = s => String(s).replace(/[&<>'"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[c]));
+  function safeSourceUrl(value) {
+    if (!value) return '';
+    try { const u = new URL(value, location.href); return ['http:','https:'].includes(u.protocol) ? u.href : ''; } catch { return ''; }
+  }
   function card(hit) {
     const r = hit.rec, c = document.createElement('article');
     c.className = 'result-card';
     const pct = (r.prob * 100).toLocaleString('fr-FR', { minimumFractionDigits: r.prob < .01 ? 2 : 1, maximumFractionDigits: 2 });
     const q = hit.m.exact ? 'exact' : 'pattern';
     const qt = hit.m.exact ? 'correspondance exacte' : r.kind === 'v12' ? `motif V12 ${r.n} / ${r.s}` : `motif ${r.n} / ${r.s}`;
-    const src = r.source ? `<a class="source-link" target="_blank" rel="noopener" href="${r.source}">source</a>` : '';
-    c.innerHTML = `<div class="result-number"><span class="target">${r.target} levée${r.target > 1 ? 's' : ''}</span><span class="prob">${pct}<small> %</small></span></div><div><div class="play-title">À jouer</div><div class="play">${esc(orient(r.strategy, hit.m.orientation))}</div><div class="meta"><span class="meta-chip ${q}">${qt}</span><span class="meta-chip">${esc(r.sourceLabel || 'Base validée')}</span>${r.note ? `<span class="meta-chip">${esc(r.note)}</span>` : ''}${src}</div></div>`;
+    const href = safeSourceUrl(r.source);
+    const src = href ? `<a class="source-link" target="_blank" rel="noopener" href="${esc(href)}" aria-label="Ouvrir la source de ${esc(r.id)} dans un nouvel onglet">Source ↗</a>` : '';
+    const strategySuspect = r.kind === 'published' && STRATEGY_SUSPECT_IDS.has(r.id);
+    const play = strategySuspect ? 'Stratégie publiée en cours d’arbitrage : la probabilité est conservée, mais l’app ne présente pas une ligne de jeu potentiellement mal rattachée à cette cible.' : orient(r.strategy, hit.m.orientation);
+    const playTitle = r.kind === 'motor' ? (String(r.strategy || '').includes(' ou ') ? 'Premiers coups optimaux' : 'Premier coup optimal') : 'Ligne de jeu';
+    const motorNote = r.kind === 'motor' ? '<span class="meta-chip">Sortie moteur : premier coup, continuation non affichée</span>' : '';
+    const warning = strategySuspect ? '<span class="meta-chip warning-chip">STRATÉGIE À ARBITRER</span>' : '';
+    c.innerHTML = `<div class="result-number"><span class="target">${r.target} levée${r.target > 1 ? 's' : ''}</span><span class="prob">${pct}<small> %</small></span></div><div><div class="play-title">${esc(playTitle)}</div><div class="play">${esc(play)}</div><div class="meta"><span class="meta-chip ${q}">${esc(qt)}</span><span class="meta-chip">${esc(r.sourceLabel || 'Base validée')}</span>${warning}${motorNote}${r.note ? `<span class="meta-chip">${esc(r.note)}</span>` : ''}${src}</div></div>`;
     return c;
   }
 
+  function ambiguityCard(target, hits) {
+    const c = document.createElement('article'); c.className = 'result-card ambiguity-card';
+    const ids = [...new Set(hits.map(h => h.rec.id))];
+    const label = Number.isFinite(target) ? `${target} levée${target > 1 ? 's' : ''}` : 'Mode max';
+    c.innerHTML = `<div class="result-number"><span class="target">${esc(label)}</span><span class="prob">AMBIGU</span></div><div><div class="play-title">Arbitrage requis</div><div class="play">Plusieurs lignes de même priorité donnent des réponses différentes. L’app refuse de choisir selon l’ordre du fichier.</div><div class="meta"><span class="meta-chip warning-chip">${ids.map(esc).join(' · ')}</span></div></div>`;
+    return c;
+  }
+  function topTies(hits) { if (!hits.length) return []; const top=Math.max(...hits.map(h=>h.score)); return hits.filter(h=>h.score===top); }
+  function divergent(hits) { return new Set(hits.map(h => `${h.rec.target}|${Number(h.rec.prob).toPrecision(15)}|${h.rec.strategy}`)).size > 1; }
+
+  function setInvalid(flag) {
+    els.h1.setAttribute('aria-invalid', String(flag)); els.h2.setAttribute('aria-invalid', String(flag));
+  }
+  function moveTo(section) {
+    const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    section.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
+    try { section.focus({ preventScroll: true }); } catch { section.focus(); }
+  }
+
   function analyze() {
-    els.validation.textContent = '';
+    els.validation.textContent = ''; setInvalid(false);
     let h1, h2;
     try {
+      validateSuitSymbols(els.h1.value, els.h2.value);
       h1 = tokUser(els.h1.value); h2 = tokUser(els.h2.value);
       validatePair(h1, h2);
     } catch (e) {
-      els.validation.textContent = e.message;
-      els.result.classList.add('hidden'); els.noResult.classList.add('hidden'); return;
+      els.validation.textContent = e.message; setInvalid(true);
+      invalidateResult(); return;
     }
 
-    setCards(els.h1, h1); setCards(els.h2, h2);
+    // Canonicalise without leaving a stale result: set values directly, then refresh buttons/previews after result construction.
+    els.h1.value = inputTxt(h1); els.h2.value = inputTxt(h2);
     const sf = matches('safety', h1, h2), mx = matches('max', h1, h2);
     if (!sf.length && !mx.length) {
-      els.result.classList.add('hidden'); els.noResult.classList.remove('hidden'); return;
+      els.result.classList.add('hidden'); els.noResult.classList.remove('hidden');
+      const params = new URLSearchParams(); if (h1.length) params.set('h1', inputTxt(h1)); if (h2.length) params.set('h2', inputTxt(h2));
+      history.replaceState(null, '', params.toString() ? `${location.pathname}?${params}` : location.pathname);
+      refresh(); moveTo(els.noResult); return;
     }
 
     els.noResult.classList.add('hidden'); els.result.classList.remove('hidden');
@@ -277,40 +378,51 @@
     const all = [...sf, ...mx].sort((a, b) => b.score - a.score);
     els.matchBadge.textContent = all[0].m.exact ? 'EXACT' : (h1.includes('x') || h2.includes('x') ? 'MOTIF AVEC x' : 'MOTIF RECONNU');
 
-    const by = new Map();
-    for (const h of sf) {
-      const old = by.get(h.rec.target);
-      if (!old || h.score > old.score) by.set(h.rec.target, h);
-    }
-    const best = [...by.values()].sort((a, b) => b.rec.target - a.rec.target);
+    const byTarget = new Map();
+    for (const h of sf) { if (!byTarget.has(h.rec.target)) byTarget.set(h.rec.target, []); byTarget.get(h.rec.target).push(h); }
+    const targets = [...byTarget.keys()].sort((a,b)=>b-a);
     els.safetyResults.innerHTML = '';
-    best.forEach(h => els.safetyResults.appendChild(card(h)));
-    if (!best.length) els.safetyResults.innerHTML = '<p class="lead">Pas de cible de sécurité référencée.</p>';
+    for (const target of targets) {
+      const ties=topTies(byTarget.get(target));
+      els.safetyResults.appendChild(divergent(ties) ? ambiguityCard(target,ties) : card(ties[0]));
+    }
+    if (!targets.length) els.safetyResults.innerHTML = '<p class="lead">Pas de cible de sécurité référencée.</p>';
 
     els.maxResults.innerHTML = '';
     if (mx.length) {
-      mx.sort((a, b) => b.score - a.score || b.rec.target - a.rec.target);
-      els.maxResults.appendChild(card(mx[0]));
+      const ties=topTies(mx);
+      els.maxResults.appendChild(divergent(ties) ? ambiguityCard(null,ties) : card(ties.sort((a,b)=>b.rec.target-a.rec.target)[0]));
     } else els.maxResults.innerHTML = '<p class="lead">Le mode max n’est pas encore renseigné.</p>';
 
-    switchMode('safety');
-    els.result.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    const params = new URLSearchParams(); if (h1.length) params.set('h1', inputTxt(h1)); if (h2.length) params.set('h2', inputTxt(h2));
+    history.replaceState(null, '', params.toString() ? `${location.pathname}?${params}` : location.pathname);
+    refresh(); switchMode('safety'); moveTo(els.result);
   }
 
   function switchMode(m) {
     const safety = m === 'safety';
     els.safetyPanel.classList.toggle('hidden', !safety); els.maxPanel.classList.toggle('hidden', safety);
+    els.safetyPanel.setAttribute('aria-hidden', String(!safety)); els.maxPanel.setAttribute('aria-hidden', String(safety));
     document.querySelectorAll('.mode-tab').forEach(b => {
-      const active = b.dataset.mode === m; b.classList.toggle('active', active); b.setAttribute('aria-selected', String(active));
+      const active = b.dataset.mode === m; b.classList.toggle('active', active); b.setAttribute('aria-selected', String(active)); b.tabIndex = active ? 0 : -1;
     });
   }
 
-  document.querySelectorAll('.mode-tab').forEach(b => b.onclick = () => switchMode(b.dataset.mode));
+  const tabs = [...document.querySelectorAll('.mode-tab')];
+  tabs.forEach((b,i) => {
+    b.onclick = () => switchMode(b.dataset.mode);
+    b.onkeydown = e => {
+      if (!['ArrowLeft','ArrowRight','Home','End'].includes(e.key)) return;
+      e.preventDefault();
+      let n = e.key === 'Home' ? 0 : e.key === 'End' ? tabs.length-1 : e.key === 'ArrowRight' ? (i+1)%tabs.length : (i-1+tabs.length)%tabs.length;
+      switchMode(tabs[n].dataset.mode); tabs[n].focus();
+    };
+  });
   els.analyze.onclick = analyze;
   els.swap.onclick = () => { const a = els.h1.value; els.h1.value = els.h2.value; els.h2.value = a; preview(); analyze(); };
   els.clear.onclick = () => {
-    els.h1.value = ''; els.h2.value = ''; els.validation.textContent = '';
-    els.result.classList.add('hidden'); els.noResult.classList.add('hidden'); preview(); els.h1.focus();
+    els.h1.value = ''; els.h2.value = ''; els.validation.textContent = ''; setInvalid(false);
+    invalidateResult(); history.replaceState(null, '', location.pathname); preview(); els.h1.focus();
   };
 
   preview();
