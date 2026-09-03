@@ -1,37 +1,54 @@
-name: Patch Maniements wildcard consensus
+name: Package Maniements wildcard preview
 
 on:
   push:
-    branches:
-      - maniements-v2-single-db
+    branches: [maniements-v2-single-db]
     paths:
-      - .github/workflows/maniements-wildcard-consensus.yml
+      - '.github/workflows/maniements-wildcard-consensus.yml'
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  patch:
+  package:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: maniements-v2-single-db
-          fetch-depth: 0
-      - uses: actions/setup-node@v4
+          ref: 167c0e9329831c8e2a29d0207283775a663a9a03
+          fetch-depth: 1
+      - name: Build exact preview ZIP
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p MANIEMENTS_V2_SINGLE_DB_WILDCARD_PREVIEW
+          cp vercel/play-dds-native/maniements/index.html MANIEMENTS_V2_SINGLE_DB_WILDCARD_PREVIEW/
+          cp vercel/play-dds-native/maniements/app.js MANIEMENTS_V2_SINGLE_DB_WILDCARD_PREVIEW/
+          cp vercel/play-dds-native/maniements/db.txt MANIEMENTS_V2_SINGLE_DB_WILDCARD_PREVIEW/
+          cat > MANIEMENTS_V2_SINGLE_DB_WILDCARD_PREVIEW/README.txt <<'EOF'
+          MANIEMENTS BRIDGE — V2 SINGLE DB + WILDCARD CONSENSUS PREVIEW
+          Exact snapshot: 167c0e9329831c8e2a29d0207283775a663a9a03
+
+          Contenu:
+          - index.html
+          - app.js
+          - db.txt (base unique 2920 entrées)
+
+          x = petite carte inconnue entre 2 et 9.
+          Toutes les réalisations compatibles sont énumérées.
+          Un résultat n'est affiché comme robuste que s'il est invariant.
+
+          Pour tester localement:
+            python -m http.server 8000
+          puis ouvrir http://localhost:8000/MANIEMENTS_V2_SINGLE_DB_WILDCARD_PREVIEW/
+          EOF
+          zip -qr MANIEMENTS_V2_SINGLE_DB_WILDCARD_PREVIEW.zip MANIEMENTS_V2_SINGLE_DB_WILDCARD_PREVIEW
+          sha256sum MANIEMENTS_V2_SINGLE_DB_WILDCARD_PREVIEW.zip > MANIEMENTS_V2_SINGLE_DB_WILDCARD_PREVIEW.zip.sha256
+      - uses: actions/upload-artifact@v4
         with:
-          node-version: '24'
-      - name: Patch app
-        run: python3 scripts/patch_maniements_wildcard_consensus.py
-      - name: Verify JavaScript
-        run: |
-          node --check vercel/play-dds-native/maniements/app.js
-          grep -q 'function wildcardConsensus' vercel/play-dds-native/maniements/app.js
-          grep -q 'app.js?v=6' vercel/play-dds-native/maniements/index.html
-      - name: Commit preview patch
-        run: |
-          git config user.name 'PONS DDS Actions'
-          git config user.email 'actions@users.noreply.github.com'
-          git add vercel/play-dds-native/maniements/app.js vercel/play-dds-native/maniements/index.html
-          git commit -m 'Add robust wildcard consensus analysis'
-          git push origin HEAD:maniements-v2-single-db
+          name: MANIEMENTS_V2_SINGLE_DB_WILDCARD_PREVIEW
+          path: |
+            MANIEMENTS_V2_SINGLE_DB_WILDCARD_PREVIEW.zip
+            MANIEMENTS_V2_SINGLE_DB_WILDCARD_PREVIEW.zip.sha256
+          if-no-files-found: error
+          retention-days: 7
