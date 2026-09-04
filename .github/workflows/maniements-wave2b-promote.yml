@@ -29,10 +29,51 @@ jobs:
           EXPECTED_MAIN='1566733e2295888f352fea9015145092a06f692e'
           test "$(git rev-parse HEAD)" = "$EXPECTED_MAIN"
           git fetch origin maniements-wave2b-promotion
+
+          # One transport chunk lost exactly one Base64 character while being staged.
+          # Recover that character deterministically against the locally precomputed
+          # Git-blob SHA of the exact 4000-byte source chunk, then verify the full
+          # sealed ZIP and qualified index hashes below before any write to main.
+          git show 'origin/maniements-wave2b-promotion:.promotion/maniements-wave2b/chunk-09.b64' > /tmp/chunk-09.bad
+          python - <<'PY'
+          import hashlib
+          from pathlib import Path
+          bad = Path('/tmp/chunk-09.bad').read_bytes()
+          target = '880a0d5ac95db0bcef227e073a297e28d2411ebf'
+          alphabet = b'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
+          if len(bad) == 4000 and hashlib.sha1(b'blob 4000\0' + bad).hexdigest() == target:
+              fixed = bad
+          else:
+              if len(bad) != 3999:
+                  raise SystemExit(f'unexpected chunk-09 length: {len(bad)}')
+              fixed = None
+              header = b'blob 4000\0'
+              for pos in range(4000):
+                  left, right = bad[:pos], bad[pos:]
+                  for c in alphabet:
+                      candidate = left + bytes((c,)) + right
+                      if hashlib.sha1(header + candidate).hexdigest() == target:
+                          fixed = candidate
+                          print(f'recovered chunk-09 insertion at {pos}')
+                          break
+                  if fixed is not None:
+                      break
+              if fixed is None:
+                  raise SystemExit('unable to recover exact chunk-09')
+          Path('/tmp/chunk-09.fixed').write_bytes(fixed)
+          assert len(fixed) == 4000
+          assert hashlib.sha1(b'blob 4000\0' + fixed).hexdigest() == target
+          PY
+
           : > /tmp/candidate.b64
           for i in $(seq -w 0 20); do
-            git show "origin/maniements-wave2b-promotion:.promotion/maniements-wave2b/chunk-${i}.b64" >> /tmp/candidate.b64
+            if [ "$i" = '09' ]; then
+              cat /tmp/chunk-09.fixed >> /tmp/candidate.b64
+            else
+              git show "origin/maniements-wave2b-promotion:.promotion/maniements-wave2b/chunk-${i}.b64" >> /tmp/candidate.b64
+            fi
           done
+          test "$(wc -c < /tmp/candidate.b64)" -eq 82816
           base64 -d /tmp/candidate.b64 > /tmp/candidate.zip
           echo 'fd07bfcdd8cfab02097fd8e0f446411a2f4fea7f479137c711c523a1a9753135  /tmp/candidate.zip' | sha256sum -c -
           unzip -p /tmp/candidate.zip index.html > vercel/play-dds-native/maniements/index.html
