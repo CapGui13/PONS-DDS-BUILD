@@ -606,7 +606,6 @@
       appendFamily(container,a.families[0],a.total,'Famille principale');
     }
     const details=elem('details','variant-details');
-    if (a.state==='CONDITIONAL' || a.state==='COVERAGE_INSUFFICIENT') details.open=true;
     const shown=a.families.slice(a.state==='DOMINANT_COVERAGE_FAMILY'?1:0);
     const hiddenCount=0;
     const summary=elem('summary','',a.state==='DOMINANT_COVERAGE_FAMILY'?'Voir les autres variantes':`Voir les variantes (${a.families.length})`);
