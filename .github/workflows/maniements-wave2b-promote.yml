@@ -1,0 +1,53 @@
+name: Promote sealed Maniements Wave2B
+
+on:
+  push:
+    branches:
+      - maniements-wave2b-promotion
+    paths:
+      - '.github/workflows/maniements-wave2b-promote.yml'
+      - '.promotion/maniements-wave2b/trigger.txt'
+
+permissions:
+  contents: write
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout production main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Reconstruct and verify sealed candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          EXPECTED_MAIN='1566733e2295888f352fea9015145092a06f692e'
+          test "$(git rev-parse HEAD)" = "$EXPECTED_MAIN"
+          git fetch origin maniements-wave2b-promotion
+          : > /tmp/candidate.b64
+          for i in $(seq -w 0 20); do
+            git show "origin/maniements-wave2b-promotion:.promotion/maniements-wave2b/chunk-${i}.b64" >> /tmp/candidate.b64
+          done
+          base64 -d /tmp/candidate.b64 > /tmp/candidate.zip
+          echo 'fd07bfcdd8cfab02097fd8e0f446411a2f4fea7f479137c711c523a1a9753135  /tmp/candidate.zip' | sha256sum -c -
+          unzip -p /tmp/candidate.zip index.html > vercel/play-dds-native/maniements/index.html
+          echo '2cd127d9cac667a1a9b1d2f5c5232ba25c32c07d609840690e2e7ded2e941f87  vercel/play-dds-native/maniements/index.html' | sha256sum -c -
+
+      - name: Commit exact qualified candidate to main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'PONS DDS Actions'
+          git config user.email 'actions@users.noreply.github.com'
+          git add vercel/play-dds-native/maniements/index.html
+          if git diff --cached --quiet; then
+            echo 'No change required'
+            exit 0
+          fi
+          git commit -m 'Promote Maniements V2 Wave2B qualified wildcard'
+          git push origin HEAD:main
