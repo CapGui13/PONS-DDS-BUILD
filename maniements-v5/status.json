@@ -1,0 +1,10 @@
+{
+  "schema": "MANIEMENTS_V3_GEN_V5_GITHUB_STATUS_V1",
+  "status": "READY_NOT_STARTED",
+  "active_lanes": [0, 1, 2, 3, 4, 5, 6],
+  "active_lane_completed_orbits": 0,
+  "active_lane_total_orbits": 87551,
+  "global_completed_orbits": 0,
+  "global_total_orbits": 797161,
+  "all_active_lanes_done": false
+}
