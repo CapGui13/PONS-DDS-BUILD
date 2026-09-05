@@ -11,6 +11,10 @@ on:
         description: "Relancer automatiquement un nouveau workflow tant que les lanes ne sont pas finies"
         required: false
         default: "true"
+  push:
+    branches: [main]
+    paths:
+      - "maniements-v5/START"
 
 permissions:
   contents: write
@@ -42,7 +46,16 @@ jobs:
           set -euo pipefail
           ZIP="$RUNNER_TEMP/MANIEMENTS_V3_GENERATION_V5_PASS_ORBIT_RUNTIME_V2.zip"
           EXPECTED="a0b580531f3c9e8bb00710b9c3e1c183b27cbfe9231c9d584e29a374ba88835d"
-          cat maniements-v5/runtime/runtime_v2.b64.part-* | base64 -d > "$ZIP"
+          cat \
+            maniements-v5/runtime/runtime_v2.b64.part-00 \
+            maniements-v5/runtime/runtime_v2.b64.part-01 \
+            maniements-v5/runtime/runtime_v2.b64.part-02a \
+            maniements-v5/runtime/runtime_v2.b64.part-02b \
+            maniements-v5/runtime/runtime_v2.b64.part-03 \
+            maniements-v5/runtime/runtime_v2.b64.part-04 \
+            maniements-v5/runtime/runtime_v2.b64.part-05 \
+            maniements-v5/runtime/runtime_v2.b64.part-06 \
+            | base64 -d > "$ZIP"
           ACTUAL=$(sha256sum "$ZIP" | awk '{print $1}')
           test "$ACTUAL" = "$EXPECTED"
           mkdir -p "$RUNNER_TEMP/v5-runtime"
