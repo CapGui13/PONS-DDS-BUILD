@@ -1,0 +1,156 @@
+name: MANIEMENTS V5 — 7 lanes cloud
+
+on:
+  workflow_dispatch:
+    inputs:
+      passes_per_job:
+        description: "Maximum de PASS de 20 min par lane et par workflow"
+        required: false
+        default: "14"
+      auto_continue:
+        description: "Relancer automatiquement un nouveau workflow tant que les lanes ne sont pas finies"
+        required: false
+        default: "true"
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: maniements-v5-seven-lanes
+  cancel-in-progress: false
+
+jobs:
+  lanes:
+    name: Lane ${{ matrix.lane }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    strategy:
+      fail-fast: false
+      matrix:
+        lane: [0, 1, 2, 3, 4, 5, 6]
+    steps:
+      - name: Checkout controller
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Verify frozen V5 runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          ZIP="$RUNNER_TEMP/MANIEMENTS_V3_GENERATION_V5_PASS_ORBIT_RUNTIME_V2.zip"
+          EXPECTED="a0b580531f3c9e8bb00710b9c3e1c183b27cbfe9231c9d584e29a374ba88835d"
+          cat maniements-v5/runtime/runtime_v2.b64.part-* | base64 -d > "$ZIP"
+          ACTUAL=$(sha256sum "$ZIP" | awk '{print $1}')
+          test "$ACTUAL" = "$EXPECTED"
+          mkdir -p "$RUNNER_TEMP/v5-runtime"
+          unzip -q "$ZIP" -d "$RUNNER_TEMP/v5-runtime"
+          (cd "$RUNNER_TEMP/v5-runtime" && sha256sum -c SHA256SUMS.txt)
+          python3 "$RUNNER_TEMP/v5-runtime/runtime/test_orbit_pass_v5.py"
+
+      - name: Checkout durable lane state
+        shell: bash
+        env:
+          LANE: ${{ matrix.lane }}
+        run: |
+          set -euo pipefail
+          PAD=$(printf '%02d' "$LANE")
+          BRANCH="maniements-v5-lane-${PAD}"
+          git fetch origin "$BRANCH:$BRANCH"
+          git worktree add "$RUNNER_TEMP/lane-state" "$BRANCH"
+
+      - name: Run durable PASS chain
+        shell: bash
+        env:
+          LANE: ${{ matrix.lane }}
+          MAX_PASSES: ${{ inputs.passes_per_job || '14' }}
+        run: |
+          set -euo pipefail
+          bash maniements-v5/cloud/run_lane.sh \
+            "$LANE" \
+            "$RUNNER_TEMP/v5-runtime" \
+            "$RUNNER_TEMP/lane-state" \
+            "$MAX_PASSES"
+
+  controller:
+    name: Progress + automatic continuation
+    needs: lanes
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Collect durable lane status
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/lane-status"
+          for L in 0 1 2 3 4 5 6; do
+            PAD=$(printf '%02d' "$L")
+            B="maniements-v5-lane-${PAD}"
+            git fetch origin "$B:refs/remotes/origin/$B"
+            git show "refs/remotes/origin/$B:state/progress.json" > "$RUNNER_TEMP/lane-status/lane_${PAD}.json"
+          done
+          python3 maniements-v5/cloud/build_status.py \
+            "$RUNNER_TEMP/lane-status" \
+            maniements-v5/STATUS.md \
+            maniements-v5/status.json
+          cat maniements-v5/STATUS.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Publish status snapshot
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add maniements-v5/STATUS.md maniements-v5/status.json
+          if ! git diff --cached --quiet; then
+            git commit -m "MANIEMENTS V5: update cloud progress"
+            git push origin HEAD:main
+          fi
+
+      - name: Decide continuation
+        id: decide
+        shell: bash
+        env:
+          LANES_RESULT: ${{ needs.lanes.result }}
+        run: |
+          set -euo pipefail
+          ALL_DONE=$(python3 - <<'PY'
+          import json
+          print('true' if json.load(open('maniements-v5/status.json'))['all_active_lanes_done'] else 'false')
+          PY
+          )
+          STOP=false
+          [[ -f maniements-v5/STOP ]] && STOP=true
+          echo "all_done=$ALL_DONE" >> "$GITHUB_OUTPUT"
+          echo "stop=$STOP" >> "$GITHUB_OUTPUT"
+          echo "lanes_result=$LANES_RESULT" >> "$GITHUB_OUTPUT"
+
+      - name: Queue next autonomous cycle
+        if: ${{ steps.decide.outputs.all_done != 'true' && steps.decide.outputs.stop != 'true' && steps.decide.outputs.lanes_result == 'success' && (inputs.auto_continue == 'true' || inputs.auto_continue == '') }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PASSES: ${{ inputs.passes_per_job || '14' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api --method POST \
+            "repos/${GITHUB_REPOSITORY}/actions/workflows/maniements-v5.yml/dispatches" \
+            -F ref=main \
+            -F "inputs[passes_per_job]=$PASSES" \
+            -F "inputs[auto_continue]=true"
+          echo "Next MANIEMENTS V5 cycle queued." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Stop reason
+        if: ${{ steps.decide.outputs.all_done == 'true' || steps.decide.outputs.stop == 'true' || steps.decide.outputs.lanes_result != 'success' }}
+        shell: bash
+        run: |
+          echo "Automatic chain stopped: all_done=${{ steps.decide.outputs.all_done }}, STOP=${{ steps.decide.outputs.stop }}, lanes_result=${{ steps.decide.outputs.lanes_result }}" >> "$GITHUB_STEP_SUMMARY"
