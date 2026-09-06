@@ -5,7 +5,12 @@ LANE_ID="$1"
 RUNTIME_ROOT="$2"
 STATE_WORKTREE="$3"
 MAX_PASSES="${4:-14}"
-WALL_LIMIT_SECONDS="${WALL_LIMIT_SECONDS:-17400}"
+WALL_LIMIT_SECONDS="${WALL_LIMIT_SECONDS:-19000}"
+NORMAL_BUDGET_SECONDS="${NORMAL_BUDGET_SECONDS:-1320}"
+NORMAL_CLOSE_RESERVE_SECONDS="${NORMAL_CLOSE_RESERVE_SECONDS:-120}"
+RESCUE_BUDGET_SECONDS="${RESCUE_BUDGET_SECONDS:-16200}"
+RESCUE_CLOSE_RESERVE_SECONDS="${RESCUE_CLOSE_RESERVE_SECONDS:-300}"
+STALL_PASSES="${STALL_PASSES:-3}"
 LANE_PAD=$(printf '%02d' "$LANE_ID")
 BRANCH="maniements-v5-lane-${LANE_PAD}"
 LATEST="$STATE_WORKTREE/state/latest.zip"
@@ -69,14 +74,30 @@ if not any(json.loads(x).get('pass_no')==hist['pass_no'] and json.loads(x).get('
 PY
 }
 
-for ((ITER=0; ITER<MAX_PASSES; ITER++)); do
-  NOW=$(date +%s)
-  ELAPSED=$((NOW-START_EPOCH))
-  if (( ELAPSED + 1320 + 120 > WALL_LIMIT_SECONDS )); then
-    echo "Job wall budget reached after ${COMPLETED_THIS_JOB} pass(es)."
-    break
-  fi
+is_stalled() {
+  python3 - "$STALL_PASSES" <<'PY'
+import json,sys
+n=int(sys.argv[1])
+try:
+    rows=[json.loads(x) for x in open('state/history.jsonl',encoding='utf-8') if x.strip()]
+except FileNotFoundError:
+    print('false'); raise SystemExit
+if len(rows) < n:
+    print('false'); raise SystemExit
+r=rows[-n:]
+# Require consecutive durable BUDGET_STOP PASSes with exactly the same scientific
+# progress and the same active target. This detects orchestration-level starvation
+# without changing any frozen solver/generator semantics.
+passes=[x.get('pass_no') for x in r]
+consecutive=all(isinstance(passes[i],int) and passes[i]==passes[0]+i for i in range(n))
+keys=('cumulative_completed_orbits','cumulative_completed_targets','active_rep_state_id','active_next_target')
+same=all(all(x.get(k)==r[0].get(k) for k in keys) for x in r[1:])
+statuses=all(x.get('status')=='BUDGET_STOP' for x in r)
+print('true' if consecutive and same and statuses else 'false')
+PY
+}
 
+for ((ITER=0; ITER<MAX_PASSES; ITER++)); do
   if [[ -f "$LATEST" ]]; then
     CURRENT_STATUS=$(read_manifest_field "$LATEST" status)
     CURRENT_PASS=$(read_manifest_field "$LATEST" pass_no)
@@ -91,18 +112,34 @@ for ((ITER=0; ITER<MAX_PASSES; ITER++)); do
     PRED_SHA=""
   fi
 
+  MODE="NORMAL"
+  BUDGET_SECONDS="$NORMAL_BUDGET_SECONDS"
+  CLOSE_RESERVE_SECONDS="$NORMAL_CLOSE_RESERVE_SECONDS"
+  if [[ -f "$LATEST" ]] && [[ "$(is_stalled)" == "true" ]]; then
+    MODE="RESCUE"
+    BUDGET_SECONDS="$RESCUE_BUDGET_SECONDS"
+    CLOSE_RESERVE_SECONDS="$RESCUE_CLOSE_RESERVE_SECONDS"
+  fi
+
+  NOW=$(date +%s)
+  ELAPSED=$((NOW-START_EPOCH))
+  if (( ELAPSED + BUDGET_SECONDS + 120 > WALL_LIMIT_SECONDS )); then
+    echo "Job wall budget reached after ${COMPLETED_THIS_JOB} pass(es); next pass would be ${MODE} (${BUDGET_SECONDS}s)."
+    break
+  fi
+
   OUT="$RUNNER_TEMP/MANIEMENTS_V3_GEN_V5_LANE_${LANE_PAD}_PASS_$(printf '%06d' "$NEXT_PASS").zip"
   rm -f "$OUT"
 
-  echo "=== Lane ${LANE_PAD} PASS $(printf '%06d' "$NEXT_PASS") ==="
+  echo "=== Lane ${LANE_PAD} PASS $(printf '%06d' "$NEXT_PASS") mode=${MODE} budget=${BUDGET_SECONDS}s reserve=${CLOSE_RESERVE_SECONDS}s ==="
   if (( NEXT_PASS == 0 )); then
     python3 "$PASSER" \
       --output-zip "$OUT" \
       --lane-id "$LANE_ID" \
       --lane-count 64 \
       --pass-no 0 \
-      --budget-seconds 1320 \
-      --close-reserve-seconds 120
+      --budget-seconds "$BUDGET_SECONDS" \
+      --close-reserve-seconds "$CLOSE_RESERVE_SECONDS"
     python3 "$VERIFY" "$OUT"
   else
     python3 "$PASSER" \
@@ -110,8 +147,8 @@ for ((ITER=0; ITER<MAX_PASSES; ITER++)); do
       --lane-id "$LANE_ID" \
       --lane-count 64 \
       --pass-no "$NEXT_PASS" \
-      --budget-seconds 1320 \
-      --close-reserve-seconds 120 \
+      --budget-seconds "$BUDGET_SECONDS" \
+      --close-reserve-seconds "$CLOSE_RESERVE_SECONDS" \
       --predecessor "$LATEST" \
       --predecessor-sha256 "$PRED_SHA"
     python3 "$VERIFY" "$OUT" --predecessor "$LATEST"
@@ -128,17 +165,18 @@ for ((ITER=0; ITER<MAX_PASSES; ITER++)); do
   write_state_metadata "$LATEST" "$NEW_SHA" "github-actions"
 
   git add state/latest.zip state/latest.zip.sha256 state/progress.json state/history.jsonl
-  git commit -m "MANIEMENTS V5 lane ${LANE_PAD}: PASS $(printf '%06d' "$NEXT_PASS") ${NEW_STATUS}"
+  git commit -m "MANIEMENTS V5 lane ${LANE_PAD}: PASS $(printf '%06d' "$NEXT_PASS") ${NEW_STATUS} ${MODE}"
   git push origin "HEAD:${BRANCH}"
   COMPLETED_THIS_JOB=$((COMPLETED_THIS_JOB+1))
 
   ORBITS=$(read_manifest_field "$LATEST" cumulative_completed_orbits)
   TARGETS=$(read_manifest_field "$LATEST" cumulative_completed_targets)
-  echo "Durable: lane=${LANE_PAD} pass=${NEXT_PASS} status=${NEW_STATUS} orbits=${ORBITS} targets=${TARGETS} sha=${NEW_SHA}"
+  echo "Durable: lane=${LANE_PAD} pass=${NEXT_PASS} mode=${MODE} status=${NEW_STATUS} orbits=${ORBITS} targets=${TARGETS} sha=${NEW_SHA}"
 
   if [[ "$NEW_STATUS" == "LANE_DONE" ]]; then
     break
   fi
+
 done
 
 python3 - "$LATEST" <<'PY' >> "$GITHUB_STEP_SUMMARY"
@@ -148,6 +186,7 @@ with zipfile.ZipFile(sys.argv[1]) as z:
 print(f"### Lane {m['lane_id']:02d}")
 print(f"- PASS: `{m['pass_no']:06d}`")
 print(f"- Status: **{m['status']}**")
+print(f"- Budget: **{m.get('budget_seconds')} s**")
 print(f"- Orbites: **{m['cumulative_completed_orbits']}**")
 print(f"- Rows: **{m['cumulative_emitted_ordered_rows']}**")
 print(f"- Targets: **{m['cumulative_completed_targets']}**")
