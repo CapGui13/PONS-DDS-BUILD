@@ -155,11 +155,19 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          python3 - "$PASSES" <<'PY' > "$RUNNER_TEMP/maniements-v5-dispatch.json"
+          import json, sys
+          print(json.dumps({
+              "ref": "main",
+              "inputs": {
+                  "passes_per_job": str(sys.argv[1]),
+                  "auto_continue": "true"
+              }
+          }))
+          PY
           gh api --method POST \
             "repos/${GITHUB_REPOSITORY}/actions/workflows/maniements-v5.yml/dispatches" \
-            -F ref=main \
-            -F "inputs[passes_per_job]=$PASSES" \
-            -F "inputs[auto_continue]=true"
+            --input "$RUNNER_TEMP/maniements-v5-dispatch.json"
           echo "Next MANIEMENTS V5 cycle queued." >> "$GITHUB_STEP_SUMMARY"
 
       - name: Stop reason
