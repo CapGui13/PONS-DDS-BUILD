@@ -1,9 +1,12 @@
-MANIEMENTS V5 7-LANE CLOUD START
+MANIEMENTS V5 64-LANE ROLLING-POOL START
 started_at_utc: 2026-09-05T09:20:00Z
 runtime_sha256: a0b580531f3c9e8bb00710b9c3e1c183b27cbfe9231c9d584e29a374ba88835d
-lanes: 0-6
-mode: autonomous
+lane_universe: 0-63
+pool_size: 20
+mode: autonomous_rolling_pool
 restart_after_dispatch_fix_utc: 2026-09-06T07:22:00Z
-resume_from_durable_pass: 13
+resume_from_durable_pass: true
 queued_recovery_after_lane01_runner_failure_utc: 2026-09-07T07:31:00Z
 queued_recovery_after_lane01_second_failure_utc: 2026-09-07T11:18:00Z
+rolling_pool_64_queued_utc: 2026-09-07T13:32:00Z
+hard_stalls_are_preserved_and_skipped: true
