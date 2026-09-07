@@ -6,3 +6,4 @@ mode: autonomous
 restart_after_dispatch_fix_utc: 2026-09-06T07:22:00Z
 resume_from_durable_pass: 13
 queued_recovery_after_lane01_runner_failure_utc: 2026-09-07T07:31:00Z
+queued_recovery_after_lane01_second_failure_utc: 2026-09-07T11:18:00Z
