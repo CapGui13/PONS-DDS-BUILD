@@ -1,6 +1,6 @@
 # MANIEMENTS V5 — progression cloud
 
-Dernière mise à jour : `2026-09-07T18:44:58+00:00`
+Dernière mise à jour : `2026-09-07T18:45:16+00:00`
 
 **Global 64 lanes : 3 060 / 797 161 orbites — 0.384%**
 Lanes initialisées : **7/64** — terminées : **0** — non démarrées : **57**
