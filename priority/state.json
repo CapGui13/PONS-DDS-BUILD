@@ -1,22 +1,22 @@
 {
   "active_orbit": {
-    "max_target": 3,
-    "north": "865",
-    "north_count": 3,
-    "rep_state_id": 40227,
-    "south": "J43",
-    "south_count": 3,
-    "split": "3-3",
+    "max_target": 4,
+    "north": "83",
+    "north_count": 2,
+    "rep_state_id": 44960,
+    "south": "J972",
+    "south_count": 4,
+    "split": "2-4",
     "targets": [
       {
-        "policy_sha256": "4480c7524ce6cbe7f4fdf5bd1063fa30c002940844ac235dfc78a8fcc429d991",
+        "policy_sha256": "faf0a4d4327cf0e39c8ec60617d4d0f2c4d2ed4654bfb13b488cf90e81229e79",
         "probability_fraction": "1/1",
         "solver_mode": "public_support_dp",
         "target": 0
       },
       {
-        "policy_sha256": "9323e66890eeb9b2fc69c090f431db149a9367eefe64432c3af3640b5769f492",
-        "probability_fraction": "0/1",
+        "policy_sha256": "918898d54d264fc74940fdd22858f988fb4360c548f0e6623b2db3119a344f5e",
+        "probability_fraction": "572/4025",
         "solver_mode": "public_support_dp",
         "target": 1
       }
@@ -24,32 +24,32 @@
   },
   "completed_by_split": {
     "1-1": 1,
-    "2-3": 74,
-    "2-4": 64,
-    "3-3": 49,
-    "3-4": 73
+    "2-3": 89,
+    "2-4": 98,
+    "3-3": 70,
+    "3-4": 109
   },
-  "completed_orbits": 261,
-  "completed_ordered_rows": 522,
-  "completed_targets": 1181,
+  "completed_orbits": 367,
+  "completed_ordered_rows": 734,
+  "completed_targets": 1675,
   "deferred_by_split": {},
   "deferred_orbits": 0,
   "done": false,
   "last_pass": {
-    "completed_orbits": 114,
-    "completed_targets": 527,
+    "completed_orbits": 106,
+    "completed_targets": 494,
     "deferred_orbits": 0,
-    "elapsed_seconds": 1017.899074,
-    "sequence": 1
+    "elapsed_seconds": 1017.702921,
+    "sequence": 2
   },
-  "next_scan_state_id": 40228,
+  "next_scan_state_id": 44961,
   "plan_id": "MANIEMENTS_V5_PRIORITY_P1_COMMON_SPLITS_PLUS_BOUNDARY_V1",
   "plan_random_deal_probability_mass": 0.4611817577950189,
   "plan_total_orbits": 146641,
   "schema": "MANIEMENTS_V5_PRIORITY_WORKER_STATE_V1",
-  "sequence": 2,
+  "sequence": 3,
   "target_cap_seconds": 180.0,
-  "updated_at_utc": "2026-09-07T15:04:28+00:00",
+  "updated_at_utc": "2026-09-07T15:21:29+00:00",
   "worker_count": 20,
   "worker_id": 11
 }
