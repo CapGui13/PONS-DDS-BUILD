@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 import argparse, json, subprocess
+from pathlib import Path
 
 LANE_COUNT = 64
 
@@ -26,6 +27,21 @@ def main():
 
     if not (1 <= a.pool_size <= LANE_COUNT):
         raise SystemExit("invalid pool size")
+
+    # Priority mode intentionally preserves every exhaustive lane branch but stops
+    # allocating runners to them. This lets the targeted exact cache use the free
+    # GitHub runner pool without deleting or mutating exhaustive scientific state.
+    if Path("maniements-v5/PRIORITY_MODE").exists():
+        if a.details:
+            print(json.dumps({
+                "schema":"MANIEMENTS_V3_GEN_V5_ROLLING_POOL_PLAN_V1",
+                "pool_size":a.pool_size,"selected_lanes":[],"eligible_count":0,
+                "hard_stall_count":0,"done_count":0,"not_started_count":0,
+                "paused_for_priority_mode":True,"lanes":[],
+            },sort_keys=True,separators=(",",":")))
+        else:
+            print("[]")
+        return
 
     eligible = []
     rows = []
@@ -65,6 +81,7 @@ def main():
             "hard_stall_count": sum(1 for r in rows if r["hard_stall"]),
             "done_count": sum(1 for r in rows if r["status"] == "LANE_DONE"),
             "not_started_count": sum(1 for r in rows if r["status"] == "NOT_STARTED"),
+            "paused_for_priority_mode": False,
             "lanes": rows,
         }, sort_keys=True, separators=(",", ":")))
     else:
