@@ -1,4 +1,4 @@
-name: MANIEMENTS V5 — 7 lanes cloud
+name: MANIEMENTS V5 — 64 lanes rolling pool
 
 on:
   workflow_dispatch:
@@ -7,6 +7,10 @@ on:
         description: "Maximum de tentatives PASS par lane et par workflow"
         required: false
         default: "14"
+      pool_size:
+        description: "Nombre maximum de lanes calculées en parallèle"
+        required: false
+        default: "20"
       auto_continue:
         description: "Relancer automatiquement tant qu'une lane peut encore progresser"
         required: false
@@ -20,19 +24,63 @@ permissions:
   contents: write
   actions: write
 
+# Keep the historical concurrency key so a rolling-pool run queues behind any
+# already-running 7-lane generation instead of overlapping the same lane branches.
 concurrency:
   group: maniements-v5-seven-lanes
   cancel-in-progress: false
 
 jobs:
+  planner:
+    name: Select rolling lane pool
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      lanes: ${{ steps.plan.outputs.lanes }}
+      has_lanes: ${{ steps.plan.outputs.has_lanes }}
+    steps:
+      - name: Checkout controller
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Fetch existing lane branches
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin '+refs/heads/maniements-v5-lane-*:refs/remotes/origin/maniements-v5-lane-*' || true
+
+      - name: Plan up to 20 runnable lanes
+        id: plan
+        shell: bash
+        env:
+          POOL_SIZE: ${{ inputs.pool_size || '20' }}
+        run: |
+          set -euo pipefail
+          LANES=$(python3 maniements-v5/cloud/plan_lanes.py --pool-size "$POOL_SIZE")
+          DETAILS=$(python3 maniements-v5/cloud/plan_lanes.py --pool-size "$POOL_SIZE" --details)
+          echo "lanes=$LANES" >> "$GITHUB_OUTPUT"
+          if [[ "$LANES" == "[]" ]]; then
+            echo "has_lanes=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_lanes=true" >> "$GITHUB_OUTPUT"
+          fi
+          echo "### Rolling-pool plan" >> "$GITHUB_STEP_SUMMARY"
+          echo '```json' >> "$GITHUB_STEP_SUMMARY"
+          echo "$DETAILS" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+
   lanes:
     name: Lane ${{ matrix.lane }}
+    needs: planner
+    if: ${{ needs.planner.outputs.has_lanes == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 355
     strategy:
       fail-fast: false
       matrix:
-        lane: [0, 1, 2, 3, 4, 5, 6]
+        lane: ${{ fromJSON(needs.planner.outputs.lanes) }}
     steps:
       - name: Checkout controller
         uses: actions/checkout@v4
@@ -63,7 +111,7 @@ jobs:
           (cd "$RUNNER_TEMP/v5-runtime" && sha256sum -c SHA256SUMS.txt)
           python3 "$RUNNER_TEMP/v5-runtime/runtime/test_orbit_pass_v5.py"
 
-      - name: Checkout durable lane state
+      - name: Checkout or initialize durable lane state
         shell: bash
         env:
           LANE: ${{ matrix.lane }}
@@ -71,8 +119,12 @@ jobs:
           set -euo pipefail
           PAD=$(printf '%02d' "$LANE")
           BRANCH="maniements-v5-lane-${PAD}"
-          git fetch origin "$BRANCH:$BRANCH"
-          git worktree add "$RUNNER_TEMP/lane-state" "$BRANCH"
+          if git ls-remote --exit-code --heads origin "$BRANCH" >/dev/null 2>&1; then
+            git fetch origin "$BRANCH:$BRANCH"
+            git worktree add "$RUNNER_TEMP/lane-state" "$BRANCH"
+          else
+            git worktree add -b "$BRANCH" "$RUNNER_TEMP/lane-state" main
+          fi
 
       - name: Run durable PASS chain
         shell: bash
@@ -89,10 +141,10 @@ jobs:
 
   controller:
     name: Progress + automatic continuation
-    needs: lanes
+    needs: [planner, lanes]
     if: always()
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - name: Checkout main
         uses: actions/checkout@v4
@@ -100,20 +152,23 @@ jobs:
           ref: main
           fetch-depth: 0
 
-      - name: Collect durable lane status
+      - name: Collect durable status for all 64 lanes
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p "$RUNNER_TEMP/lane-status"
-          for L in 0 1 2 3 4 5 6; do
+          git fetch origin '+refs/heads/maniements-v5-lane-*:refs/remotes/origin/maniements-v5-lane-*' || true
+          for L in $(seq 0 63); do
             PAD=$(printf '%02d' "$L")
             B="maniements-v5-lane-${PAD}"
-            git fetch origin "$B:refs/remotes/origin/$B"
-            git show "refs/remotes/origin/$B:state/progress.json" > "$RUNNER_TEMP/lane-status/lane_${PAD}.json"
-            if git cat-file -e "refs/remotes/origin/$B:state/orchestration.json" 2>/dev/null; then
-              git show "refs/remotes/origin/$B:state/orchestration.json" > "$RUNNER_TEMP/lane-status/lane_${PAD}.orchestration.json"
-            else
-              printf '{}\n' > "$RUNNER_TEMP/lane-status/lane_${PAD}.orchestration.json"
+            REF="refs/remotes/origin/$B"
+            if git cat-file -e "$REF:state/progress.json" 2>/dev/null; then
+              git show "$REF:state/progress.json" > "$RUNNER_TEMP/lane-status/lane_${PAD}.json"
+              if git cat-file -e "$REF:state/orchestration.json" 2>/dev/null; then
+                git show "$REF:state/orchestration.json" > "$RUNNER_TEMP/lane-status/lane_${PAD}.orchestration.json"
+              else
+                printf '{}\n' > "$RUNNER_TEMP/lane-status/lane_${PAD}.orchestration.json"
+              fi
             fi
           done
           python3 maniements-v5/cloud/build_status.py \
@@ -161,13 +216,14 @@ jobs:
           LANES_RESULT: ${{ needs.lanes.result }}
         run: |
           set -euo pipefail
-          read -r ALL_DONE NO_RUNNABLE HARD_STALL_COUNT <<< "$(python3 - <<'PY'
+          read -r ALL_DONE NO_RUNNABLE HARD_STALL_COUNT RUNNABLE_COUNT <<< "$(python3 - <<'PY'
           import json
           s=json.load(open('maniements-v5/status.json'))
           print(
-            'true' if s['all_active_lanes_done'] else 'false',
+            'true' if s.get('all_global_lanes_done',False) else 'false',
             'true' if s.get('all_unfinished_hard_stalled',False) else 'false',
-            s.get('hard_stall_count',0)
+            s.get('hard_stall_count',0),
+            s.get('runnable_lane_count',0),
           )
           PY
           )"
@@ -176,6 +232,7 @@ jobs:
           echo "all_done=$ALL_DONE" >> "$GITHUB_OUTPUT"
           echo "no_runnable=$NO_RUNNABLE" >> "$GITHUB_OUTPUT"
           echo "hard_stall_count=$HARD_STALL_COUNT" >> "$GITHUB_OUTPUT"
+          echo "runnable_count=$RUNNABLE_COUNT" >> "$GITHUB_OUTPUT"
           echo "stop=$STOP" >> "$GITHUB_OUTPUT"
           echo "lanes_result=$LANES_RESULT" >> "$GITHUB_OUTPUT"
 
@@ -184,18 +241,20 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           PASSES: ${{ inputs.passes_per_job || '14' }}
+          POOL_SIZE: ${{ inputs.pool_size || '20' }}
         shell: bash
         run: |
           set -euo pipefail
           if [[ "${{ steps.decide.outputs.lanes_result }}" != "success" ]]; then
-            echo "One or more lane jobs failed/cancelled, but durable lane state is authoritative; queuing a fresh autonomous cycle to retry from latest durable PASSes." >> "$GITHUB_STEP_SUMMARY"
+            echo "One or more lane jobs failed/cancelled, but durable lane state is authoritative; queuing a fresh autonomous cycle from the latest durable states." >> "$GITHUB_STEP_SUMMARY"
           fi
-          python3 - "$PASSES" <<'PY' > "$RUNNER_TEMP/maniements-v5-dispatch.json"
+          python3 - "$PASSES" "$POOL_SIZE" <<'PY' > "$RUNNER_TEMP/maniements-v5-dispatch.json"
           import json, sys
           print(json.dumps({
               "ref": "main",
               "inputs": {
                   "passes_per_job": str(sys.argv[1]),
+                  "pool_size": str(sys.argv[2]),
                   "auto_continue": "true"
               }
           }))
@@ -203,10 +262,10 @@ jobs:
           gh api --method POST \
             "repos/${GITHUB_REPOSITORY}/actions/workflows/maniements-v5.yml/dispatches" \
             --input "$RUNNER_TEMP/maniements-v5-dispatch.json"
-          echo "Next MANIEMENTS V5 cycle queued." >> "$GITHUB_STEP_SUMMARY"
+          echo "Next MANIEMENTS V5 rolling-pool cycle queued." >> "$GITHUB_STEP_SUMMARY"
 
       - name: Stop reason
         if: ${{ steps.decide.outputs.all_done == 'true' || steps.decide.outputs.no_runnable == 'true' || steps.decide.outputs.stop == 'true' }}
         shell: bash
         run: |
-          echo "Automatic chain stopped: all_done=${{ steps.decide.outputs.all_done }}, no_runnable=${{ steps.decide.outputs.no_runnable }}, hard_stall_count=${{ steps.decide.outputs.hard_stall_count }}, STOP=${{ steps.decide.outputs.stop }}, lanes_result=${{ steps.decide.outputs.lanes_result }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "Automatic chain stopped: all_done=${{ steps.decide.outputs.all_done }}, no_runnable=${{ steps.decide.outputs.no_runnable }}, runnable=${{ steps.decide.outputs.runnable_count }}, hard_stall_count=${{ steps.decide.outputs.hard_stall_count }}, STOP=${{ steps.decide.outputs.stop }}, lanes_result=${{ steps.decide.outputs.lanes_result }}" >> "$GITHUB_STEP_SUMMARY"
