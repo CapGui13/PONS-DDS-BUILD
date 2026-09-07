@@ -6,12 +6,12 @@
   "cumulative_completed_targets": 3837,
   "hard_stall": false,
   "lane_id": 0,
-  "last_pass_mode": "NORMAL",
-  "last_pass_no": 73,
+  "last_pass_mode": "RESCUE",
+  "last_pass_no": 74,
   "last_scientific_progress_at_utc": "2026-09-07T06:53:12+00:00",
-  "next_mode": "RESCUE",
-  "reason": "3 consecutive zero-progress PASSes on the same active target",
+  "next_mode": "RESCUE_MAX",
+  "reason": "RESCUE completed without scientific progress",
   "schema": "MANIEMENTS_V3_GEN_V5_ORCHESTRATION_STATE_V1",
-  "stall_count": 3,
-  "updated_at_utc": "2026-09-07T07:53:18+00:00"
+  "stall_count": 4,
+  "updated_at_utc": "2026-09-07T12:18:55+00:00"
 }
