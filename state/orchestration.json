@@ -4,14 +4,14 @@
   "active_rep_state_id": 55190,
   "cumulative_completed_orbits": 401,
   "cumulative_completed_targets": 2085,
-  "hard_stall": false,
+  "hard_stall": true,
   "lane_id": 5,
-  "last_pass_mode": "RESCUE",
-  "last_pass_no": 70,
+  "last_pass_mode": "RESCUE_MAX",
+  "last_pass_no": 71,
   "last_scientific_progress_at_utc": "2026-09-05T11:03:17+00:00",
-  "next_mode": "RESCUE_MAX",
-  "reason": "RESCUE completed without scientific progress",
+  "next_mode": "HARD_STALL",
+  "reason": "RESCUE_MAX completed without scientific progress",
   "schema": "MANIEMENTS_V3_GEN_V5_ORCHESTRATION_STATE_V1",
-  "stall_count": 66,
-  "updated_at_utc": "2026-09-07T06:53:10+00:00"
+  "stall_count": 67,
+  "updated_at_utc": "2026-09-07T13:18:52+00:00"
 }
