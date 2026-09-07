@@ -180,13 +180,16 @@ jobs:
           echo "lanes_result=$LANES_RESULT" >> "$GITHUB_OUTPUT"
 
       - name: Queue next autonomous cycle
-        if: ${{ steps.decide.outputs.all_done != 'true' && steps.decide.outputs.no_runnable != 'true' && steps.decide.outputs.stop != 'true' && steps.decide.outputs.lanes_result == 'success' && (inputs.auto_continue == 'true' || inputs.auto_continue == '') }}
+        if: ${{ steps.decide.outputs.all_done != 'true' && steps.decide.outputs.no_runnable != 'true' && steps.decide.outputs.stop != 'true' && (inputs.auto_continue == 'true' || inputs.auto_continue == '') }}
         env:
           GH_TOKEN: ${{ github.token }}
           PASSES: ${{ inputs.passes_per_job || '14' }}
         shell: bash
         run: |
           set -euo pipefail
+          if [[ "${{ steps.decide.outputs.lanes_result }}" != "success" ]]; then
+            echo "One or more lane jobs failed/cancelled, but durable lane state is authoritative; queuing a fresh autonomous cycle to retry from latest durable PASSes." >> "$GITHUB_STEP_SUMMARY"
+          fi
           python3 - "$PASSES" <<'PY' > "$RUNNER_TEMP/maniements-v5-dispatch.json"
           import json, sys
           print(json.dumps({
@@ -203,7 +206,7 @@ jobs:
           echo "Next MANIEMENTS V5 cycle queued." >> "$GITHUB_STEP_SUMMARY"
 
       - name: Stop reason
-        if: ${{ steps.decide.outputs.all_done == 'true' || steps.decide.outputs.no_runnable == 'true' || steps.decide.outputs.stop == 'true' || steps.decide.outputs.lanes_result != 'success' }}
+        if: ${{ steps.decide.outputs.all_done == 'true' || steps.decide.outputs.no_runnable == 'true' || steps.decide.outputs.stop == 'true' }}
         shell: bash
         run: |
           echo "Automatic chain stopped: all_done=${{ steps.decide.outputs.all_done }}, no_runnable=${{ steps.decide.outputs.no_runnable }}, hard_stall_count=${{ steps.decide.outputs.hard_stall_count }}, STOP=${{ steps.decide.outputs.stop }}, lanes_result=${{ steps.decide.outputs.lanes_result }}" >> "$GITHUB_STEP_SUMMARY"
