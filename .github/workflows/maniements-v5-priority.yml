@@ -108,11 +108,7 @@ jobs:
               git commit -m "MANIEMENTS V5 priority P1 worker ${PAD}: durable PASS"
               git push origin "HEAD:${BRANCH}"
             fi
-            DONE=$(python3 - <<'PY'
-import json
-print('true' if json.load(open('priority/state.json'))['done'] else 'false')
-PY
-            )
+            DONE=$(python3 -c "import json; print('true' if json.load(open('priority/state.json'))['done'] else 'false')")
             if [[ "$DONE" == "true" ]]; then break; fi
           done
           cat priority/state.json >> "$GITHUB_STEP_SUMMARY"
@@ -176,11 +172,7 @@ PY
         shell: bash
         run: |
           set -euo pipefail
-          DONE=$(python3 - <<'PY'
-import json
-print('true' if json.load(open('maniements-v5/priority/status.json'))['all_workers_done'] else 'false')
-PY
-          )
+          DONE=$(python3 -c "import json; print('true' if json.load(open('maniements-v5/priority/status.json'))['all_workers_done'] else 'false')")
           STOP=false
           [[ -f maniements-v5/PRIORITY_STOP ]] && STOP=true
           echo "done=$DONE" >> "$GITHUB_OUTPUT"
@@ -195,10 +187,7 @@ PY
         shell: bash
         run: |
           set -euo pipefail
-          python3 - "$PASSES" "$TARGET_CAP" <<'PY' > "$RUNNER_TEMP/priority-dispatch.json"
-import json,sys
-print(json.dumps({'ref':'main','inputs':{'passes_per_job':str(sys.argv[1]),'target_cap_seconds':str(sys.argv[2]),'auto_continue':'true'}}))
-PY
+          python3 -c 'import json,os; print(json.dumps({"ref":"main","inputs":{"passes_per_job":os.environ["PASSES"],"target_cap_seconds":os.environ["TARGET_CAP"],"auto_continue":"true"}}))' > "$RUNNER_TEMP/priority-dispatch.json"
           gh api --method POST \
             "repos/${GITHUB_REPOSITORY}/actions/workflows/maniements-v5-priority.yml/dispatches" \
             --input "$RUNNER_TEMP/priority-dispatch.json"
