@@ -4,11 +4,11 @@ on:
   workflow_dispatch:
     inputs:
       passes_per_job:
-        description: "Maximum de PASS de 20 min par lane et par workflow"
+        description: "Maximum de tentatives PASS par lane et par workflow"
         required: false
         default: "14"
       auto_continue:
-        description: "Relancer automatiquement un nouveau workflow tant que les lanes ne sont pas finies"
+        description: "Relancer automatiquement tant qu'une lane peut encore progresser"
         required: false
         default: "true"
   push:
@@ -28,7 +28,7 @@ jobs:
   lanes:
     name: Lane ${{ matrix.lane }}
     runs-on: ubuntu-latest
-    timeout-minutes: 330
+    timeout-minutes: 355
     strategy:
       fail-fast: false
       matrix:
@@ -110,6 +110,11 @@ jobs:
             B="maniements-v5-lane-${PAD}"
             git fetch origin "$B:refs/remotes/origin/$B"
             git show "refs/remotes/origin/$B:state/progress.json" > "$RUNNER_TEMP/lane-status/lane_${PAD}.json"
+            if git cat-file -e "refs/remotes/origin/$B:state/orchestration.json" 2>/dev/null; then
+              git show "refs/remotes/origin/$B:state/orchestration.json" > "$RUNNER_TEMP/lane-status/lane_${PAD}.orchestration.json"
+            else
+              printf '{}\n' > "$RUNNER_TEMP/lane-status/lane_${PAD}.orchestration.json"
+            fi
           done
           python3 maniements-v5/cloud/build_status.py \
             "$RUNNER_TEMP/lane-status" \
@@ -117,16 +122,36 @@ jobs:
             maniements-v5/status.json
           cat maniements-v5/STATUS.md >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Publish status snapshot
+      - name: Publish status snapshot robustly
         shell: bash
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add maniements-v5/STATUS.md maniements-v5/status.json
-          if ! git diff --cached --quiet; then
+          cp maniements-v5/STATUS.md "$RUNNER_TEMP/MANIEMENTS_STATUS.md"
+          cp maniements-v5/status.json "$RUNNER_TEMP/maniements_status.json"
+          PUSHED=false
+          for ATTEMPT in 1 2 3 4; do
+            git fetch origin main
+            git reset --hard origin/main
+            cp "$RUNNER_TEMP/MANIEMENTS_STATUS.md" maniements-v5/STATUS.md
+            cp "$RUNNER_TEMP/maniements_status.json" maniements-v5/status.json
+            git add maniements-v5/STATUS.md maniements-v5/status.json
+            if git diff --cached --quiet; then
+              PUSHED=true
+              break
+            fi
             git commit -m "MANIEMENTS V5: update cloud progress"
-            git push origin HEAD:main
+            if git push origin HEAD:main; then
+              PUSHED=true
+              break
+            fi
+            echo "Status push race on attempt ${ATTEMPT}; retrying from latest main."
+            sleep $((ATTEMPT*2))
+          done
+          if [[ "$PUSHED" != "true" ]]; then
+            echo "Unable to publish status snapshot after retries." >&2
+            exit 42
           fi
 
       - name: Decide continuation
@@ -136,19 +161,26 @@ jobs:
           LANES_RESULT: ${{ needs.lanes.result }}
         run: |
           set -euo pipefail
-          ALL_DONE=$(python3 - <<'PY'
+          read -r ALL_DONE NO_RUNNABLE HARD_STALL_COUNT <<< "$(python3 - <<'PY'
           import json
-          print('true' if json.load(open('maniements-v5/status.json'))['all_active_lanes_done'] else 'false')
-          PY
+          s=json.load(open('maniements-v5/status.json'))
+          print(
+            'true' if s['all_active_lanes_done'] else 'false',
+            'true' if s.get('all_unfinished_hard_stalled',False) else 'false',
+            s.get('hard_stall_count',0)
           )
+          PY
+          )"
           STOP=false
           [[ -f maniements-v5/STOP ]] && STOP=true
           echo "all_done=$ALL_DONE" >> "$GITHUB_OUTPUT"
+          echo "no_runnable=$NO_RUNNABLE" >> "$GITHUB_OUTPUT"
+          echo "hard_stall_count=$HARD_STALL_COUNT" >> "$GITHUB_OUTPUT"
           echo "stop=$STOP" >> "$GITHUB_OUTPUT"
           echo "lanes_result=$LANES_RESULT" >> "$GITHUB_OUTPUT"
 
       - name: Queue next autonomous cycle
-        if: ${{ steps.decide.outputs.all_done != 'true' && steps.decide.outputs.stop != 'true' && steps.decide.outputs.lanes_result == 'success' && (inputs.auto_continue == 'true' || inputs.auto_continue == '') }}
+        if: ${{ steps.decide.outputs.all_done != 'true' && steps.decide.outputs.no_runnable != 'true' && steps.decide.outputs.stop != 'true' && steps.decide.outputs.lanes_result == 'success' && (inputs.auto_continue == 'true' || inputs.auto_continue == '') }}
         env:
           GH_TOKEN: ${{ github.token }}
           PASSES: ${{ inputs.passes_per_job || '14' }}
@@ -171,7 +203,7 @@ jobs:
           echo "Next MANIEMENTS V5 cycle queued." >> "$GITHUB_STEP_SUMMARY"
 
       - name: Stop reason
-        if: ${{ steps.decide.outputs.all_done == 'true' || steps.decide.outputs.stop == 'true' || steps.decide.outputs.lanes_result != 'success' }}
+        if: ${{ steps.decide.outputs.all_done == 'true' || steps.decide.outputs.no_runnable == 'true' || steps.decide.outputs.stop == 'true' || steps.decide.outputs.lanes_result != 'success' }}
         shell: bash
         run: |
-          echo "Automatic chain stopped: all_done=${{ steps.decide.outputs.all_done }}, STOP=${{ steps.decide.outputs.stop }}, lanes_result=${{ steps.decide.outputs.lanes_result }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "Automatic chain stopped: all_done=${{ steps.decide.outputs.all_done }}, no_runnable=${{ steps.decide.outputs.no_runnable }}, hard_stall_count=${{ steps.decide.outputs.hard_stall_count }}, STOP=${{ steps.decide.outputs.stop }}, lanes_result=${{ steps.decide.outputs.lanes_result }}" >> "$GITHUB_STEP_SUMMARY"
