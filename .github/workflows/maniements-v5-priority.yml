@@ -16,8 +16,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  paused:
-    if: ${{ false }}
+  drain:
     runs-on: ubuntu-latest
+    timeout-minutes: 2
     steps:
       - run: echo "MANIEMENTS temporarily paused to free GitHub-hosted runners for external deployment"
