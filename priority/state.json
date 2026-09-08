@@ -1,66 +1,38 @@
 {
-  "active_orbit": {
-    "max_target": 4,
-    "north": "QT7",
-    "north_count": 3,
-    "rep_state_id": 424577,
-    "south": "K952",
-    "south_count": 4,
-    "split": "3-4",
-    "targets": [
-      {
-        "policy_sha256": "e1660d16732aafdd1d0b9348508efa421db7b14f8891f41527da553cd7866451",
-        "probability_fraction": "1/1",
-        "solver_mode": "public_support_dp",
-        "target": 0
-      },
-      {
-        "policy_sha256": "e40be91a6c1c77fea75e67ae30e2175d9264fee88bbf0eca713b8dc168b6d2f8",
-        "probability_fraction": "1/1",
-        "solver_mode": "public_support_dp",
-        "target": 1
-      },
-      {
-        "policy_sha256": "b4cd7dc9bcfc8e0953281484c0c8324b1ad73cb4de68e3156f8b4cef31db39a2",
-        "probability_fraction": "1/1",
-        "solver_mode": "public_support_dp",
-        "target": 2
-      }
-    ]
-  },
+  "active_orbit": null,
   "completed_by_split": {
     "0-1": 2,
     "1-1": 6,
     "2-3": 329,
-    "2-4": 388,
-    "3-3": 397,
-    "3-4": 932
+    "2-4": 389,
+    "3-3": 401,
+    "3-4": 942
   },
-  "completed_orbits": 2054,
-  "completed_ordered_rows": 4108,
-  "completed_targets": 9841,
+  "completed_orbits": 2069,
+  "completed_ordered_rows": 4138,
+  "completed_targets": 9919,
   "deferred_by_split": {
     "2-3": 19,
-    "2-4": 188,
+    "2-4": 193,
     "3-4": 30
   },
-  "deferred_orbits": 237,
+  "deferred_orbits": 242,
   "done": false,
   "last_pass": {
     "completed_orbits": 15,
-    "completed_targets": 82,
-    "deferred_orbits": 4,
-    "elapsed_seconds": 1015.456114,
-    "sequence": 67
+    "completed_targets": 78,
+    "deferred_orbits": 5,
+    "elapsed_seconds": 1129.062482,
+    "sequence": 68
   },
-  "next_scan_state_id": 424578,
+  "next_scan_state_id": 426733,
   "plan_id": "MANIEMENTS_V5_PRIORITY_P1_COMMON_SPLITS_PLUS_BOUNDARY_V1",
   "plan_random_deal_probability_mass": 0.4611817577950189,
   "plan_total_orbits": 146641,
   "schema": "MANIEMENTS_V5_PRIORITY_WORKER_STATE_V1",
-  "sequence": 68,
+  "sequence": 69,
   "target_cap_seconds": 180.0,
-  "updated_at_utc": "2026-09-08T15:50:59+00:00",
+  "updated_at_utc": "2026-09-08T16:09:50+00:00",
   "worker_count": 20,
   "worker_id": 14
 }
