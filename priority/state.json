@@ -1,37 +1,65 @@
 {
-  "active_orbit": null,
+  "active_orbit": {
+    "max_target": 4,
+    "north": "532",
+    "north_count": 3,
+    "rep_state_id": 170779,
+    "south": "QJT6",
+    "south_count": 4,
+    "split": "3-4",
+    "targets": [
+      {
+        "policy_sha256": "33acfdcac27539a11abe845cf84f66ba256cd925b4fa90bd304a6f21cefda429",
+        "probability_fraction": "1/1",
+        "solver_mode": "public_support_dp",
+        "target": 0
+      },
+      {
+        "policy_sha256": "6d64e51b514e1520bc2cf7b118ee0646952b19522dab8500390447a845498b34",
+        "probability_fraction": "1/1",
+        "solver_mode": "public_support_dp",
+        "target": 1
+      },
+      {
+        "policy_sha256": "a4dfd3ee6a0ad2866bf58cdcf54572d5c81870bbf1f55ec5c437bfeef99e2d98",
+        "probability_fraction": "669/805",
+        "solver_mode": "public_support_dp",
+        "target": 2
+      }
+    ]
+  },
   "completed_by_split": {
     "1-1": 5,
-    "2-3": 216,
-    "2-4": 312,
-    "3-3": 246,
-    "3-4": 536
+    "2-3": 217,
+    "2-4": 318,
+    "3-3": 251,
+    "3-4": 558
   },
-  "completed_orbits": 1315,
-  "completed_ordered_rows": 2630,
-  "completed_targets": 6179,
+  "completed_orbits": 1349,
+  "completed_ordered_rows": 2698,
+  "completed_targets": 6352,
   "deferred_by_split": {
     "2-3": 8,
-    "2-4": 49,
-    "3-4": 11
+    "2-4": 50,
+    "3-4": 13
   },
-  "deferred_orbits": 68,
+  "deferred_orbits": 71,
   "done": false,
   "last_pass": {
-    "completed_orbits": 27,
-    "completed_targets": 136,
-    "deferred_orbits": 4,
-    "elapsed_seconds": 1115.996235,
-    "sequence": 26
+    "completed_orbits": 34,
+    "completed_targets": 173,
+    "deferred_orbits": 3,
+    "elapsed_seconds": 1019.867463,
+    "sequence": 27
   },
-  "next_scan_state_id": 165169,
+  "next_scan_state_id": 170780,
   "plan_id": "MANIEMENTS_V5_PRIORITY_P1_COMMON_SPLITS_PLUS_BOUNDARY_V1",
   "plan_random_deal_probability_mass": 0.4611817577950189,
   "plan_total_orbits": 146641,
   "schema": "MANIEMENTS_V5_PRIORITY_WORKER_STATE_V1",
-  "sequence": 27,
+  "sequence": 28,
   "target_cap_seconds": 180.0,
-  "updated_at_utc": "2026-09-08T02:40:33+00:00",
+  "updated_at_utc": "2026-09-08T02:57:35+00:00",
   "worker_count": 20,
   "worker_id": 1
 }
