@@ -1,37 +1,59 @@
 {
-  "active_orbit": null,
+  "active_orbit": {
+    "max_target": 4,
+    "north": "Q53",
+    "north_count": 3,
+    "rep_state_id": 430887,
+    "south": "KT94",
+    "south_count": 4,
+    "split": "3-4",
+    "targets": [
+      {
+        "policy_sha256": "e26e38d54466f722030810c3e0084616077ed4c74353a4be6d78438a5cec4027",
+        "probability_fraction": "1/1",
+        "solver_mode": "public_support_dp",
+        "target": 0
+      },
+      {
+        "policy_sha256": "8270d036401bd9c258141903e179db7a34f8f72cd30090dd5a9b243cbb0c83a6",
+        "probability_fraction": "1/1",
+        "solver_mode": "public_support_dp",
+        "target": 1
+      }
+    ]
+  },
   "completed_by_split": {
     "1-1": 5,
     "2-3": 321,
-    "2-4": 390,
-    "3-3": 386,
-    "3-4": 971
+    "2-4": 392,
+    "3-3": 394,
+    "3-4": 984
   },
-  "completed_orbits": 2073,
-  "completed_ordered_rows": 4146,
-  "completed_targets": 9998,
+  "completed_orbits": 2096,
+  "completed_ordered_rows": 4192,
+  "completed_targets": 10115,
   "deferred_by_split": {
-    "2-3": 41,
-    "2-4": 184,
-    "3-4": 42
+    "2-3": 42,
+    "2-4": 185,
+    "3-4": 44
   },
-  "deferred_orbits": 267,
+  "deferred_orbits": 271,
   "done": false,
   "last_pass": {
-    "completed_orbits": 7,
-    "completed_targets": 41,
-    "deferred_orbits": 5,
-    "elapsed_seconds": 1166.633866,
-    "sequence": 71
+    "completed_orbits": 23,
+    "completed_targets": 117,
+    "deferred_orbits": 4,
+    "elapsed_seconds": 1015.506027,
+    "sequence": 72
   },
-  "next_scan_state_id": 427457,
+  "next_scan_state_id": 430888,
   "plan_id": "MANIEMENTS_V5_PRIORITY_P1_COMMON_SPLITS_PLUS_BOUNDARY_V1",
   "plan_random_deal_probability_mass": 0.4611817577950189,
   "plan_total_orbits": 146641,
   "schema": "MANIEMENTS_V5_PRIORITY_WORKER_STATE_V1",
-  "sequence": 72,
+  "sequence": 73,
   "target_cap_seconds": 180.0,
-  "updated_at_utc": "2026-09-08T17:00:47+00:00",
+  "updated_at_utc": "2026-09-08T17:17:44+00:00",
   "worker_count": 20,
   "worker_id": 5
 }
