@@ -2,6 +2,19 @@ name: MANIEMENTS V5 — Priority P1 exact cache
 
 on:
   workflow_dispatch:
+    inputs:
+      passes_per_job:
+        description: "Nombre maximum de PASS rapides par worker"
+        required: false
+        default: "14"
+      target_cap_seconds:
+        description: "Temps maximum par target avant différé exact"
+        required: false
+        default: "180"
+      auto_continue:
+        description: "Relancer jusqu'à scan complet de P1"
+        required: false
+        default: "true"
   push:
     branches: [main]
     paths:
@@ -13,11 +26,175 @@ permissions:
 
 concurrency:
   group: maniements-v5-priority-p1
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
-  paused:
-    if: ${{ false }}
+  workers:
+    name: Priority P1 worker ${{ matrix.worker }}
     runs-on: ubuntu-latest
+    timeout-minutes: 350
+    strategy:
+      fail-fast: false
+      max-parallel: 19
+      matrix:
+        worker: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
     steps:
-      - run: echo "MANIEMENTS temporarily drained to reserve one GitHub-hosted runner"
+      - name: Checkout controller
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Verify frozen V5 runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          ZIP="$RUNNER_TEMP/MANIEMENTS_V3_GENERATION_V5_PASS_ORBIT_RUNTIME_V2.zip"
+          EXPECTED="a0b580531f3c9e8bb00710b9c3e1c183b27cbfe9231c9d584e29a374ba88835d"
+          cat \
+            maniements-v5/runtime/runtime_v2.b64.part-00 \
+            maniements-v5/runtime/runtime_v2.b64.part-01 \
+            maniements-v5/runtime/runtime_v2.b64.part-02a \
+            maniements-v5/runtime/runtime_v2.b64.part-02b \
+            maniements-v5/runtime/runtime_v2.b64.part-03 \
+            maniements-v5/runtime/runtime_v2.b64.part-04 \
+            maniements-v5/runtime/runtime_v2.b64.part-05 \
+            maniements-v5/runtime/runtime_v2.b64.part-06 \
+            | base64 -d > "$ZIP"
+          test "$(sha256sum "$ZIP" | awk '{print $1}')" = "$EXPECTED"
+          mkdir -p "$RUNNER_TEMP/v5-runtime"
+          unzip -q "$ZIP" -d "$RUNNER_TEMP/v5-runtime"
+          (cd "$RUNNER_TEMP/v5-runtime" && sha256sum -c SHA256SUMS.txt)
+          python3 "$RUNNER_TEMP/v5-runtime/runtime/test_orbit_pass_v5.py"
+
+      - name: Checkout or initialize priority worker branch
+        shell: bash
+        env:
+          WORKER: ${{ matrix.worker }}
+        run: |
+          set -euo pipefail
+          PAD=$(printf '%02d' "$WORKER")
+          BRANCH="maniements-v5-priority-p1-${PAD}"
+          if git ls-remote --exit-code --heads origin "$BRANCH" >/dev/null 2>&1; then
+            git fetch origin "$BRANCH:$BRANCH"
+            git worktree add "$RUNNER_TEMP/priority-state" "$BRANCH"
+          else
+            git worktree add -b "$BRANCH" "$RUNNER_TEMP/priority-state" main
+          fi
+
+      - name: Run durable targeted PASS chain
+        shell: bash
+        env:
+          WORKER: ${{ matrix.worker }}
+          MAX_PASSES: ${{ inputs.passes_per_job || '14' }}
+          TARGET_CAP: ${{ inputs.target_cap_seconds || '180' }}
+        run: |
+          set -euo pipefail
+          PAD=$(printf '%02d' "$WORKER")
+          BRANCH="maniements-v5-priority-p1-${PAD}"
+          cd "$RUNNER_TEMP/priority-state"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          for ITER in $(seq 1 "$MAX_PASSES"); do
+            python3 "$GITHUB_WORKSPACE/maniements-v5/priority/priority_worker.py" \
+              --runtime-root "$RUNNER_TEMP/v5-runtime" \
+              --state-root "$RUNNER_TEMP/priority-state" \
+              --worker-id "$WORKER" \
+              --worker-count 20 \
+              --budget-seconds 1320 \
+              --close-reserve-seconds 120 \
+              --target-cap-seconds "$TARGET_CAP"
+            git add priority
+            if ! git diff --cached --quiet; then
+              git commit -m "MANIEMENTS V5 priority P1 worker ${PAD}: durable PASS"
+              git push origin "HEAD:${BRANCH}"
+            fi
+            DONE=$(python3 -c "import json; print('true' if json.load(open('priority/state.json'))['done'] else 'false')")
+            if [[ "$DONE" == "true" ]]; then break; fi
+          done
+          cat priority/state.json >> "$GITHUB_STEP_SUMMARY"
+
+  controller:
+    name: Priority P1 status + continuation
+    needs: workers
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Collect priority worker states
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/priority-status"
+          git fetch origin '+refs/heads/maniements-v5-priority-p1-*:refs/remotes/origin/maniements-v5-priority-p1-*' || true
+          for W in $(seq 0 19); do
+            PAD=$(printf '%02d' "$W")
+            REF="refs/remotes/origin/maniements-v5-priority-p1-${PAD}"
+            if git cat-file -e "$REF:priority/state.json" 2>/dev/null; then
+              git show "$REF:priority/state.json" > "$RUNNER_TEMP/priority-status/worker_${PAD}.json"
+            fi
+          done
+          python3 maniements-v5/priority/build_priority_status.py \
+            "$RUNNER_TEMP/priority-status" \
+            maniements-v5/priority/STATUS.md \
+            maniements-v5/priority/status.json
+          cat maniements-v5/priority/STATUS.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Publish priority status robustly
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          cp maniements-v5/priority/STATUS.md "$RUNNER_TEMP/PRIORITY_STATUS.md"
+          cp maniements-v5/priority/status.json "$RUNNER_TEMP/priority_status.json"
+          for ATTEMPT in 1 2 3 4; do
+            git fetch origin main
+            git reset --hard origin/main
+            mkdir -p maniements-v5/priority
+            cp "$RUNNER_TEMP/PRIORITY_STATUS.md" maniements-v5/priority/STATUS.md
+            cp "$RUNNER_TEMP/priority_status.json" maniements-v5/priority/status.json
+            git add maniements-v5/priority/STATUS.md maniements-v5/priority/status.json
+            if git diff --cached --quiet; then exit 0; fi
+            git commit -m "MANIEMENTS V5 priority P1: update status"
+            if git push origin HEAD:main; then exit 0; fi
+            sleep $((ATTEMPT*2))
+          done
+          exit 42
+
+      - name: Decide continuation
+        id: decide
+        shell: bash
+        run: |
+          set -euo pipefail
+          DONE=$(python3 -c "import json; print('true' if json.load(open('maniements-v5/priority/status.json'))['all_workers_done'] else 'false')")
+          STOP=false
+          [[ -f maniements-v5/PRIORITY_STOP ]] && STOP=true
+          echo "done=$DONE" >> "$GITHUB_OUTPUT"
+          echo "stop=$STOP" >> "$GITHUB_OUTPUT"
+
+      - name: Queue next priority cycle
+        if: ${{ steps.decide.outputs.done != 'true' && steps.decide.outputs.stop != 'true' && (inputs.auto_continue == 'true' || inputs.auto_continue == '') }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PASSES: ${{ inputs.passes_per_job || '14' }}
+          TARGET_CAP: ${{ inputs.target_cap_seconds || '180' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -c 'import json,os; print(json.dumps({"ref":"main","inputs":{"passes_per_job":os.environ["PASSES"],"target_cap_seconds":os.environ["TARGET_CAP"],"auto_continue":"true"}}))' > "$RUNNER_TEMP/priority-dispatch.json"
+          gh api --method POST \
+            "repos/${GITHUB_REPOSITORY}/actions/workflows/maniements-v5-priority.yml/dispatches" \
+            --input "$RUNNER_TEMP/priority-dispatch.json"
+
+      - name: Finish reason
+        if: ${{ steps.decide.outputs.done == 'true' || steps.decide.outputs.stop == 'true' }}
+        shell: bash
+        run: |
+          echo "Priority P1 chain stopped: done=${{ steps.decide.outputs.done }}, stop=${{ steps.decide.outputs.stop }}" >> "$GITHUB_STEP_SUMMARY"
