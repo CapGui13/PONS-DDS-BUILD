@@ -1,21 +1,21 @@
 {
   "active_orbit": {
     "max_target": 4,
-    "north": "Q642",
-    "north_count": 4,
-    "rep_state_id": 413974,
-    "south": "K75",
-    "south_count": 3,
+    "north": "Q94",
+    "north_count": 3,
+    "rep_state_id": 417645,
+    "south": "K876",
+    "south_count": 4,
     "split": "3-4",
     "targets": [
       {
-        "policy_sha256": "b97d744d9a73e5bdb9967cdac13f555f3760c35e1839bee31e1c3a765e9a2a47",
+        "policy_sha256": "3082ed6767aabcc46f51eb41bf628ed67cda19d87ce9547dfa082b77b795e8f8",
         "probability_fraction": "1/1",
         "solver_mode": "public_support_dp",
         "target": 0
       },
       {
-        "policy_sha256": "6288b4126f443bda9a5c0b05b178959e8d7e42c6d93e456df54b84e3a79d6b0f",
+        "policy_sha256": "bcac57fa3dec0ae186dae3fd3704fdbb2c2f20b700b174e3e06ce4a387f0ad5b",
         "probability_fraction": "1/1",
         "solver_mode": "public_support_dp",
         "target": 1
@@ -25,14 +25,14 @@
   "completed_by_split": {
     "0-1": 1,
     "1-1": 5,
-    "2-3": 337,
-    "2-4": 355,
-    "3-3": 337,
-    "3-4": 934
+    "2-3": 342,
+    "2-4": 365,
+    "3-3": 352,
+    "3-4": 967
   },
-  "completed_orbits": 1969,
-  "completed_ordered_rows": 3938,
-  "completed_targets": 9435,
+  "completed_orbits": 2032,
+  "completed_ordered_rows": 4064,
+  "completed_targets": 9730,
   "deferred_by_split": {
     "2-3": 24,
     "2-4": 149,
@@ -41,20 +41,20 @@
   "deferred_orbits": 213,
   "done": false,
   "last_pass": {
-    "completed_orbits": 47,
-    "completed_targets": 233,
-    "deferred_orbits": 4,
-    "elapsed_seconds": 1015.295646,
-    "sequence": 53
+    "completed_orbits": 63,
+    "completed_targets": 295,
+    "deferred_orbits": 0,
+    "elapsed_seconds": 1015.546496,
+    "sequence": 54
   },
-  "next_scan_state_id": 413975,
+  "next_scan_state_id": 417646,
   "plan_id": "MANIEMENTS_V5_PRIORITY_P1_COMMON_SPLITS_PLUS_BOUNDARY_V1",
   "plan_random_deal_probability_mass": 0.4611817577950189,
   "plan_total_orbits": 146641,
   "schema": "MANIEMENTS_V5_PRIORITY_WORKER_STATE_V1",
-  "sequence": 54,
+  "sequence": 55,
   "target_cap_seconds": 180.0,
-  "updated_at_utc": "2026-09-08T11:33:20+00:00",
+  "updated_at_utc": "2026-09-08T11:50:17+00:00",
   "worker_count": 20,
   "worker_id": 16
 }
