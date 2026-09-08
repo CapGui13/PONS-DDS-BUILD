@@ -1,38 +1,60 @@
 {
-  "active_orbit": null,
+  "active_orbit": {
+    "max_target": 3,
+    "north": "T7",
+    "north_count": 2,
+    "rep_state_id": 366930,
+    "south": "K98",
+    "south_count": 3,
+    "split": "2-3",
+    "targets": [
+      {
+        "policy_sha256": "fbd00c5793a802869252590a054426006dc5570e6faba68b4c382fcc70cb0012",
+        "probability_fraction": "1/1",
+        "solver_mode": "public_support_dp",
+        "target": 0
+      },
+      {
+        "policy_sha256": "8c642865564f5048732c1df39b445a80e50377ff4abc5b76c473208f034d166d",
+        "probability_fraction": "23771/30590",
+        "solver_mode": "public_support_dp",
+        "target": 1
+      }
+    ]
+  },
   "completed_by_split": {
     "0-1": 2,
     "1-1": 2,
-    "2-3": 268,
-    "2-4": 315,
-    "3-3": 265,
-    "3-4": 629
+    "2-3": 277,
+    "2-4": 325,
+    "3-3": 274,
+    "3-4": 664
   },
-  "completed_orbits": 1481,
-  "completed_ordered_rows": 2962,
-  "completed_targets": 7016,
+  "completed_orbits": 1544,
+  "completed_ordered_rows": 3088,
+  "completed_targets": 7316,
   "deferred_by_split": {
     "2-3": 5,
-    "2-4": 101,
+    "2-4": 102,
     "3-4": 23
   },
-  "deferred_orbits": 129,
+  "deferred_orbits": 130,
   "done": false,
   "last_pass": {
-    "completed_orbits": 21,
-    "completed_targets": 105,
-    "deferred_orbits": 5,
-    "elapsed_seconds": 1079.528105,
-    "sequence": 36
+    "completed_orbits": 63,
+    "completed_targets": 300,
+    "deferred_orbits": 1,
+    "elapsed_seconds": 1075.947332,
+    "sequence": 37
   },
-  "next_scan_state_id": 362495,
+  "next_scan_state_id": 366931,
   "plan_id": "MANIEMENTS_V5_PRIORITY_P1_COMMON_SPLITS_PLUS_BOUNDARY_V1",
   "plan_random_deal_probability_mass": 0.4611817577950189,
   "plan_total_orbits": 146641,
   "schema": "MANIEMENTS_V5_PRIORITY_WORKER_STATE_V1",
-  "sequence": 37,
+  "sequence": 38,
   "target_cap_seconds": 180.0,
-  "updated_at_utc": "2026-09-08T05:54:54+00:00",
+  "updated_at_utc": "2026-09-08T06:12:51+00:00",
   "worker_count": 20,
   "worker_id": 3
 }
