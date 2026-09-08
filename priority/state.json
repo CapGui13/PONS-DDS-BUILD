@@ -1,42 +1,70 @@
 {
-  "active_orbit": null,
+  "active_orbit": {
+    "max_target": 4,
+    "north": "J7",
+    "north_count": 2,
+    "rep_state_id": 492342,
+    "south": "KQ43",
+    "south_count": 4,
+    "split": "2-4",
+    "targets": [
+      {
+        "policy_sha256": "5085d5ddb6d510fa8e96a10fe1080a85cee4ff35a8343291bc3507b6b874b4de",
+        "probability_fraction": "1/1",
+        "solver_mode": "public_support_dp",
+        "target": 0
+      },
+      {
+        "policy_sha256": "cbd287aa11a1256075799aaa9d086974e7a1ba9ed7c7981e7bd884cb9d062ba3",
+        "probability_fraction": "1/1",
+        "solver_mode": "public_support_dp",
+        "target": 1
+      },
+      {
+        "policy_sha256": "7f61239d83ca8c42961f601b46867f38cebca781a2347f676f52932d54030161",
+        "probability_fraction": "1/1",
+        "solver_mode": "public_support_dp",
+        "target": 2
+      }
+    ]
+  },
   "completed_by_split": {
     "1-1": 8,
     "2-10": 1,
-    "2-3": 357,
-    "2-4": 452,
-    "3-3": 439,
-    "3-4": 1194,
+    "2-3": 358,
+    "2-4": 454,
+    "3-3": 442,
+    "3-4": 1215,
     "3-9": 3,
     "4-8": 11,
     "5-7": 17,
     "6-6": 11
   },
-  "completed_orbits": 2493,
-  "completed_ordered_rows": 4986,
-  "completed_targets": 12252,
+  "completed_orbits": 2520,
+  "completed_ordered_rows": 5040,
+  "completed_targets": 12392,
   "deferred_by_split": {
     "2-3": 33,
-    "2-4": 207,
+    "2-4": 210,
     "3-4": 68
   },
-  "deferred_orbits": 308,
+  "deferred_orbits": 311,
   "done": false,
   "last_pass": {
-    "completed_orbits": 22,
-    "completed_targets": 114,
-    "deferred_orbits": 4,
-    "elapsed_seconds": 1038.311963,
-    "sequence": 84
+    "completed_orbits": 27,
+    "completed_targets": 140,
+    "deferred_orbits": 3,
+    "elapsed_seconds": 1016.743426,
+    "sequence": 85
   },
-  "next_scan_state_id": 485923,
+  "next_scan_state_id": 492343,
   "plan_id": "MANIEMENTS_V5_PRIORITY_P1_COMMON_SPLITS_PLUS_BOUNDARY_V1",
   "plan_random_deal_probability_mass": 0.4611817577950189,
   "plan_total_orbits": 146641,
   "schema": "MANIEMENTS_V5_PRIORITY_WORKER_STATE_V1",
-  "sequence": 85,
+  "sequence": 86,
   "target_cap_seconds": 180.0,
-  "updated_at_utc": "2026-09-08T21:04:47+00:00",
+  "updated_at_utc": "2026-09-08T21:21:45+00:00",
   "worker_count": 20,
   "worker_id": 7
 }
