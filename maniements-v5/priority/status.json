@@ -13,7 +13,7 @@
   "scan_percent": 26.024782,
   "scanned_orbits": 38163,
   "schema": "MANIEMENTS_V5_PRIORITY_STATUS_V1",
-  "updated_at_utc": "2026-09-08T09:10:15+00:00",
+  "updated_at_utc": "2026-09-08T09:20:16+00:00",
   "workers": [
     {
       "active_rep_state_id": null,

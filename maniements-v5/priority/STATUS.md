@@ -2,7 +2,7 @@
 
 Objectif : calcul exact ciblé des splits de couleur les plus fréquents `2-3`, `2-4`, `3-3`, `3-4`, plus tout le domaine boundary fermé-forme.
 
-Dernière mise à jour : `2026-09-08T09:10:15+00:00`
+Dernière mise à jour : `2026-09-08T09:20:16+00:00`
 
 **Scanné : 38 163 / 146 641 orbites — 26.02%**
 Exactement calculées : **34 884** — différées car target > cap : **3 279**
