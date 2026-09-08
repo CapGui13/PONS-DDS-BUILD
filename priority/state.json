@@ -1,42 +1,20 @@
 {
-  "active_orbit": {
-    "max_target": 3,
-    "north": "532",
-    "north_count": 3,
-    "rep_state_id": 1076053,
-    "south": "AT4",
-    "south_count": 3,
-    "split": "3-3",
-    "targets": [
-      {
-        "policy_sha256": "7f863f073b91d984f9fa1ee4470f38020276c8119538867e015d69bbc3b13b13",
-        "probability_fraction": "1/1",
-        "solver_mode": "public_support_dp",
-        "target": 0
-      },
-      {
-        "policy_sha256": "9b76f181b5c7245bd5cd97b9edeb93a4b1e99d2a26ab87b460819ffeb68ba79c",
-        "probability_fraction": "1/1",
-        "solver_mode": "public_support_dp",
-        "target": 1
-      }
-    ]
-  },
+  "active_orbit": null,
   "completed_by_split": {
     "1-1": 2,
     "2-10": 3,
-    "2-3": 386,
-    "2-4": 542,
-    "3-3": 529,
-    "3-4": 1434,
+    "2-3": 397,
+    "2-4": 571,
+    "3-3": 544,
+    "3-4": 1487,
     "3-9": 9,
     "4-8": 31,
     "5-7": 31,
     "6-6": 23
   },
-  "completed_orbits": 2990,
-  "completed_ordered_rows": 5980,
-  "completed_targets": 14891,
+  "completed_orbits": 3098,
+  "completed_ordered_rows": 6196,
+  "completed_targets": 15403,
   "deferred_by_split": {
     "2-3": 22,
     "2-4": 211,
@@ -45,20 +23,20 @@
   "deferred_orbits": 321,
   "done": false,
   "last_pass": {
-    "completed_orbits": 86,
-    "completed_targets": 399,
+    "completed_orbits": 108,
+    "completed_targets": 512,
     "deferred_orbits": 0,
-    "elapsed_seconds": 1015.319953,
-    "sequence": 90
+    "elapsed_seconds": 1015.030579,
+    "sequence": 91
   },
-  "next_scan_state_id": 1076054,
+  "next_scan_state_id": 1083035,
   "plan_id": "MANIEMENTS_V5_PRIORITY_P1_COMMON_SPLITS_PLUS_BOUNDARY_V1",
   "plan_random_deal_probability_mass": 0.4611817577950189,
   "plan_total_orbits": 146641,
   "schema": "MANIEMENTS_V5_PRIORITY_WORKER_STATE_V1",
-  "sequence": 91,
+  "sequence": 92,
   "target_cap_seconds": 180.0,
-  "updated_at_utc": "2026-09-08T22:58:31+00:00",
+  "updated_at_utc": "2026-09-08T23:34:53+00:00",
   "worker_count": 20,
   "worker_id": 0
 }
