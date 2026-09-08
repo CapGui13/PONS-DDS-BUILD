@@ -2,36 +2,36 @@
   "active_orbit": null,
   "completed_by_split": {
     "1-1": 8,
-    "2-3": 313,
+    "2-3": 314,
     "2-4": 351,
-    "3-3": 331,
-    "3-4": 837
+    "3-3": 334,
+    "3-4": 845
   },
-  "completed_orbits": 1840,
-  "completed_ordered_rows": 3680,
-  "completed_targets": 8760,
+  "completed_orbits": 1852,
+  "completed_ordered_rows": 3704,
+  "completed_targets": 8821,
   "deferred_by_split": {
     "2-3": 24,
-    "2-4": 138,
+    "2-4": 143,
     "3-4": 27
   },
-  "deferred_orbits": 189,
+  "deferred_orbits": 194,
   "done": false,
   "last_pass": {
-    "completed_orbits": 5,
-    "completed_targets": 30,
-    "deferred_orbits": 6,
-    "elapsed_seconds": 1175.407744,
-    "sequence": 53
+    "completed_orbits": 12,
+    "completed_targets": 61,
+    "deferred_orbits": 5,
+    "elapsed_seconds": 1146.808778,
+    "sequence": 54
   },
-  "next_scan_state_id": 394473,
+  "next_scan_state_id": 394931,
   "plan_id": "MANIEMENTS_V5_PRIORITY_P1_COMMON_SPLITS_PLUS_BOUNDARY_V1",
   "plan_random_deal_probability_mass": 0.4611817577950189,
   "plan_total_orbits": 146641,
   "schema": "MANIEMENTS_V5_PRIORITY_WORKER_STATE_V1",
-  "sequence": 54,
+  "sequence": 55,
   "target_cap_seconds": 180.0,
-  "updated_at_utc": "2026-09-08T11:32:54+00:00",
+  "updated_at_utc": "2026-09-08T11:52:02+00:00",
   "worker_count": 20,
   "worker_id": 7
 }
