@@ -1,72 +1,38 @@
 {
-  "active_orbit": {
-    "max_target": 4,
-    "north": "984",
-    "north_count": 3,
-    "rep_state_id": 370833,
-    "south": "KT73",
-    "south_count": 4,
-    "split": "3-4",
-    "targets": [
-      {
-        "policy_sha256": "95a5eb8b6e65ee139f33f8e27b98f22877549a886bc5b25e4b9082fca7b0f145",
-        "probability_fraction": "1/1",
-        "solver_mode": "public_support_dp",
-        "target": 0
-      },
-      {
-        "policy_sha256": "49e985b75e9f651e6dc1197e04371a7c955271afa1ea30639b4728b31268ce87",
-        "probability_fraction": "1/1",
-        "solver_mode": "public_support_dp",
-        "target": 1
-      },
-      {
-        "policy_sha256": "a33ee85939b7f0289b6ddf221ed636182b142226cc039f5722ebf2eb422ab3f3",
-        "probability_fraction": "19/25",
-        "solver_mode": "public_support_dp",
-        "target": 2
-      },
-      {
-        "policy_sha256": "b374e515770fadd78b044f6d6e4cf4817536b710713a2a3c583ce1cde95b7b3c",
-        "probability_fraction": "0/1",
-        "solver_mode": "public_support_dp",
-        "target": 3
-      }
-    ]
-  },
+  "active_orbit": null,
   "completed_by_split": {
     "0-1": 2,
     "1-1": 2,
-    "2-3": 291,
-    "2-4": 328,
-    "3-3": 290,
-    "3-4": 689
+    "2-3": 300,
+    "2-4": 332,
+    "3-3": 298,
+    "3-4": 712
   },
-  "completed_orbits": 1602,
-  "completed_ordered_rows": 3204,
-  "completed_targets": 7597,
+  "completed_orbits": 1646,
+  "completed_ordered_rows": 3292,
+  "completed_targets": 7799,
   "deferred_by_split": {
     "2-3": 5,
-    "2-4": 121,
+    "2-4": 124,
     "3-4": 23
   },
-  "deferred_orbits": 149,
+  "deferred_orbits": 152,
   "done": false,
   "last_pass": {
-    "completed_orbits": 24,
-    "completed_targets": 114,
+    "completed_orbits": 44,
+    "completed_targets": 202,
     "deferred_orbits": 3,
-    "elapsed_seconds": 1015.673394,
-    "sequence": 41
+    "elapsed_seconds": 1031.304556,
+    "sequence": 42
   },
-  "next_scan_state_id": 370834,
+  "next_scan_state_id": 374511,
   "plan_id": "MANIEMENTS_V5_PRIORITY_P1_COMMON_SPLITS_PLUS_BOUNDARY_V1",
   "plan_random_deal_probability_mass": 0.4611817577950189,
   "plan_total_orbits": 146641,
   "schema": "MANIEMENTS_V5_PRIORITY_WORKER_STATE_V1",
-  "sequence": 42,
+  "sequence": 43,
   "target_cap_seconds": 180.0,
-  "updated_at_utc": "2026-09-08T07:24:48+00:00",
+  "updated_at_utc": "2026-09-08T07:42:32+00:00",
   "worker_count": 20,
   "worker_id": 3
 }
