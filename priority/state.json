@@ -1,38 +1,60 @@
 {
-  "active_orbit": null,
+  "active_orbit": {
+    "max_target": 4,
+    "north": "832",
+    "north_count": 3,
+    "rep_state_id": 394609,
+    "south": "KJ65",
+    "south_count": 4,
+    "split": "3-4",
+    "targets": [
+      {
+        "policy_sha256": "d7214d6b323b43d8d4d43bf045b90b0061dd0214ceb8bb18dc3c5fc04134b58c",
+        "probability_fraction": "1/1",
+        "solver_mode": "public_support_dp",
+        "target": 0
+      },
+      {
+        "policy_sha256": "8d8772c7ab371ad0a4651a502ca368f2391a668e23688ed0a2a36c3cdba1829e",
+        "probability_fraction": "291/322",
+        "solver_mode": "public_support_dp",
+        "target": 1
+      }
+    ]
+  },
   "completed_by_split": {
     "0-1": 1,
     "1-1": 5,
-    "2-3": 322,
+    "2-3": 323,
     "2-4": 334,
-    "3-3": 313,
-    "3-4": 840
+    "3-3": 314,
+    "3-4": 845
   },
-  "completed_orbits": 1815,
-  "completed_ordered_rows": 3630,
-  "completed_targets": 8649,
+  "completed_orbits": 1822,
+  "completed_ordered_rows": 3644,
+  "completed_targets": 8689,
   "deferred_by_split": {
-    "2-3": 17,
-    "2-4": 126,
+    "2-3": 19,
+    "2-4": 129,
     "3-4": 34
   },
-  "deferred_orbits": 177,
+  "deferred_orbits": 182,
   "done": false,
   "last_pass": {
-    "completed_orbits": 23,
-    "completed_targets": 110,
-    "deferred_orbits": 3,
-    "elapsed_seconds": 1031.560533,
-    "sequence": 45
+    "completed_orbits": 7,
+    "completed_targets": 40,
+    "deferred_orbits": 5,
+    "elapsed_seconds": 1015.977082,
+    "sequence": 46
   },
-  "next_scan_state_id": 394195,
+  "next_scan_state_id": 394610,
   "plan_id": "MANIEMENTS_V5_PRIORITY_P1_COMMON_SPLITS_PLUS_BOUNDARY_V1",
   "plan_random_deal_probability_mass": 0.4611817577950189,
   "plan_total_orbits": 146641,
   "schema": "MANIEMENTS_V5_PRIORITY_WORKER_STATE_V1",
-  "sequence": 46,
+  "sequence": 47,
   "target_cap_seconds": 180.0,
-  "updated_at_utc": "2026-09-08T08:36:54+00:00",
+  "updated_at_utc": "2026-09-08T08:53:52+00:00",
   "worker_count": 20,
   "worker_id": 16
 }
