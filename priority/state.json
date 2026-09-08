@@ -1,36 +1,64 @@
 {
-  "active_orbit": null,
-  "completed_by_split": {
-    "2-3": 300,
-    "2-4": 351,
-    "3-3": 368,
-    "3-4": 883
+  "active_orbit": {
+    "max_target": 4,
+    "north": "T54",
+    "north_count": 3,
+    "rep_state_id": 400421,
+    "south": "KJ62",
+    "south_count": 4,
+    "split": "3-4",
+    "targets": [
+      {
+        "policy_sha256": "ffc8f621635f59f3bc42b522737084c6477f32f7a9ff2395c107dd94c51d0a1b",
+        "probability_fraction": "1/1",
+        "solver_mode": "public_support_dp",
+        "target": 0
+      },
+      {
+        "policy_sha256": "bcc8b9bfb63ae7ad1996691e895c0a48ee8f91421276a7e64571242577c8b341",
+        "probability_fraction": "1/1",
+        "solver_mode": "public_support_dp",
+        "target": 1
+      },
+      {
+        "policy_sha256": "432dcec95576a7153f12a7ccefa66d0ae91f87a7414b63d7f52c93f97794065e",
+        "probability_fraction": "2221/3220",
+        "solver_mode": "public_support_dp",
+        "target": 2
+      }
+    ]
   },
-  "completed_orbits": 1902,
-  "completed_ordered_rows": 3804,
-  "completed_targets": 9102,
+  "completed_by_split": {
+    "2-3": 301,
+    "2-4": 353,
+    "3-3": 369,
+    "3-4": 892
+  },
+  "completed_orbits": 1915,
+  "completed_ordered_rows": 3830,
+  "completed_targets": 9172,
   "deferred_by_split": {
-    "2-3": 25,
-    "2-4": 161,
+    "2-3": 26,
+    "2-4": 163,
     "3-4": 32
   },
-  "deferred_orbits": 218,
+  "deferred_orbits": 221,
   "done": false,
   "last_pass": {
-    "completed_orbits": 19,
-    "completed_targets": 95,
+    "completed_orbits": 13,
+    "completed_targets": 70,
     "deferred_orbits": 3,
-    "elapsed_seconds": 1184.853437,
-    "sequence": 59
+    "elapsed_seconds": 1027.467015,
+    "sequence": 60
   },
-  "next_scan_state_id": 398123,
+  "next_scan_state_id": 400422,
   "plan_id": "MANIEMENTS_V5_PRIORITY_P1_COMMON_SPLITS_PLUS_BOUNDARY_V1",
   "plan_random_deal_probability_mass": 0.4611817577950189,
   "plan_total_orbits": 146641,
   "schema": "MANIEMENTS_V5_PRIORITY_WORKER_STATE_V1",
-  "sequence": 60,
+  "sequence": 61,
   "target_cap_seconds": 180.0,
-  "updated_at_utc": "2026-09-08T13:27:48+00:00",
+  "updated_at_utc": "2026-09-08T13:44:57+00:00",
   "worker_count": 20,
   "worker_id": 18
 }
