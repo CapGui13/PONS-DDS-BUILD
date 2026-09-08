@@ -1,65 +1,37 @@
 {
-  "active_orbit": {
-    "max_target": 4,
-    "north": "32",
-    "north_count": 2,
-    "rep_state_id": 406804,
-    "south": "KJT4",
-    "south_count": 4,
-    "split": "2-4",
-    "targets": [
-      {
-        "policy_sha256": "a50e760b9bb74d258abc9d3e5a28a29b65eae4d1025ab323352ed9b76d65d322",
-        "probability_fraction": "1/1",
-        "solver_mode": "public_support_dp",
-        "target": 0
-      },
-      {
-        "policy_sha256": "8603bfe0946d0637968a7c984132dcc695bd0d46b67f1e9431efd137c78ab976",
-        "probability_fraction": "1/1",
-        "solver_mode": "public_support_dp",
-        "target": 1
-      },
-      {
-        "policy_sha256": "f87901b1ba04ddcd1aa6b6cb218a67d895baebbdd6ddda385c98496aa443560b",
-        "probability_fraction": "63/100",
-        "solver_mode": "public_support_dp",
-        "target": 2
-      }
-    ]
-  },
+  "active_orbit": null,
   "completed_by_split": {
     "1-1": 5,
     "2-3": 325,
-    "2-4": 367,
+    "2-4": 370,
     "3-3": 353,
-    "3-4": 903
+    "3-4": 907
   },
-  "completed_orbits": 1953,
-  "completed_ordered_rows": 3906,
-  "completed_targets": 9340,
+  "completed_orbits": 1960,
+  "completed_ordered_rows": 3920,
+  "completed_targets": 9380,
   "deferred_by_split": {
     "2-3": 20,
-    "2-4": 166,
+    "2-4": 170,
     "3-4": 29
   },
-  "deferred_orbits": 215,
+  "deferred_orbits": 219,
   "done": false,
   "last_pass": {
-    "completed_orbits": 16,
-    "completed_targets": 86,
+    "completed_orbits": 7,
+    "completed_targets": 40,
     "deferred_orbits": 4,
-    "elapsed_seconds": 1172.719761,
-    "sequence": 58
+    "elapsed_seconds": 1040.185107,
+    "sequence": 59
   },
-  "next_scan_state_id": 406805,
+  "next_scan_state_id": 407557,
   "plan_id": "MANIEMENTS_V5_PRIORITY_P1_COMMON_SPLITS_PLUS_BOUNDARY_V1",
   "plan_random_deal_probability_mass": 0.4611817577950189,
   "plan_total_orbits": 146641,
   "schema": "MANIEMENTS_V5_PRIORITY_WORKER_STATE_V1",
-  "sequence": 59,
+  "sequence": 60,
   "target_cap_seconds": 180.0,
-  "updated_at_utc": "2026-09-08T13:09:56+00:00",
+  "updated_at_utc": "2026-09-08T13:27:18+00:00",
   "worker_count": 20,
   "worker_id": 2
 }
