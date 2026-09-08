@@ -1,38 +1,60 @@
 {
-  "active_orbit": null,
+  "active_orbit": {
+    "max_target": 4,
+    "north": "862",
+    "north_count": 3,
+    "rep_state_id": 355651,
+    "south": "K753",
+    "south_count": 4,
+    "split": "3-4",
+    "targets": [
+      {
+        "policy_sha256": "38b36921b3889efed9caea83fd8df3198e824db80eb40b63f4313a33df6fae6c",
+        "probability_fraction": "1/1",
+        "solver_mode": "public_support_dp",
+        "target": 0
+      },
+      {
+        "policy_sha256": "0c727cc5efd29f8720866084241f46055ba21b02de39bc95a6eee0c5b775f5dd",
+        "probability_fraction": "2481/3220",
+        "solver_mode": "public_support_dp",
+        "target": 1
+      }
+    ]
+  },
   "completed_by_split": {
     "0-1": 2,
     "1-1": 2,
-    "2-3": 244,
-    "2-4": 298,
-    "3-3": 237,
-    "3-4": 560
+    "2-3": 245,
+    "2-4": 302,
+    "3-3": 244,
+    "3-4": 565
   },
-  "completed_orbits": 1343,
-  "completed_ordered_rows": 2686,
-  "completed_targets": 6328,
+  "completed_orbits": 1360,
+  "completed_ordered_rows": 2720,
+  "completed_targets": 6412,
   "deferred_by_split": {
     "2-3": 5,
-    "2-4": 51,
+    "2-4": 56,
     "3-4": 23
   },
-  "deferred_orbits": 79,
+  "deferred_orbits": 84,
   "done": false,
   "last_pass": {
-    "completed_orbits": 69,
-    "completed_targets": 337,
-    "deferred_orbits": 3,
-    "elapsed_seconds": 1165.844247,
-    "sequence": 27
+    "completed_orbits": 17,
+    "completed_targets": 84,
+    "deferred_orbits": 5,
+    "elapsed_seconds": 1017.534675,
+    "sequence": 28
   },
-  "next_scan_state_id": 354857,
+  "next_scan_state_id": 355652,
   "plan_id": "MANIEMENTS_V5_PRIORITY_P1_COMMON_SPLITS_PLUS_BOUNDARY_V1",
   "plan_random_deal_probability_mass": 0.4611817577950189,
   "plan_total_orbits": 146641,
   "schema": "MANIEMENTS_V5_PRIORITY_WORKER_STATE_V1",
-  "sequence": 28,
+  "sequence": 29,
   "target_cap_seconds": 180.0,
-  "updated_at_utc": "2026-09-08T03:06:21+00:00",
+  "updated_at_utc": "2026-09-08T03:24:03+00:00",
   "worker_count": 20,
   "worker_id": 3
 }
