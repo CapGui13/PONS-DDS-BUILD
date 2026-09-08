@@ -1,38 +1,66 @@
 {
-  "active_orbit": null,
+  "active_orbit": {
+    "max_target": 4,
+    "north": "QJ7",
+    "north_count": 3,
+    "rep_state_id": 433503,
+    "south": "K654",
+    "south_count": 4,
+    "split": "3-4",
+    "targets": [
+      {
+        "policy_sha256": "621126918c25eebe3312bdef7babdb574e8ef5b049da99e29f3b3f2cc498115f",
+        "probability_fraction": "1/1",
+        "solver_mode": "public_support_dp",
+        "target": 0
+      },
+      {
+        "policy_sha256": "8e4f4e0d3f8a0ed395d9d794549b095ff16917a6408037b529b6575f89a9befc",
+        "probability_fraction": "1/1",
+        "solver_mode": "public_support_dp",
+        "target": 1
+      },
+      {
+        "policy_sha256": "7b28cee901a0fa8c25e061a45951a810527eb8967974772891520aa396529dd6",
+        "probability_fraction": "1/1",
+        "solver_mode": "public_support_dp",
+        "target": 2
+      }
+    ]
+  },
   "completed_by_split": {
     "0-1": 1,
     "1-1": 1,
-    "2-3": 335,
-    "2-4": 396,
-    "3-3": 417,
-    "3-4": 995
+    "2-3": 336,
+    "2-4": 397,
+    "3-3": 422,
+    "3-4": 1022
   },
-  "completed_orbits": 2145,
-  "completed_ordered_rows": 4290,
-  "completed_targets": 10301,
+  "completed_orbits": 2179,
+  "completed_ordered_rows": 4358,
+  "completed_targets": 10474,
   "deferred_by_split": {
-    "2-3": 33,
-    "2-4": 174,
+    "2-3": 34,
+    "2-4": 176,
     "3-4": 39
   },
-  "deferred_orbits": 246,
+  "deferred_orbits": 249,
   "done": false,
   "last_pass": {
-    "completed_orbits": 5,
-    "completed_targets": 35,
-    "deferred_orbits": 5,
-    "elapsed_seconds": 1085.212058,
-    "sequence": 71
+    "completed_orbits": 34,
+    "completed_targets": 173,
+    "deferred_orbits": 3,
+    "elapsed_seconds": 1017.166604,
+    "sequence": 72
   },
-  "next_scan_state_id": 428707,
+  "next_scan_state_id": 433504,
   "plan_id": "MANIEMENTS_V5_PRIORITY_P1_COMMON_SPLITS_PLUS_BOUNDARY_V1",
   "plan_random_deal_probability_mass": 0.4611817577950189,
   "plan_total_orbits": 146641,
   "schema": "MANIEMENTS_V5_PRIORITY_WORKER_STATE_V1",
-  "sequence": 72,
+  "sequence": 73,
   "target_cap_seconds": 180.0,
-  "updated_at_utc": "2026-09-08T17:04:44+00:00",
+  "updated_at_utc": "2026-09-08T17:21:43+00:00",
   "worker_count": 20,
   "worker_id": 11
 }
