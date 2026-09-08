@@ -26,11 +26,10 @@ permissions:
 
 concurrency:
   group: maniements-v5-priority-p1
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   workers:
-    if: ${{ false }}
     name: Priority P1 worker ${{ matrix.worker }}
     runs-on: ubuntu-latest
     timeout-minutes: 350
