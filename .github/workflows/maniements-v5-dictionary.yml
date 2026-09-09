@@ -11,6 +11,8 @@ on:
     branches: [main]
     paths:
       - "maniements-v5/dictionary/START"
+  schedule:
+    - cron: "17 */6 * * *"
 
 permissions:
   contents: write
@@ -161,3 +163,24 @@ jobs:
             sleep $((ATTEMPT*2))
           done
           exit 42
+
+      - name: Decide continuation
+        id: decide
+        shell: bash
+        run: |
+          set -euo pipefail
+          CAUGHT=$(python3 -c "import json; d=json.load(open('maniements-v5/dictionary/status.json')); print('true' if d.get('caught_up_workers',0)==20 else 'false')" 2>/dev/null || echo false)
+          echo "caught=$CAUGHT" >> "$GITHUB_OUTPUT"
+
+      - name: Queue next dictionary cycle while backlog remains
+        if: ${{ steps.decide.outputs.caught != 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TARGET_CAP: ${{ inputs.target_cap_seconds || '210' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -c 'import json,os; print(json.dumps({"ref":"main","inputs":{"target_cap_seconds":os.environ["TARGET_CAP"]}}))' > "$RUNNER_TEMP/dict-dispatch.json"
+          gh api --method POST \
+            "repos/${GITHUB_REPOSITORY}/actions/workflows/maniements-v5-dictionary.yml/dispatches" \
+            --input "$RUNNER_TEMP/dict-dispatch.json"
