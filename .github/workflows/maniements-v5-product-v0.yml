@@ -1,0 +1,81 @@
+name: MANIEMENTS V5 — Product V0 snapshot
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "maniements-v5/product/V0_START"
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  build-v0:
+    name: Build exact P1 V0 snapshot
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Fetch 20 durable P1 worker branches
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin \
+            '+refs/heads/maniements-v5-priority-p1-*:refs/remotes/origin/maniements-v5-priority-p1-*'
+
+      - name: Build SQLite snapshot
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist/package
+          python3 maniements-v5/product/v0/build_snapshot.py \
+            --repo . \
+            --output dist/package/maniements_v5_p1_v0.sqlite \
+            --manifest dist/package/manifest.json
+
+      - name: Smoke test
+        shell: bash
+        run: |
+          set -euo pipefail
+          PYTHONPATH=maniements-v5/product/v0 \
+            python3 maniements-v5/product/v0/smoke_test.py \
+            --db dist/package/maniements_v5_p1_v0.sqlite
+
+      - name: Assemble V0 package
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp maniements-v5/product/v0/query.py dist/package/query.py
+          cp maniements-v5/product/v0/server.py dist/package/server.py
+          cp maniements-v5/product/v0/README.md dist/package/README.md
+          (cd dist/package && sha256sum maniements_v5_p1_v0.sqlite > SHA256SUMS.txt)
+          (cd dist/package && zip -9 -q ../MANIEMENTS_V5_PRODUCT_V0.zip \
+            maniements_v5_p1_v0.sqlite manifest.json query.py server.py README.md SHA256SUMS.txt)
+          {
+            echo "## MANIEMENTS V5 Product V0"
+            echo
+            python3 - <<'PY'
+          import json
+          m=json.load(open("dist/package/manifest.json"))
+          print(f"- exact_orbits: **{m['exact_orbits']:,}**")
+          print(f"- exact_ordered_rows: **{m['exact_ordered_rows']:,}**")
+          print(f"- deferred_orbits: **{m['deferred_orbits']:,}**")
+          print(f"- completed_targets: **{m['completed_targets']:,}**")
+          print(f"- SQLite SHA-256: `{m['sqlite_sha256']}`")
+          PY
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload functional V0
+        uses: actions/upload-artifact@v4
+        with:
+          name: MANIEMENTS_V5_PRODUCT_V0
+          path: dist/MANIEMENTS_V5_PRODUCT_V0.zip
+          if-no-files-found: error
+          retention-days: 30
