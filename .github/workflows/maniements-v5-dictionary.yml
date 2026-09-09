@@ -1,0 +1,163 @@
+name: MANIEMENTS V5 — Dictionary backfill
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_cap_seconds:
+        description: "Cap par target pour la matérialisation dictionnaire"
+        required: false
+        default: "210"
+  push:
+    branches: [main]
+    paths:
+      - "maniements-v5/dictionary/START"
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: maniements-v5-dictionary-backfill
+  cancel-in-progress: false
+
+jobs:
+  workers:
+    name: Dictionary worker ${{ matrix.worker }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        worker: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Verify frozen V5 runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          ZIP="$RUNNER_TEMP/MANIEMENTS_V3_GENERATION_V5_PASS_ORBIT_RUNTIME_V2.zip"
+          EXPECTED="a0b580531f3c9e8bb00710b9c3e1c183b27cbfe9231c9d584e29a374ba88835d"
+          cat \
+            maniements-v5/runtime/runtime_v2.b64.part-00 \
+            maniements-v5/runtime/runtime_v2.b64.part-01 \
+            maniements-v5/runtime/runtime_v2.b64.part-02a \
+            maniements-v5/runtime/runtime_v2.b64.part-02b \
+            maniements-v5/runtime/runtime_v2.b64.part-03 \
+            maniements-v5/runtime/runtime_v2.b64.part-04 \
+            maniements-v5/runtime/runtime_v2.b64.part-05 \
+            maniements-v5/runtime/runtime_v2.b64.part-06 \
+            | base64 -d > "$ZIP"
+          test "$(sha256sum "$ZIP" | awk '{print $1}')" = "$EXPECTED"
+          mkdir -p "$RUNNER_TEMP/v5-runtime"
+          unzip -q "$ZIP" -d "$RUNNER_TEMP/v5-runtime"
+          (cd "$RUNNER_TEMP/v5-runtime" && sha256sum -c SHA256SUMS.txt)
+
+      - name: Checkout source and durable dictionary branch
+        shell: bash
+        env:
+          WORKER: ${{ matrix.worker }}
+        run: |
+          set -euo pipefail
+          PAD=$(printf '%02d' "$WORKER")
+          SOURCE="maniements-v5-priority-p1-${PAD}"
+          DEST="maniements-v5-dictionary-p1-${PAD}"
+          git fetch origin "$SOURCE:refs/remotes/origin/$SOURCE"
+          git worktree add --detach "$RUNNER_TEMP/p1-source" "refs/remotes/origin/$SOURCE"
+          if git ls-remote --exit-code --heads origin "$DEST" >/dev/null 2>&1; then
+            git fetch origin "$DEST:$DEST"
+            git worktree add "$RUNNER_TEMP/dict-state" "$DEST"
+          else
+            git worktree add -b "$DEST" "$RUNNER_TEMP/dict-state" main
+          fi
+
+      - name: Materialize exact concise dictionary entries
+        shell: bash
+        env:
+          WORKER: ${{ matrix.worker }}
+          TARGET_CAP: ${{ inputs.target_cap_seconds || '210' }}
+        run: |
+          set -euo pipefail
+          python3 maniements-v5/dictionary/materialize_worker.py \
+            --runtime-root "$RUNNER_TEMP/v5-runtime" \
+            --source-root "$RUNNER_TEMP/p1-source" \
+            --state-root "$RUNNER_TEMP/dict-state" \
+            --worker-id "$WORKER" \
+            --budget-seconds 900 \
+            --close-reserve-seconds 90 \
+            --target-cap-seconds "$TARGET_CAP"
+
+      - name: Persist dictionary state
+        shell: bash
+        env:
+          WORKER: ${{ matrix.worker }}
+        run: |
+          set -euo pipefail
+          PAD=$(printf '%02d' "$WORKER")
+          DEST="maniements-v5-dictionary-p1-${PAD}"
+          cd "$RUNNER_TEMP/dict-state"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add dictionary
+          if ! git diff --cached --quiet; then
+            git commit -m "MANIEMENTS V5 dictionary ${PAD}: durable materialization"
+            git push origin "HEAD:${DEST}"
+          fi
+          cat dictionary/state.json >> "$GITHUB_STEP_SUMMARY"
+
+  controller:
+    name: Dictionary status
+    needs: workers
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Collect dictionary states
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/dict-status"
+          git fetch origin '+refs/heads/maniements-v5-dictionary-p1-*:refs/remotes/origin/maniements-v5-dictionary-p1-*' || true
+          for W in $(seq 0 19); do
+            PAD=$(printf '%02d' "$W")
+            REF="refs/remotes/origin/maniements-v5-dictionary-p1-${PAD}"
+            if git cat-file -e "$REF:dictionary/state.json" 2>/dev/null; then
+              git show "$REF:dictionary/state.json" > "$RUNNER_TEMP/dict-status/worker_${PAD}.json"
+            fi
+          done
+          python3 maniements-v5/dictionary/build_status.py \
+            "$RUNNER_TEMP/dict-status" \
+            "$RUNNER_TEMP/status.json" \
+            "$RUNNER_TEMP/STATUS.md"
+          cat "$RUNNER_TEMP/STATUS.md" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Publish dictionary status robustly
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          for ATTEMPT in 1 2 3 4; do
+            git fetch origin main
+            git reset --hard origin/main
+            mkdir -p maniements-v5/dictionary
+            cp "$RUNNER_TEMP/status.json" maniements-v5/dictionary/status.json
+            cp "$RUNNER_TEMP/STATUS.md" maniements-v5/dictionary/STATUS.md
+            git add maniements-v5/dictionary/status.json maniements-v5/dictionary/STATUS.md
+            if git diff --cached --quiet; then exit 0; fi
+            git commit -m "MANIEMENTS V5 dictionary: update status"
+            if git push origin HEAD:main; then exit 0; fi
+            sleep $((ATTEMPT*2))
+          done
+          exit 42
