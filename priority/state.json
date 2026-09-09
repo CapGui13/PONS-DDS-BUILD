@@ -1,64 +1,42 @@
 {
-  "active_orbit": {
-    "max_target": 4,
-    "north": "JT92",
-    "north_count": 4,
-    "rep_state_id": 1091962,
-    "south": "A76",
-    "south_count": 3,
-    "split": "3-4",
-    "targets": [
-      {
-        "policy_sha256": "fdc5f145ddf4bfef8251b54b5650528253283fa219db0f36250e55842ebc9ffc",
-        "probability_fraction": "1/1",
-        "solver_mode": "public_support_dp",
-        "target": 0
-      },
-      {
-        "policy_sha256": "b01df2740091307562d7910c384a32921ac8060154b45627bdbbf151b7f59e7e",
-        "probability_fraction": "1/1",
-        "solver_mode": "public_support_dp",
-        "target": 1
-      }
-    ]
-  },
+  "active_orbit": null,
   "completed_by_split": {
     "1-1": 2,
     "2-10": 3,
-    "2-3": 412,
-    "2-4": 601,
-    "3-3": 570,
-    "3-4": 1554,
+    "2-3": 414,
+    "2-4": 606,
+    "3-3": 579,
+    "3-4": 1586,
     "3-9": 9,
     "4-8": 31,
     "5-7": 31,
     "6-6": 23
   },
-  "completed_orbits": 3236,
-  "completed_ordered_rows": 6472,
-  "completed_targets": 16070,
+  "completed_orbits": 3284,
+  "completed_ordered_rows": 6568,
+  "completed_targets": 16304,
   "deferred_by_split": {
     "2-3": 22,
     "2-4": 212,
-    "3-4": 95
+    "3-4": 98
   },
-  "deferred_orbits": 329,
+  "deferred_orbits": 332,
   "done": false,
   "last_pass": {
-    "completed_orbits": 45,
-    "completed_targets": 218,
-    "deferred_orbits": 2,
-    "elapsed_seconds": 1015.665652,
-    "sequence": 94
+    "completed_orbits": 48,
+    "completed_targets": 234,
+    "deferred_orbits": 3,
+    "elapsed_seconds": 1110.97211,
+    "sequence": 95
   },
-  "next_scan_state_id": 1091963,
+  "next_scan_state_id": 1097272,
   "plan_id": "MANIEMENTS_V5_PRIORITY_P1_COMMON_SPLITS_PLUS_BOUNDARY_V1",
   "plan_random_deal_probability_mass": 0.4611817577950189,
   "plan_total_orbits": 146641,
   "schema": "MANIEMENTS_V5_PRIORITY_WORKER_STATE_V1",
-  "sequence": 95,
+  "sequence": 96,
   "target_cap_seconds": 180.0,
-  "updated_at_utc": "2026-09-09T00:25:48+00:00",
+  "updated_at_utc": "2026-09-09T00:44:21+00:00",
   "worker_count": 20,
   "worker_id": 0
 }
