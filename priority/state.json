@@ -1,64 +1,42 @@
 {
-  "active_orbit": {
-    "max_target": 3,
-    "north": "85",
-    "north_count": 2,
-    "rep_state_id": 1103490,
-    "south": "AJ7",
-    "south_count": 3,
-    "split": "2-3",
-    "targets": [
-      {
-        "policy_sha256": "1f46ff913c9192692c06700be15457c2fd536e553e10d1a8212c47ffc945b072",
-        "probability_fraction": "1/1",
-        "solver_mode": "public_support_dp",
-        "target": 0
-      },
-      {
-        "policy_sha256": "89ff13c9eecb16552751cf36eaeb3c2c04c7ff5ab5f81558afbee60f72cabbca",
-        "probability_fraction": "1/1",
-        "solver_mode": "public_support_dp",
-        "target": 1
-      }
-    ]
-  },
+  "active_orbit": null,
   "completed_by_split": {
     "0-1": 2,
     "1-1": 4,
-    "2-3": 445,
-    "2-4": 642,
-    "3-3": 562,
-    "3-4": 1573,
+    "2-3": 456,
+    "2-4": 652,
+    "3-3": 569,
+    "3-4": 1590,
     "3-9": 13,
     "4-8": 25,
     "5-7": 40,
     "6-6": 26
   },
-  "completed_orbits": 3332,
-  "completed_ordered_rows": 6664,
-  "completed_targets": 16530,
+  "completed_orbits": 3377,
+  "completed_ordered_rows": 6754,
+  "completed_targets": 16741,
   "deferred_by_split": {
     "2-3": 38,
-    "2-4": 213,
+    "2-4": 216,
     "3-4": 87
   },
-  "deferred_orbits": 338,
+  "deferred_orbits": 341,
   "done": false,
   "last_pass": {
-    "completed_orbits": 42,
-    "completed_targets": 203,
+    "completed_orbits": 45,
+    "completed_targets": 211,
     "deferred_orbits": 3,
-    "elapsed_seconds": 1015.571171,
-    "sequence": 94
+    "elapsed_seconds": 1065.693224,
+    "sequence": 95
   },
-  "next_scan_state_id": 1103491,
+  "next_scan_state_id": 1106797,
   "plan_id": "MANIEMENTS_V5_PRIORITY_P1_COMMON_SPLITS_PLUS_BOUNDARY_V1",
   "plan_random_deal_probability_mass": 0.4611817577950189,
   "plan_total_orbits": 146641,
   "schema": "MANIEMENTS_V5_PRIORITY_WORKER_STATE_V1",
-  "sequence": 95,
+  "sequence": 96,
   "target_cap_seconds": 180.0,
-  "updated_at_utc": "2026-09-09T00:27:36+00:00",
+  "updated_at_utc": "2026-09-09T00:45:24+00:00",
   "worker_count": 20,
   "worker_id": 4
 }
