@@ -35,7 +35,8 @@ jobs:
     timeout-minutes: 350
     strategy:
       fail-fast: false
-      max-parallel: 19
+      # 18 P1 + 1 dictionary = 19; one hosted-runner slot remains free for user updates.
+      max-parallel: 18
       matrix:
         worker: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
     steps:
