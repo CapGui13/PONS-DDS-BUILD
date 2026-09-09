@@ -20,7 +20,7 @@ permissions:
 
 concurrency:
   group: maniements-v5-dictionary-backfill
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   workers:
