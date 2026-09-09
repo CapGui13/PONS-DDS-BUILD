@@ -2,3 +2,4 @@ MANIEMENTS V5 dictionary backfill start
 created: 2026-09-10
 mode: exact concise French dictionary materialization
 source: durable P1 exact rows
+continuation_workflow: enabled
