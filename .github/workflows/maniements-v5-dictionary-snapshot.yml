@@ -1,0 +1,48 @@
+name: MANIEMENTS V5 — Dictionary HTML snapshot
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "maniements-v5/dictionary/SNAPSHOT_START"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Fetch dictionary branches
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin '+refs/heads/maniements-v5-dictionary-p1-*:refs/remotes/origin/maniements-v5-dictionary-p1-*' || true
+
+      - name: Build autonomous French dictionary HTML
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          python3 maniements-v5/dictionary/build_html.py \
+            --repo . \
+            --output dist/MANIEMENTS_V5_DICTIONNAIRE.html
+          sha256sum dist/MANIEMENTS_V5_DICTIONNAIRE.html > dist/SHA256SUMS.txt
+
+      - name: Upload dictionary HTML
+        uses: actions/upload-artifact@v4
+        with:
+          name: MANIEMENTS_V5_DICTIONNAIRE
+          path: |
+            dist/MANIEMENTS_V5_DICTIONNAIRE.html
+            dist/SHA256SUMS.txt
+          if-no-files-found: error
+          retention-days: 30
