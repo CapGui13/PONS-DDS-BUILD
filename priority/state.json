@@ -1,65 +1,43 @@
 {
-  "active_orbit": {
-    "max_target": 4,
-    "north": "974",
-    "north_count": 3,
-    "rep_state_id": 1184879,
-    "south": "AQ82",
-    "south_count": 4,
-    "split": "3-4",
-    "targets": [
-      {
-        "policy_sha256": "6067631eea7c796409c3c3494f1f90a9a8e0874ccd42dd3789b65596dcb5b11d",
-        "probability_fraction": "1/1",
-        "solver_mode": "public_support_dp",
-        "target": 0
-      },
-      {
-        "policy_sha256": "76ec207f18edd8e75cf00f970de8f568d58b3bf208937ff2850559ab89f729cf",
-        "probability_fraction": "1/1",
-        "solver_mode": "public_support_dp",
-        "target": 1
-      }
-    ]
-  },
+  "active_orbit": null,
   "completed_by_split": {
     "1-1": 1,
     "2-10": 5,
-    "2-3": 507,
+    "2-3": 509,
     "2-4": 683,
     "3-3": 674,
-    "3-4": 1970,
+    "3-4": 1978,
     "3-9": 6,
     "4-8": 27,
     "5-7": 50,
     "6-6": 31
   },
-  "completed_orbits": 3954,
-  "completed_ordered_rows": 7908,
-  "completed_targets": 19800,
+  "completed_orbits": 3964,
+  "completed_ordered_rows": 7928,
+  "completed_targets": 19856,
   "deferred_by_split": {
     "2-3": 40,
-    "2-4": 298,
+    "2-4": 303,
     "3-3": 11,
     "3-4": 133
   },
-  "deferred_orbits": 482,
+  "deferred_orbits": 487,
   "done": false,
   "last_pass": {
-    "completed_orbits": 9,
-    "completed_targets": 54,
+    "completed_orbits": 10,
+    "completed_targets": 56,
     "deferred_orbits": 5,
-    "elapsed_seconds": 1016.549254,
-    "sequence": 131
+    "elapsed_seconds": 1044.345691,
+    "sequence": 132
   },
-  "next_scan_state_id": 1184880,
+  "next_scan_state_id": 1185851,
   "plan_id": "MANIEMENTS_V5_PRIORITY_P1_COMMON_SPLITS_PLUS_BOUNDARY_V1",
   "plan_random_deal_probability_mass": 0.4611817577950189,
   "plan_total_orbits": 146641,
   "schema": "MANIEMENTS_V5_PRIORITY_WORKER_STATE_V1",
-  "sequence": 132,
+  "sequence": 133,
   "target_cap_seconds": 180.0,
-  "updated_at_utc": "2026-09-09T19:46:37+00:00",
+  "updated_at_utc": "2026-09-09T20:04:02+00:00",
   "worker_count": 20,
   "worker_id": 18
 }
