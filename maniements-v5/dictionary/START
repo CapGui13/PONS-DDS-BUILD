@@ -4,5 +4,5 @@ mode: exact concise French dictionary materialization
 source: durable P1 exact rows
 continuation_workflow: enabled
 extractor: LOCAL_WITNESS_FIRST_DEFENSE_V2
-restart: 2026-09-10T18:00+02:00
-acceleration: 19 parallel dictionary workers; 1 runner reserved
+restart: 2026-09-10T18:45+02:00
+orchestration: max-parallel 1; P1 max-parallel 18; 1 runner reserved
