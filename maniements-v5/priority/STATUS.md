@@ -2,34 +2,34 @@
 
 Objectif : calcul exact ciblé des splits de couleur les plus fréquents `2-3`, `2-4`, `3-3`, `3-4`, plus tout le domaine boundary fermé-forme.
 
-Dernière mise à jour : `2026-09-10T00:09:04+00:00`
+Dernière mise à jour : `2026-09-10T08:21:59+00:00`
 
-**Scanné : 94 507 / 146 641 orbites — 64.45%**
-Exactement calculées : **85 112** — différées car target > cap : **9 395**
-Couverture probabiliste exacte déjà capturée (modèle de donne aléatoire) : **33.334%**
+**Scanné : 113 958 / 146 641 orbites — 77.71%**
+Exactement calculées : **103 859** — différées car target > cap : **10 099**
+Couverture probabiliste exacte déjà capturée (modèle de donne aléatoire) : **37.494%**
 Couverture maximale de P1 si aucun différé : **46.118%**
 
 | Worker | État | Exactes | Différées | Targets | Cursor | Active |
 |---:|:---|---:|---:|---:|---:|---:|
-| 00 | RUNNING | 4481 | 464 | 22614 | 1260449 | — |
-| 01 | RUNNING | 4299 | 469 | 21635 | 1227043 | — |
-| 02 | RUNNING | 4146 | 481 | 20852 | 1205138 | — |
-| 03 | RUNNING | 4457 | 469 | 22564 | 1254050 | 1254049 |
-| 04 | RUNNING | 4284 | 481 | 21752 | 1241590 | — |
-| 05 | RUNNING | 3925 | 469 | 19779 | 1195003 | — |
-| 06 | RUNNING | 4141 | 484 | 20856 | 1226945 | 1226944 |
-| 07 | RUNNING | 4044 | 475 | 20247 | 1206499 | — |
-| 08 | RUNNING | 4289 | 456 | 21741 | 1244415 | — |
-| 09 | RUNNING | 4106 | 457 | 20633 | 1203358 | 1203357 |
-| 10 | RUNNING | 4370 | 445 | 22047 | 1248856 | — |
-| 11 | RUNNING | 4039 | 469 | 20358 | 1213084 | 1213083 |
-| 12 | RUNNING | 4159 | 488 | 21006 | 1207417 | — |
-| 13 | RUNNING | 4176 | 484 | 21242 | 1241520 | — |
-| 14 | RUNNING | 4478 | 453 | 22694 | 1259747 | — |
-| 15 | RUNNING | 4136 | 487 | 20830 | 1202239 | 1202238 |
-| 16 | RUNNING | 4627 | 469 | 23548 | 1283827 | — |
-| 17 | RUNNING | 4444 | 459 | 22461 | 1263871 | 1263870 |
-| 18 | RUNNING | 3964 | 487 | 19856 | 1185851 | — |
-| 19 | RUNNING | 4547 | 449 | 22979 | 1265590 | — |
+| 00 | RUNNING | 5631 | 497 | 30557 | 1419771 | 1419770 |
+| 01 | RUNNING | 4934 | 511 | 25127 | 1319515 | 1319514 |
+| 02 | RUNNING | 4675 | 523 | 23827 | 1283123 | — |
+| 03 | RUNNING | 5685 | 495 | 30894 | 1419673 | 1419672 |
+| 04 | RUNNING | 5266 | 510 | 27805 | 1368343 | — |
+| 05 | RUNNING | 4414 | 507 | 22454 | 1265320 | — |
+| 06 | RUNNING | 4833 | 521 | 25000 | 1331929 | 1331928 |
+| 07 | RUNNING | 4913 | 510 | 25501 | 1339230 | 1339229 |
+| 08 | RUNNING | 5185 | 484 | 27388 | 1368352 | — |
+| 09 | RUNNING | 4584 | 505 | 23306 | 1283045 | — |
+| 10 | RUNNING | 5768 | 482 | 31035 | 1439057 | — |
+| 11 | RUNNING | 5399 | 494 | 28918 | 1399034 | — |
+| 12 | RUNNING | 4897 | 521 | 25128 | 1318822 | — |
+| 13 | RUNNING | 4701 | 522 | 24081 | 1312501 | 1312500 |
+| 14 | RUNNING | 5871 | 489 | 31935 | 1438454 | — |
+| 15 | RUNNING | 4816 | 535 | 24703 | 1314448 | — |
+| 16 | RUNNING | 6029 | 489 | 32732 | 1477453 | 1477452 |
+| 17 | RUNNING | 5729 | 494 | 31260 | 1426348 | — |
+| 18 | RUNNING | 4533 | 520 | 22895 | 1264835 | 1264834 |
+| 19 | RUNNING | 5996 | 490 | 32532 | 1477939 | 1477938 |
 
 Aucune valeur approximative n’est enregistrée : une orbite est soit calculée exactement, soit différée pour une passe spécialisée plus longue.
