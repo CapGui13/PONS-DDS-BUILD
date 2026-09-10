@@ -1,11 +1,11 @@
 {
   "caught_up_workers": 0,
   "deferred_targets": 0,
-  "materialized_targets": 3231,
+  "materialized_targets": 4393,
   "plan_id": "MANIEMENTS_V5_PRIORITY_P1_COMMON_SPLITS_PLUS_BOUNDARY_V1",
   "schema": "MANIEMENTS_V5_DICTIONARY_STATUS_V1",
   "source_done_workers": 0,
-  "updated_at_utc": "2026-09-10T03:16:18+00:00",
+  "updated_at_utc": "2026-09-10T04:51:06+00:00",
   "workers": [
     {
       "active_state_id": null,
@@ -14,20 +14,20 @@
       "extractor": "LOCAL_WITNESS_FIRST_DEFENSE_V2",
       "last_pass": {
         "deferred_targets": 0,
-        "elapsed_seconds": 595.419364,
+        "elapsed_seconds": 596.447689,
         "extractor": "LOCAL_WITNESS_FIRST_DEFENSE_V2",
-        "materialized_targets": 161,
-        "sequence": 0
+        "materialized_targets": 229,
+        "sequence": 1
       },
-      "materialized_targets": 161,
-      "next_source_state_id": 47202,
+      "materialized_targets": 390,
+      "next_source_state_id": 121684,
       "next_target": 1,
       "plan_id": "MANIEMENTS_V5_PRIORITY_P1_COMMON_SPLITS_PLUS_BOUNDARY_V1",
       "schema": "MANIEMENTS_V5_DICTIONARY_WORKER_STATE_V1",
-      "sequence": 1,
+      "sequence": 2,
       "source_done": false,
       "target_cap_seconds": 210.0,
-      "updated_at_utc": "2026-09-10T00:03:32+00:00",
+      "updated_at_utc": "2026-09-10T03:26:27+00:00",
       "worker_id": 0
     },
     {
@@ -37,20 +37,20 @@
       "extractor": "LOCAL_WITNESS_FIRST_DEFENSE_V2",
       "last_pass": {
         "deferred_targets": 0,
-        "elapsed_seconds": 596.49237,
+        "elapsed_seconds": 595.898053,
         "extractor": "LOCAL_WITNESS_FIRST_DEFENSE_V2",
-        "materialized_targets": 159,
-        "sequence": 0
+        "materialized_targets": 127,
+        "sequence": 1
       },
-      "materialized_targets": 159,
-      "next_source_state_id": 45721,
+      "materialized_targets": 286,
+      "next_source_state_id": 55021,
       "next_target": 1,
       "plan_id": "MANIEMENTS_V5_PRIORITY_P1_COMMON_SPLITS_PLUS_BOUNDARY_V1",
       "schema": "MANIEMENTS_V5_DICTIONARY_WORKER_STATE_V1",
-      "sequence": 1,
+      "sequence": 2,
       "source_done": false,
       "target_cap_seconds": 210.0,
-      "updated_at_utc": "2026-09-10T00:13:40+00:00",
+      "updated_at_utc": "2026-09-10T03:36:33+00:00",
       "worker_id": 1
     },
     {
@@ -60,20 +60,20 @@
       "extractor": "LOCAL_WITNESS_FIRST_DEFENSE_V2",
       "last_pass": {
         "deferred_targets": 0,
-        "elapsed_seconds": 595.12612,
+        "elapsed_seconds": 596.901172,
         "extractor": "LOCAL_WITNESS_FIRST_DEFENSE_V2",
-        "materialized_targets": 166,
-        "sequence": 0
+        "materialized_targets": 113,
+        "sequence": 1
       },
-      "materialized_targets": 166,
-      "next_source_state_id": 46193,
+      "materialized_targets": 279,
+      "next_source_state_id": 55624,
       "next_target": 1,
       "plan_id": "MANIEMENTS_V5_PRIORITY_P1_COMMON_SPLITS_PLUS_BOUNDARY_V1",
       "schema": "MANIEMENTS_V5_DICTIONARY_WORKER_STATE_V1",
-      "sequence": 1,
+      "sequence": 2,
       "source_done": false,
       "target_cap_seconds": 210.0,
-      "updated_at_utc": "2026-09-10T00:23:45+00:00",
+      "updated_at_utc": "2026-09-10T03:46:40+00:00",
       "worker_id": 2
     },
     {
@@ -83,20 +83,20 @@
       "extractor": "LOCAL_WITNESS_FIRST_DEFENSE_V2",
       "last_pass": {
         "deferred_targets": 0,
-        "elapsed_seconds": 598.520074,
+        "elapsed_seconds": 595.257909,
         "extractor": "LOCAL_WITNESS_FIRST_DEFENSE_V2",
-        "materialized_targets": 155,
-        "sequence": 0
+        "materialized_targets": 110,
+        "sequence": 1
       },
-      "materialized_targets": 155,
-      "next_source_state_id": 46314,
+      "materialized_targets": 265,
+      "next_source_state_id": 56147,
       "next_target": 1,
       "plan_id": "MANIEMENTS_V5_PRIORITY_P1_COMMON_SPLITS_PLUS_BOUNDARY_V1",
       "schema": "MANIEMENTS_V5_DICTIONARY_WORKER_STATE_V1",
-      "sequence": 1,
+      "sequence": 2,
       "source_done": false,
       "target_cap_seconds": 210.0,
-      "updated_at_utc": "2026-09-10T00:33:52+00:00",
+      "updated_at_utc": "2026-09-10T03:56:48+00:00",
       "worker_id": 3
     },
     {
@@ -106,20 +106,20 @@
       "extractor": "LOCAL_WITNESS_FIRST_DEFENSE_V2",
       "last_pass": {
         "deferred_targets": 0,
-        "elapsed_seconds": 598.222352,
+        "elapsed_seconds": 596.809242,
         "extractor": "LOCAL_WITNESS_FIRST_DEFENSE_V2",
-        "materialized_targets": 147,
-        "sequence": 0
+        "materialized_targets": 112,
+        "sequence": 1
       },
-      "materialized_targets": 147,
-      "next_source_state_id": 44978,
+      "materialized_targets": 259,
+      "next_source_state_id": 53417,
       "next_target": 1,
       "plan_id": "MANIEMENTS_V5_PRIORITY_P1_COMMON_SPLITS_PLUS_BOUNDARY_V1",
       "schema": "MANIEMENTS_V5_DICTIONARY_WORKER_STATE_V1",
-      "sequence": 1,
+      "sequence": 2,
       "source_done": false,
       "target_cap_seconds": 210.0,
-      "updated_at_utc": "2026-09-10T00:44:01+00:00",
+      "updated_at_utc": "2026-09-10T04:07:01+00:00",
       "worker_id": 4
     },
     {
@@ -129,20 +129,20 @@
       "extractor": "LOCAL_WITNESS_FIRST_DEFENSE_V2",
       "last_pass": {
         "deferred_targets": 0,
-        "elapsed_seconds": 597.301601,
+        "elapsed_seconds": 596.017316,
         "extractor": "LOCAL_WITNESS_FIRST_DEFENSE_V2",
-        "materialized_targets": 167,
-        "sequence": 0
+        "materialized_targets": 114,
+        "sequence": 1
       },
-      "materialized_targets": 167,
-      "next_source_state_id": 47310,
+      "materialized_targets": 281,
+      "next_source_state_id": 58405,
       "next_target": 1,
       "plan_id": "MANIEMENTS_V5_PRIORITY_P1_COMMON_SPLITS_PLUS_BOUNDARY_V1",
       "schema": "MANIEMENTS_V5_DICTIONARY_WORKER_STATE_V1",
-      "sequence": 1,
+      "sequence": 2,
       "source_done": false,
       "target_cap_seconds": 210.0,
-      "updated_at_utc": "2026-09-10T00:54:10+00:00",
+      "updated_at_utc": "2026-09-10T04:17:09+00:00",
       "worker_id": 5
     },
     {
@@ -152,20 +152,20 @@
       "extractor": "LOCAL_WITNESS_FIRST_DEFENSE_V2",
       "last_pass": {
         "deferred_targets": 0,
-        "elapsed_seconds": 596.670036,
+        "elapsed_seconds": 602.385187,
         "extractor": "LOCAL_WITNESS_FIRST_DEFENSE_V2",
-        "materialized_targets": 155,
-        "sequence": 0
+        "materialized_targets": 99,
+        "sequence": 1
       },
-      "materialized_targets": 155,
-      "next_source_state_id": 46634,
+      "materialized_targets": 254,
+      "next_source_state_id": 55336,
       "next_target": 1,
       "plan_id": "MANIEMENTS_V5_PRIORITY_P1_COMMON_SPLITS_PLUS_BOUNDARY_V1",
       "schema": "MANIEMENTS_V5_DICTIONARY_WORKER_STATE_V1",
-      "sequence": 1,
+      "sequence": 2,
       "source_done": false,
       "target_cap_seconds": 210.0,
-      "updated_at_utc": "2026-09-10T01:04:17+00:00",
+      "updated_at_utc": "2026-09-10T04:27:23+00:00",
       "worker_id": 6
     },
     {
@@ -175,20 +175,20 @@
       "extractor": "LOCAL_WITNESS_FIRST_DEFENSE_V2",
       "last_pass": {
         "deferred_targets": 0,
-        "elapsed_seconds": 598.935704,
+        "elapsed_seconds": 617.79702,
         "extractor": "LOCAL_WITNESS_FIRST_DEFENSE_V2",
-        "materialized_targets": 147,
-        "sequence": 0
+        "materialized_targets": 117,
+        "sequence": 1
       },
-      "materialized_targets": 147,
-      "next_source_state_id": 45248,
+      "materialized_targets": 264,
+      "next_source_state_id": 55096,
       "next_target": 1,
       "plan_id": "MANIEMENTS_V5_PRIORITY_P1_COMMON_SPLITS_PLUS_BOUNDARY_V1",
       "schema": "MANIEMENTS_V5_DICTIONARY_WORKER_STATE_V1",
-      "sequence": 1,
+      "sequence": 2,
       "source_done": false,
       "target_cap_seconds": 210.0,
-      "updated_at_utc": "2026-09-10T01:14:25+00:00",
+      "updated_at_utc": "2026-09-10T04:37:51+00:00",
       "worker_id": 7
     },
     {
@@ -198,20 +198,20 @@
       "extractor": "LOCAL_WITNESS_FIRST_DEFENSE_V2",
       "last_pass": {
         "deferred_targets": 0,
-        "elapsed_seconds": 595.04308,
+        "elapsed_seconds": 597.288442,
         "extractor": "LOCAL_WITNESS_FIRST_DEFENSE_V2",
-        "materialized_targets": 181,
-        "sequence": 0
+        "materialized_targets": 141,
+        "sequence": 1
       },
-      "materialized_targets": 181,
-      "next_source_state_id": 49333,
+      "materialized_targets": 322,
+      "next_source_state_id": 120101,
       "next_target": 1,
       "plan_id": "MANIEMENTS_V5_PRIORITY_P1_COMMON_SPLITS_PLUS_BOUNDARY_V1",
       "schema": "MANIEMENTS_V5_DICTIONARY_WORKER_STATE_V1",
-      "sequence": 1,
+      "sequence": 2,
       "source_done": false,
       "target_cap_seconds": 210.0,
-      "updated_at_utc": "2026-09-10T01:24:32+00:00",
+      "updated_at_utc": "2026-09-10T04:47:57+00:00",
       "worker_id": 8
     },
     {

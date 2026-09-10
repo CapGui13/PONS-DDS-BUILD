@@ -1,24 +1,24 @@
 # MANIEMENTS V5 — Dictionary materialization
 
-Updated: `2026-09-10T03:16:18+00:00`
+Updated: `2026-09-10T04:51:06+00:00`
 
 - workers seen: **20/20**
-- materialized targets: **3,231**
+- materialized targets: **4,393**
 - deferred targets: **0**
 - caught-up workers: **0/20**
 - source-done workers: **0/20**
 
 | Worker | Materialized | Deferred | Next state | Active | Caught up | Source done |
 |---:|---:|---:|---:|---:|:---:|:---:|
-| 00 | 161 | 0 | 47,202 |  | no | no |
-| 01 | 159 | 0 | 45,721 |  | no | no |
-| 02 | 166 | 0 | 46,193 |  | no | no |
-| 03 | 155 | 0 | 46,314 |  | no | no |
-| 04 | 147 | 0 | 44,978 |  | no | no |
-| 05 | 167 | 0 | 47,310 |  | no | no |
-| 06 | 155 | 0 | 46,634 |  | no | no |
-| 07 | 147 | 0 | 45,248 |  | no | no |
-| 08 | 181 | 0 | 49,333 |  | no | no |
+| 00 | 390 | 0 | 121,684 |  | no | no |
+| 01 | 286 | 0 | 55,021 |  | no | no |
+| 02 | 279 | 0 | 55,624 |  | no | no |
+| 03 | 265 | 0 | 56,147 |  | no | no |
+| 04 | 259 | 0 | 53,417 |  | no | no |
+| 05 | 281 | 0 | 58,405 |  | no | no |
+| 06 | 254 | 0 | 55,336 |  | no | no |
+| 07 | 264 | 0 | 55,096 |  | no | no |
+| 08 | 322 | 0 | 120,101 |  | no | no |
 | 09 | 149 | 0 | 44,975 |  | no | no |
 | 10 | 152 | 0 | 46,689 |  | no | no |
 | 11 | 149 | 0 | 45,318 |  | no | no |
