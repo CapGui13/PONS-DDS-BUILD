@@ -29,8 +29,8 @@ jobs:
     timeout-minutes: 25
     strategy:
       fail-fast: false
-      # 18 P1 + 1 dictionary = 19; one hosted-runner slot remains free for user updates.
-      max-parallel: 1
+      # P1 source computation is complete: use 19 dictionary runners and keep 1 slot free.
+      max-parallel: 19
       matrix:
         worker: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
     steps:
@@ -91,8 +91,8 @@ jobs:
             --source-root "$RUNNER_TEMP/p1-source" \
             --state-root "$RUNNER_TEMP/dict-state" \
             --worker-id "$WORKER" \
-            --budget-seconds 900 \
-            --close-reserve-seconds 90 \
+            --budget-seconds 1320 \
+            --close-reserve-seconds 120 \
             --target-cap-seconds "$TARGET_CAP"
 
       - name: Persist dictionary state
