@@ -84,7 +84,7 @@ jobs:
           TARGET_CAP: ${{ inputs.target_cap_seconds || '210' }}
         run: |
           set -euo pipefail
-          python3 maniements-v5/dictionary/materialize_worker_v3.py \
+          python3 maniements-v5/dictionary/materialize_worker_v31.py \
             --runtime-root "$RUNNER_TEMP/v5-runtime" \
             --source-root "$RUNNER_TEMP/p1-source" \
             --state-root "$RUNNER_TEMP/dict-v3-state" \
@@ -150,10 +150,11 @@ jobs:
           python3 - <<'PY'
           import glob,json,os
           files=glob.glob(os.path.join(os.environ['RUNNER_TEMP'],'dict-v3-status','worker_*.json'))
+          allowed={'NATIVE_PUBLIC_POLICY_COMPRESSED_V3','NATIVE_PUBLIC_POLICY_COMPRESSED_V3_SEMANTIC_V1'}
           for p in files:
               d=json.load(open(p,encoding='utf-8'))
               assert d['schema']=='MANIEMENTS_V5_DICTIONARY_WORKER_STATE_V2', (p,d.get('schema'))
-              assert d['extractor']=='NATIVE_PUBLIC_POLICY_COMPRESSED_V3', (p,d.get('extractor'))
+              assert d['extractor'] in allowed, (p,d.get('extractor'))
           print('validated V3 workers:',len(files))
           PY
 
