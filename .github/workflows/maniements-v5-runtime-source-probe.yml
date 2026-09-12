@@ -1,0 +1,49 @@
+name: MANIEMENTS V5 — Frozen runtime source probe
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "maniements-v5/dictionary/V3_ENGINE_PROBE_START"
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Reconstruct frozen runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          ZIP="$RUNNER_TEMP/runtime-v2.zip"
+          EXPECTED="a0b580531f3c9e8bb00710b9c3e1c183b27cbfe9231c9d584e29a374ba88835d"
+          cat \
+            maniements-v5/runtime/runtime_v2.b64.part-00 \
+            maniements-v5/runtime/runtime_v2.b64.part-01 \
+            maniements-v5/runtime/runtime_v2.b64.part-02a \
+            maniements-v5/runtime/runtime_v2.b64.part-02b \
+            maniements-v5/runtime/runtime_v2.b64.part-03 \
+            maniements-v5/runtime/runtime_v2.b64.part-04 \
+            maniements-v5/runtime/runtime_v2.b64.part-05 \
+            maniements-v5/runtime/runtime_v2.b64.part-06 \
+            | base64 -d > "$ZIP"
+          test "$(sha256sum "$ZIP" | awk '{print $1}')" = "$EXPECTED"
+          mkdir -p "$RUNNER_TEMP/runtime"
+          unzip -q "$ZIP" -d "$RUNNER_TEMP/runtime"
+          mkdir -p dist
+          cp "$RUNNER_TEMP/runtime/runtime/integrated_engine.py" dist/integrated_engine.py
+          grep -nE '^ *def (frontier|close|decl_play|def_play|solve|order)\b|^class ' dist/integrated_engine.py > dist/ENGINE_INDEX.txt || true
+          cat dist/ENGINE_INDEX.txt >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MANIEMENTS_V5_FROZEN_ENGINE_SOURCE
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 30
