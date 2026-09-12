@@ -1,4 +1,4 @@
-name: MANIEMENTS V5 — Human V5.8 exact layout reasons
+name: MANIEMENTS V5 — Human V5.8.1 exact layout reasons
 on:
   workflow_dispatch:
   push:
@@ -29,21 +29,15 @@ jobs:
           mkdir -p "$RUNNER_TEMP/v5-runtime" && unzip -q "$ZIP" -d "$RUNNER_TEMP/v5-runtime"
           (cd "$RUNNER_TEMP/v5-runtime" && sha256sum -c SHA256SUMS.txt)
       - name: Rebuild exact qualification corpus
-        shell: bash
-        run: |
-          python3 maniements-v5/dictionary/human_semantic_v52.py --runtime-root "$RUNNER_TEMP/v5-runtime" --reference maniements-v5/dictionary/human_reference_cases_v4.json --out-dir v52
+        run: python3 maniements-v5/dictionary/human_semantic_v52.py --runtime-root "$RUNNER_TEMP/v5-runtime" --reference maniements-v5/dictionary/human_reference_cases_v4.json --out-dir v52
       - name: Rebuild exact motif-first strategies
-        shell: bash
-        run: |
-          python3 maniements-v5/dictionary/human_motif_search_v572.py --input v52/HUMAN_V52_NORMALIZED.json --runtime-root "$RUNNER_TEMP/v5-runtime" --out-dir v57
+        run: python3 maniements-v5/dictionary/human_motif_search_v572.py --input v52/HUMAN_V52_NORMALIZED.json --runtime-root "$RUNNER_TEMP/v5-runtime" --out-dir v57
       - name: Mine exact human layout reasons
-        shell: bash
-        run: |
-          python3 maniements-v5/dictionary/human_layout_reason_v58.py --motifs v57/HUMAN_V57_MOTIF_SEARCH.json --runtime-root "$RUNNER_TEMP/v5-runtime" --out-dir dist
+        run: python3 maniements-v5/dictionary/human_layout_reason_v581.py --motifs v57/HUMAN_V57_MOTIF_SEARCH.json --runtime-root "$RUNNER_TEMP/v5-runtime" --out-dir dist
       - run: cat dist/SUMMARY.txt
       - uses: actions/upload-artifact@v4
         with:
-          name: MANIEMENTS_V5_HUMAN_V58_LAYOUT_REASON
+          name: MANIEMENTS_V5_HUMAN_V581_LAYOUT_REASON
           path: dist/*
           if-no-files-found: error
           retention-days: 30
