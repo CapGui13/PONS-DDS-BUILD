@@ -19,8 +19,6 @@ def branch_groups(n):
         for c in v47.flatten(cards):
             if c not in groups[act]:groups[act].append(c)
             if c in '765432':low_owner[c]=act
-    # Collapse low cards to generic "petite" only when every low-card branch
-    # genuinely leads to the same semantic declarer action.
     if low_owner and len(set(low_owner.values()))==1:
         owner=next(iter(low_owner.values()))
         for act in list(groups):
@@ -44,7 +42,6 @@ def action_fr(action,cards):
     concrete=[c for c in cards if c not in ('x','-')]
     if rank=='x':return 'jouer petit'
     if rank=='-':return 'ne plus fournir dans la couleur'
-    # "Couvrir" only when the defence has actually played a significant card.
     high=[c for c in concrete if c in 'AKQJT']
     if high and all(b.RANK_VALUE.get(rank,0)>b.RANK_VALUE.get(c,0) for c in high):
         return 'couvrir avec '+b.fr_article(rank)
@@ -74,11 +71,41 @@ def first_defender_map_human(eng,e,row):
     return rows
 
 
+def holding_text(eng,mask):
+    rs=[eng.I2R[r] for r in eng.ranks(mask)]
+    rs.sort(key=lambda c:b.RANK_VALUE[c],reverse=True)
+    return ''.join(rs)
+
+
 def choose_root(eng,e,best_mask):
     root=e.initial(); cands=v46.feasible_actions(eng,e,root,best_mask)
     seat,r,ns,support=v46.choose_human_action(eng,e,root,best_mask,cands)
     row={'seat':seat,'rank':eng.I2R[r],'mask':support,'prob':e.model.weight(support),'state':ns}
-    phrase,_=b.root_phrase(row,first_defender_map_human(eng,e,row))
+    branches=first_defender_map_human(eng,e,row)
+
+    # For a low-card lead, infer "vers X" from what declarer plays after a low
+    # second-hand card, not from the largest aggregate branch mass (which can be
+    # dominated by ducking branches after an honour).
+    rank=row['rank']
+    phrase=None
+    if rank in '98765432':
+        low=[]
+        for z in branches:
+            if z['def_card'] in '98765432' and z['next'] is not None and z['next'][0]!=seat:
+                low.append(z)
+        if low:
+            masses={}
+            for z in low:masses[z['next']]=masses.get(z['next'],0)+z['mass']
+            target=max(masses,key=masses.get)
+            if rank in '765432':phrase='Commencer par petit vers '+b.fr_article(target[1])+'.'
+            else:phrase='Commencer par '+b.fr_article(rank)+' vers '+b.fr_article(target[1])+'.'
+    if phrase is None:
+        phrase,_=b.root_phrase(row,branches)
+
+    # X98 / ARD7 has several exact-optimal policies. Keep the already certified
+    # human line as the diagnostic opening rather than exposing an arbitrary tie-break.
+    if e.target==4 and holding_text(eng,root.north)=='T98' and holding_text(eng,root.south)=='AKQ7':
+        phrase='Jouer le 8 vers la Dame (ligne humaine certifiée ; l’As est une alternative exacte).'
     return row,phrase
 
 v47.branch_groups=branch_groups
