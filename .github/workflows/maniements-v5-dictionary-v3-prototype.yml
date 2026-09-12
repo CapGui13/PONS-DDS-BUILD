@@ -18,7 +18,7 @@ concurrency:
 
 jobs:
   inspect-v3:
-    name: Inspect exact multi-trick witness for AD2-V963
+    name: Inspect and compile exact multi-trick plan for AD2-V963
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -62,9 +62,23 @@ jobs:
             --runtime-root "$RUNNER_TEMP/v5-runtime" \
             --north AQ2 --south J963 --target 3 \
             > dist/AD2_V963_target3.json
-          cat dist/AD2_V963_target4.json >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Upload prototype inspection
+      - name: Compile conservative bridge-style plans
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 maniements-v5/dictionary/prototype_v3_compile.py \
+            dist/AD2_V963_target4.json \
+            --output dist/AD2_V963_target4_compiled.json
+          python3 maniements-v5/dictionary/prototype_v3_compile.py \
+            dist/AD2_V963_target3.json \
+            --output dist/AD2_V963_target3_compiled.json
+          echo '### Target 4 compiled plan' >> "$GITHUB_STEP_SUMMARY"
+          cat dist/AD2_V963_target4_compiled.json >> "$GITHUB_STEP_SUMMARY"
+          echo '### Target 3 compiled plan' >> "$GITHUB_STEP_SUMMARY"
+          cat dist/AD2_V963_target3_compiled.json >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload prototype inspection and compiled plans
         uses: actions/upload-artifact@v4
         with:
           name: MANIEMENTS_V5_DICTIONARY_V3_PROTOTYPE
