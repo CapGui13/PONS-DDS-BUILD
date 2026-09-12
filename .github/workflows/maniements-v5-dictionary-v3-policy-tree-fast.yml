@@ -1,0 +1,93 @@
+name: MANIEMENTS V5 — Dictionary V3 policy-tree fast diagnostics
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "maniements-v5/dictionary/V3_TREE_START"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: maniements-v5-dictionary-v3-policy-tree-fast
+  cancel-in-progress: false
+
+jobs:
+  policy-tree-fast:
+    name: Export bounded policy trees for fast MEDIUM cases
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Reconstruct and verify frozen V5 runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          ZIP="$RUNNER_TEMP/MANIEMENTS_V3_GENERATION_V5_PASS_ORBIT_RUNTIME_V2.zip"
+          EXPECTED="a0b580531f3c9e8bb00710b9c3e1c183b27cbfe9231c9d584e29a374ba88835d"
+          cat \
+            maniements-v5/runtime/runtime_v2.b64.part-00 \
+            maniements-v5/runtime/runtime_v2.b64.part-01 \
+            maniements-v5/runtime/runtime_v2.b64.part-02a \
+            maniements-v5/runtime/runtime_v2.b64.part-02b \
+            maniements-v5/runtime/runtime_v2.b64.part-03 \
+            maniements-v5/runtime/runtime_v2.b64.part-04 \
+            maniements-v5/runtime/runtime_v2.b64.part-05 \
+            maniements-v5/runtime/runtime_v2.b64.part-06 \
+            | base64 -d > "$ZIP"
+          test "$(sha256sum "$ZIP" | awk '{print $1}')" = "$EXPECTED"
+          mkdir -p "$RUNNER_TEMP/v5-runtime"
+          unzip -q "$ZIP" -d "$RUNNER_TEMP/v5-runtime"
+          (cd "$RUNNER_TEMP/v5-runtime" && sha256sum -c SHA256SUMS.txt)
+
+      - name: Run four fast MEDIUM policy trees
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          cat > "$RUNNER_TEMP/cases.tsv" <<'EOF'
+          AQ2 J963 3 AD2_V963_t3
+          AJ2 Q963 3 AV2_D963_t3
+          AK2 Q963 4 AR2_D963_t4
+          A92 QJ63 3 A92_DV63_t3
+          EOF
+          while read -r NORTH SOUTH TARGET NAME; do
+            echo "=== $NAME : $NORTH / $SOUTH target $TARGET ==="
+            python3 maniements-v5/dictionary/prototype_v3_policy_tree.py \
+              --runtime-root "$RUNNER_TEMP/v5-runtime" \
+              --north "$NORTH" --south "$SOUTH" --target "$TARGET" \
+              --max-nodes 1800 --max-depth 36 \
+              > "dist/${NAME}_tree.json"
+          done < "$RUNNER_TEMP/cases.tsv"
+
+      - name: Summarize trees
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY' > dist/POLICY_TREE_SUMMARY.md
+          import glob,json,os
+          print('# MANIEMENTS V5 — V3 fast policy-tree diagnostics')
+          print()
+          print('| Cas | Proba | Lead | Nodes | DECL | DEF | Branches | Truncated | Depth |')
+          print('|---|---:|---|---:|---:|---:|---:|---:|---:|')
+          for p in sorted(glob.glob('dist/*_tree.json')):
+              d=json.load(open(p,encoding='utf-8'))
+              c=d['case']; s=d['policy_tree_stats']
+              print(f"| {c['north']} / {c['south']} → {c['target']} | {d['probability_fraction']} | {d['root_lead']} | {s['nodes']} | {s['declarer_nodes']} | {s['defender_nodes']} | {s['defender_branches']} | {s['truncated_nodes']} | {s['max_depth_seen']} |")
+          PY
+          cat dist/POLICY_TREE_SUMMARY.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload fast policy trees
+        uses: actions/upload-artifact@v4
+        with:
+          name: MANIEMENTS_V5_DICTIONARY_V3_POLICY_TREE_FAST
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 30
