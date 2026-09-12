@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 import argparse, json, sys
+from collections import deque
 from pathlib import Path
 
 import prototype_v3_inspect as base
@@ -24,71 +25,92 @@ def card_text(eng, r):
     return '-' if not r else eng.I2R[r]
 
 
-def build_policy_tree(eng, e, s, mask, max_nodes=1600, max_depth=36):
+def graph_key(state, support):
+    return (base.state_key(state), support)
+
+
+def build_policy_graph(eng, e, start_state, start_mask, max_nodes=5000, max_depth=10):
+    nodes={}
+    seen={}
+    queue=deque()
     stats={
-        'nodes':0,
+        'unique_nodes':0,
         'declarer_nodes':0,
         'defender_nodes':0,
         'defender_branches':0,
         'terminal_nodes':0,
-        'truncated_nodes':0,
+        'depth_limited_nodes':0,
+        'budget_limited_links':0,
+        'deduplicated_links':0,
         'max_depth_seen':0,
     }
 
-    def rec(state, support, depth):
-        stats['max_depth_seen']=max(stats['max_depth_seen'], depth)
-        if stats['nodes'] >= max_nodes:
-            stats['truncated_nodes'] += 1
-            return {'truncated':'NODE_BUDGET','depth':depth}
-        stats['nodes'] += 1
+    def register(state, support, depth):
+        key=graph_key(state,support)
+        if key in seen:
+            stats['deduplicated_links'] += 1
+            return seen[key]
+        if len(seen) >= max_nodes:
+            stats['budget_limited_links'] += 1
+            return None
+        node_id=len(seen)
+        seen[key]=node_id
+        queue.append((node_id,state,support,depth))
+        stats['unique_nodes']=len(seen)
+        return node_id
 
+    root_id=register(start_state,start_mask,0)
+
+    while queue:
+        node_id,state,support,depth=queue.popleft()
+        stats['max_depth_seen']=max(stats['max_depth_seen'],depth)
+        common={
+            'id':node_id,
+            'depth':depth,
+            'won':state.won,
+            'support_mass':str(e.model.weight(support)),
+            'support_bits':support.bit_count(),
+        }
         term=base.terminal_code(e,state)
         if term:
             stats['terminal_nodes'] += 1
-            return {
-                'role':'TERMINAL',
-                'terminal':term,
-                'won':state.won,
-                'support_mass':str(e.model.weight(support)),
-                'support_bits':support.bit_count(),
-            }
+            nodes[str(node_id)]={**common,'role':'TERMINAL','terminal':term}
+            continue
         if depth >= max_depth:
-            stats['truncated_nodes'] += 1
-            return {
-                'truncated':'DEPTH_LIMIT',
-                'depth':depth,
-                'support_mass':str(e.model.weight(support)),
-                'support_bits':support.bit_count(),
-            }
+            stats['depth_limited_nodes'] += 1
+            nodes[str(node_id)]={**common,'role':'TRUNCATED','reason':'DEPTH_LIMIT'}
+            continue
 
         seat=e.order(state.leader)[state.pos]
         if seat in eng.DECL:
             stats['declarer_nodes'] += 1
             dseat,cands=declarer_candidates(eng,e,state,support)
             if not cands:
-                return {'role':'DECL','seat':seat,'error':'no declarer witness'}
+                nodes[str(node_id)]={**common,'role':'DECL','seat':seat,'error':'no declarer witness'}
+                continue
             r,ns,cm=cands[0]
             alternatives=[]
-            seen=set()
+            action_seen=set()
             for ar,_,acm in cands:
                 txt=card_text(eng,ar)
-                if txt in seen:
+                if txt in action_seen:
                     continue
-                seen.add(txt)
+                action_seen.add(txt)
                 alternatives.append({
                     'card':txt,
                     'support_mass':str(e.model.weight(acm)),
                     'support_bits':acm.bit_count(),
                 })
-            return {
+            child_id=register(ns,cm,depth+1)
+            nodes[str(node_id)]={
+                **common,
                 'role':'DECL',
                 'seat':dseat,
                 'card':card_text(eng,r),
-                'support_mass':str(e.model.weight(support)),
-                'support_bits':support.bit_count(),
                 'equivalent_preserving_actions':alternatives,
-                'next':rec(ns,cm,depth+1),
+                'next_id':child_id,
             }
+            continue
 
         stats['defender_nodes'] += 1
         branches=[]
@@ -100,23 +122,22 @@ def build_policy_tree(eng, e, s, mask, max_nodes=1600, max_depth=36):
             if child is None:
                 continue
             ns,cm=child
+            child_id=register(ns,cm,depth+1)
             stats['defender_branches'] += 1
             branches.append({
                 'card':card_text(eng,r),
                 'compatible_mass':str(e.model.weight(need)),
                 'compatible_bits':need.bit_count(),
-                'next':rec(ns,cm,depth+1),
+                'next_id':child_id,
             })
-        return {
+        nodes[str(node_id)]={
+            **common,
             'role':'DEF',
             'seat':seat,
-            'support_mass':str(e.model.weight(support)),
-            'support_bits':support.bit_count(),
             'branches':branches,
         }
 
-    tree=rec(s,mask,0)
-    return tree,stats
+    return {'root_id':root_id,'nodes':nodes},stats
 
 
 def main():
@@ -125,8 +146,8 @@ def main():
     ap.add_argument('--north',required=True)
     ap.add_argument('--south',required=True)
     ap.add_argument('--target',type=int,required=True)
-    ap.add_argument('--max-nodes',type=int,default=1600)
-    ap.add_argument('--max-depth',type=int,default=36)
+    ap.add_argument('--max-nodes',type=int,default=5000)
+    ap.add_argument('--max-depth',type=int,default=10)
     a=ap.parse_args()
 
     sys.path.insert(0,str(Path(a.runtime_root)/'runtime'))
@@ -137,19 +158,19 @@ def main():
     root=e.initial(); fr=e.frontier(root)
     best=max(fr,key=lambda m:(e.model.weight(m),m))
     seat,rank,after_lead,lead_mask=base.select_root(eng,e,root,best)
-    tree,stats=build_policy_tree(
+    graph,stats=build_policy_graph(
         eng,e,after_lead,lead_mask,
         max_nodes=a.max_nodes,
         max_depth=a.max_depth,
     )
     out={
-        'schema':'MANIEMENTS_V5_DICTIONARY_V3_POLICY_TREE_V1',
+        'schema':'MANIEMENTS_V5_DICTIONARY_V3_POLICY_GRAPH_V2',
         'case':{'north':a.north,'south':a.south,'target':a.target},
         'probability_fraction':solved['probability_fraction'],
         'root_lead':f'{seat}:{rank}',
         'best_mask_bits':best.bit_count(),
-        'policy_tree_stats':stats,
-        'policy_tree_after_lead':tree,
+        'policy_graph_stats':stats,
+        'policy_graph_after_lead':graph,
     }
     print(json.dumps(out,ensure_ascii=False,indent=2,sort_keys=True))
 
