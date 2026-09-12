@@ -1,0 +1,63 @@
+name: MANIEMENTS V5 — Dictionary V3.4 honor-first qualification
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "maniements-v5/dictionary/V34_PRIORITY_TEST_START"
+
+permissions:
+  contents: read
+
+jobs:
+  qualify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Fetch one source and dictionary partition
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin maniements-v5-priority-p1-00:refs/remotes/origin/maniements-v5-priority-p1-00
+          git fetch origin maniements-v5-dictionary-v3-p1-00:refs/remotes/origin/maniements-v5-dictionary-v3-p1-00
+          git worktree add --detach "$RUNNER_TEMP/source" refs/remotes/origin/maniements-v5-priority-p1-00
+          git worktree add --detach "$RUNNER_TEMP/dict" refs/remotes/origin/maniements-v5-dictionary-v3-p1-00
+
+      - name: Validate Python and honor-first queue
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile \
+            maniements-v5/dictionary/materialize_worker_v31.py \
+            maniements-v5/dictionary/materialize_worker_v34_honor_first.py \
+            maniements-v5/dictionary/build_web_v33.py
+          python3 - <<'PY'
+          import sys, os
+          from pathlib import Path
+          sys.path.insert(0,'maniements-v5/dictionary')
+          import materialize_worker_v34_honor_first as h
+          source=Path(os.environ['RUNNER_TEMP'])/'source'
+          root=Path(os.environ['RUNNER_TEMP'])/'dict'
+          fam,done,deferred,total=h.pending_families(source,root)
+          assert fam and total>0
+          tops=[]
+          for sk,items in fam[:20]:
+              r=items[0][0]; p=h.family_priority(r); tops.append((sk,p,len(items)))
+          print('top honor/x families:')
+          for x in tops: print(x)
+          # The queue must put genuine A/K/Q/J holdings ahead of no-honor length-only cases.
+          assert any(sum(c in h.MAJOR for c in items[0][0]['north']+items[0][0]['south'])>=2 for _,items in fam[:5])
+          first_major=sum(c in h.MAJOR for c in fam[0][1][0][0]['north']+fam[0][1][0][0]['south'])
+          assert first_major>=2, first_major
+          # 2–7 collapse to lowercase x, while 8/9/T stay explicit.
+          assert h.skeleton_hand('AQ764')=='AQxxx'
+          assert h.skeleton_hand('AJ9872')=='AJ98xx'
+          assert h.skeleton_hand('T765')=='Txxx'
+          print('fresh targets',total,'done',len(done),'deferred',len(deferred))
+          PY
