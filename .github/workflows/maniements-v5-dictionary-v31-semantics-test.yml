@@ -1,0 +1,71 @@
+name: MANIEMENTS V5 — Dictionary V3.1 semantic qualification
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "maniements-v5/dictionary/V31_SEMANTICS_START"
+
+permissions:
+  contents: read
+
+jobs:
+  qualify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Reconstruct frozen V5 runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          ZIP="$RUNNER_TEMP/runtime.zip"
+          cat \
+            maniements-v5/runtime/runtime_v2.b64.part-00 \
+            maniements-v5/runtime/runtime_v2.b64.part-01 \
+            maniements-v5/runtime/runtime_v2.b64.part-02a \
+            maniements-v5/runtime/runtime_v2.b64.part-02b \
+            maniements-v5/runtime/runtime_v2.b64.part-03 \
+            maniements-v5/runtime/runtime_v2.b64.part-04 \
+            maniements-v5/runtime/runtime_v2.b64.part-05 \
+            maniements-v5/runtime/runtime_v2.b64.part-06 \
+            | base64 -d > "$ZIP"
+          test "$(sha256sum "$ZIP" | awk '{print $1}')" = "a0b580531f3c9e8bb00710b9c3e1c183b27cbfe9231c9d584e29a374ba88835d"
+          mkdir -p "$RUNNER_TEMP/v5-runtime"
+          unzip -q "$ZIP" -d "$RUNNER_TEMP/v5-runtime"
+      - name: Verify semantic simplification
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - "$RUNNER_TEMP/v5-runtime" <<'PY'
+          import sys
+          from pathlib import Path
+          sys.path.insert(0,str(Path(sys.argv[1])/'runtime'))
+          sys.path.insert(0,'maniements-v5/dictionary')
+          import integrated_engine as eng
+          import prototype_v3_semantics as sem
+
+          def analyze(n,s,t):
+              e=eng.Engine2(n,s,t)
+              base=e.solve(include_policy=False)
+              fr=e.frontier(e.initial())
+              best=max(fr,key=lambda m:(e.model.weight(m),m))
+              return base,sem.semantic_success_explanation(eng,e,best,base['probability_fraction'],n,s,t)
+
+          base,x=analyze('764','9532',1)
+          assert base['probability_fraction']=='286/805',base
+          assert x is not None
+          assert x['semantic_kind']=='LENGTH_DISTRIBUTION_ONLY'
+          assert x['winning_splits']==['3–3'],x
+          assert x['first_move_irrelevant'] is True,x
+          assert x['summary_fr']=='On peut faire une levée si les cartes adverses sont réparties 3–3. Quel que soit le maniement adopté.',x
+          print(x['summary_fr'])
+
+          _,y=analyze('AQ2','J963',4)
+          assert y is None,y
+          print('honor-dependent case correctly left to exact policy')
+          PY
