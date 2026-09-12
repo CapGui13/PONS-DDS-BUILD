@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   native-policy-fast:
-    name: Export and compress native V5 policies for fast MEDIUM cases
+    name: Export and compress native V5 policies for all five MEDIUM cases
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -47,22 +47,31 @@ jobs:
           unzip -q "$ZIP" -d "$RUNNER_TEMP/v5-runtime"
           (cd "$RUNNER_TEMP/v5-runtime" && sha256sum -c SHA256SUMS.txt)
 
-      - name: Export and compress four native policies
+      - name: Export and compress five native policies
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p dist
+          # MASK/PROBA are '-' for an ordinary full solve. The KJ2/A963 target-3
+          # row replays the exact success mask certified by qualification run
+          # 34682631911, avoiding the original ~43-minute full-universe solve.
           cat > "$RUNNER_TEMP/cases.tsv" <<'EOF'
-          AQ2 J963 3 AD2_V963_t3
-          AJ2 Q963 3 AV2_D963_t3
-          AK2 Q963 4 AR2_D963_t4
-          A92 QJ63 3 A92_DV63_t3
+          AQ2 J963 3 AD2_V963_t3 - -
+          AJ2 Q963 3 AV2_D963_t3 - -
+          AK2 Q963 4 AR2_D963_t4 - -
+          A92 QJ63 3 A92_DV63_t3 - -
+          KJ2 A963 3 RV2_A963_t3 18441915018640280703 135/161
           EOF
-          while read -r NORTH SOUTH TARGET NAME; do
+          while read -r NORTH SOUTH TARGET NAME MASK PROBA; do
             echo "=== $NAME : $NORTH / $SOUTH target $TARGET ==="
+            EXTRA=()
+            if [ "$MASK" != "-" ]; then
+              EXTRA+=(--winning-mask "$MASK" --expected-probability "$PROBA")
+            fi
             python3 maniements-v5/dictionary/prototype_v3_builtin_policy.py \
               --runtime-root "$RUNNER_TEMP/v5-runtime" \
               --north "$NORTH" --south "$SOUTH" --target "$TARGET" \
+              "${EXTRA[@]}" \
               > "dist/${NAME}_native_policy.json"
             python3 maniements-v5/dictionary/prototype_v3_policy_compress.py \
               "dist/${NAME}_native_policy.json" \
@@ -75,15 +84,17 @@ jobs:
         run: |
           set -euo pipefail
           python3 - <<'PY' > dist/NATIVE_POLICY_SUMMARY.md
-          import glob,json,os
+          import glob,json
           print('# MANIEMENTS V5 — V3 native public-policy diagnostics')
           print()
-          print('| Cas | Proba | Native states | Contexts | Conditional | Leaves | Max depth | Errors |')
-          print('|---|---:|---:|---:|---:|---:|---:|---:|')
+          print('| Cas | Proba | Source | Native states | Contexts | Conditional | Leaves | Max depth | Errors |')
+          print('|---|---:|---|---:|---:|---:|---:|---:|---:|')
           for p in sorted(glob.glob('dist/*_policy_program.json')):
               d=json.load(open(p,encoding='utf-8'))
-              c=d['case']; s=d['program_stats']
-              print(f"| {c['north']} / {c['south']} → {c['target']} | {d['probability_fraction']} | {d['native_policy_states']} | {d['context_count']} | {d['conditional_context_count']} | {s['leaves']} | {s['max_conditional_depth']} | {s['unseparable_contexts']} |")
+              native_path=p.replace('_policy_program.json','_native_policy.json')
+              native=json.load(open(native_path,encoding='utf-8'))
+              c=d['case']; s=d['program_stats']; source=native['policy_source']['mode']
+              print(f"| {c['north']} / {c['south']} → {c['target']} | {d['probability_fraction']} | {source} | {d['native_policy_states']} | {d['context_count']} | {d['conditional_context_count']} | {s['leaves']} | {s['max_conditional_depth']} | {s['unseparable_contexts']} |")
               assert s['unseparable_contexts']==0
           PY
           cat dist/NATIVE_POLICY_SUMMARY.md >> "$GITHUB_STEP_SUMMARY"
