@@ -1,12 +1,12 @@
 # MANIEMENTS V5 — Dictionary materialization
 
-Updated: `2026-09-12T13:34:49+00:00`
+Updated: `2026-09-12T13:53:54+00:00`
 
 - workers seen: **20/20**
-- materialized targets: **36,352**
+- materialized targets: **36,492**
 - deferred targets: **0**
 - caught-up workers: **0/20**
-- source-done workers: **19/20**
+- source-done workers: **20/20**
 
 | Worker | Materialized | Deferred | Next state | Active | Caught up | Source done |
 |---:|---:|---:|---:|---:|:---:|:---:|
@@ -29,4 +29,4 @@ Updated: `2026-09-12T13:34:49+00:00`
 | 16 | 3,273 | 0 | 1 |  | no | yes |
 | 17 | 3,075 | 0 | 1 |  | no | yes |
 | 18 | 979 | 0 | 1 |  | no | yes |
-| 19 | 634 | 0 | 129,766 | 129852 | no | no |
+| 19 | 774 | 0 | 1 |  | no | yes |

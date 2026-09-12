@@ -1,11 +1,11 @@
 {
   "caught_up_workers": 0,
   "deferred_targets": 0,
-  "materialized_targets": 36352,
+  "materialized_targets": 36492,
   "plan_id": "MANIEMENTS_V5_PRIORITY_P1_COMMON_SPLITS_PLUS_BOUNDARY_V1",
   "schema": "MANIEMENTS_V5_DICTIONARY_STATUS_V1",
-  "source_done_workers": 19,
-  "updated_at_utc": "2026-09-12T13:34:49+00:00",
+  "source_done_workers": 20,
+  "updated_at_utc": "2026-09-12T13:53:54+00:00",
   "workers": [
     {
       "active_state_id": null,
@@ -787,26 +787,44 @@
       "worker_id": 18
     },
     {
-      "active_state_id": 129852,
+      "active_state_id": null,
       "caught_up": false,
       "deferred_targets": 0,
       "extractor": "NATIVE_PUBLIC_POLICY_COMPRESSED_V3_SEMANTIC_V1",
       "last_pass": {
         "deferred_targets": 0,
-        "elapsed_seconds": 1042.482509,
+        "elapsed_seconds": 1050.053523,
         "extractor": "NATIVE_PUBLIC_POLICY_COMPRESSED_V3_SEMANTIC_V1",
-        "materialized_targets": 171,
-        "sequence": 2
+        "families_touched": 31,
+        "first_families": [
+          "T9x/KQJ8",
+          "T9x/AKJ8",
+          "T98x/AQJ",
+          "T98/AKQx",
+          "T98/AKJx",
+          "T8x/AKQ9",
+          "QTx/AK98",
+          "QTx/AJ98",
+          "QT98/AKx",
+          "QT98/AJx",
+          "QT8x/KJ9",
+          "QT8x/AK9"
+        ],
+        "fresh_targets_remaining": 22926,
+        "materialized_targets": 140,
+        "priority_mode": "HONOR_FIRST_X_FAMILY_V2_AKQJT",
+        "sequence": 3
       },
-      "materialized_targets": 634,
-      "next_source_state_id": 129766,
-      "next_target": 2,
+      "materialized_targets": 774,
+      "next_source_state_id": 1,
+      "next_target": 1,
       "plan_id": "MANIEMENTS_V5_PRIORITY_P1_COMMON_SPLITS_PLUS_BOUNDARY_V1",
+      "priority_mode": "HONOR_FIRST_X_FAMILY_V2_AKQJT",
       "schema": "MANIEMENTS_V5_DICTIONARY_WORKER_STATE_V2",
-      "sequence": 3,
-      "source_done": false,
+      "sequence": 4,
+      "source_done": true,
       "target_cap_seconds": 210.0,
-      "updated_at_utc": "2026-09-12T12:39:54+00:00",
+      "updated_at_utc": "2026-09-12T13:52:42+00:00",
       "worker_id": 19
     }
   ],
