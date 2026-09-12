@@ -123,8 +123,9 @@ def _bare_higher_honors_promotion(eng,e,best_mask,probability,north,south,target
             return None
 
     # If the hand containing our highest card has enough lower companions, the
-    # human bridge line is simply to preserve that card while forcing the bare
-    # higher cards. We only say this when it is structurally justified.
+    # human bridge line is to preserve that card while forcing the bare higher
+    # cards. The exact engine assumes outside entries between rounds, so the text
+    # must say so rather than silently implying suit-only communication.
     hero_hand=north if hero in north else south
     lower_companions=[r for r in hero_hand if RANKS.index(r)>hidx]
 
@@ -137,8 +138,9 @@ def _bare_higher_honors_promotion(eng,e,best_mask,probability,north,south,target
         hero_text=RANK_FR[hero]
         n=len(higher)
         times={1:'une fois',2:'deux fois',3:'trois fois',4:'quatre fois',5:'cinq fois'}.get(n,f'{n} fois')
-        summary+=(f' Jouer petit {times} en conservant {hero_text} : '
-                  f'{higher_text} sont forcés, puis {hero_text} est maître.')
+        summary+=(f" Ne pas jouer {hero_text} avant d'avoir forcé {higher_text}. "
+                  f"Avec les communications extérieures nécessaires, jouer petit {times} de la main qui contient {hero_text}, "
+                  f"en revenant dans cette main entre les tours : {higher_text} sont forcés, puis {hero_text} est maître.")
 
     root_probs=_root_action_probabilities(eng,e,e.initial())
     p=Fraction(probability)
