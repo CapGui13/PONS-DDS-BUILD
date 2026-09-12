@@ -1,0 +1,102 @@
+name: MANIEMENTS V5 — Dictionary V3 worker pilot
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "maniements-v5/dictionary/V3_WORKER_PILOT_START"
+
+permissions:
+  contents: read
+
+jobs:
+  pilot:
+    name: V3 dictionary worker 00 pilot
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Reconstruct and verify frozen V5 runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          ZIP="$RUNNER_TEMP/MANIEMENTS_V3_GENERATION_V5_PASS_ORBIT_RUNTIME_V2.zip"
+          EXPECTED="a0b580531f3c9e8bb00710b9c3e1c183b27cbfe9231c9d584e29a374ba88835d"
+          cat \
+            maniements-v5/runtime/runtime_v2.b64.part-00 \
+            maniements-v5/runtime/runtime_v2.b64.part-01 \
+            maniements-v5/runtime/runtime_v2.b64.part-02a \
+            maniements-v5/runtime/runtime_v2.b64.part-02b \
+            maniements-v5/runtime/runtime_v2.b64.part-03 \
+            maniements-v5/runtime/runtime_v2.b64.part-04 \
+            maniements-v5/runtime/runtime_v2.b64.part-05 \
+            maniements-v5/runtime/runtime_v2.b64.part-06 \
+            | base64 -d > "$ZIP"
+          test "$(sha256sum "$ZIP" | awk '{print $1}')" = "$EXPECTED"
+          mkdir -p "$RUNNER_TEMP/v5-runtime"
+          unzip -q "$ZIP" -d "$RUNNER_TEMP/v5-runtime"
+          (cd "$RUNNER_TEMP/v5-runtime" && sha256sum -c SHA256SUMS.txt)
+
+      - name: Checkout priority source worker 00
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin maniements-v5-priority-p1-00:refs/remotes/origin/maniements-v5-priority-p1-00
+          git worktree add --detach "$RUNNER_TEMP/p1-source" refs/remotes/origin/maniements-v5-priority-p1-00
+          mkdir -p "$RUNNER_TEMP/v3-state"
+
+      - name: Run V3 materializer pilot
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 maniements-v5/dictionary/materialize_worker_v3.py \
+            --runtime-root "$RUNNER_TEMP/v5-runtime" \
+            --source-root "$RUNNER_TEMP/p1-source" \
+            --state-root "$RUNNER_TEMP/v3-state" \
+            --worker-id 0 \
+            --budget-seconds 300 \
+            --close-reserve-seconds 30 \
+            --target-cap-seconds 45 | tee "$RUNNER_TEMP/pilot-result.json"
+
+      - name: Validate pilot output
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import glob,json,os
+          chunks=glob.glob(os.path.join(os.environ['RUNNER_TEMP'],'v3-state','dictionary','chunks','*.jsonl'))
+          deferred=glob.glob(os.path.join(os.environ['RUNNER_TEMP'],'v3-state','dictionary','deferred','*.jsonl'))
+          entries=[]
+          for p in chunks:
+              for line in open(p,encoding='utf-8'):
+                  if line.strip(): entries.append(json.loads(line))
+          assert entries, 'pilot produced no V3 entry'
+          max_bytes=0
+          modes={}
+          for e in entries:
+              assert e['schema']=='MANIEMENTS_V5_DICTIONARY_ENTRY_V2'
+              assert e['extractor']=='NATIVE_PUBLIC_POLICY_COMPRESSED_V3'
+              c=e['compact']; assert c['confidence']=='HIGH'
+              if c['coverage']=='EXACT_POLICY_PROGRAM':
+                  pp=c['policy_program']; assert pp['schema']=='MANIEMENTS_V5_DICTIONARY_V3_COMPACT_POLICY_V1'
+                  b=len(json.dumps(pp,separators=(',',':'),ensure_ascii=False).encode())
+                  max_bytes=max(max_bytes,b); assert b < 12000, b
+              modes[c.get('coverage')]=modes.get(c.get('coverage'),0)+1
+          print('entries',len(entries),'deferred_files',len(deferred),'max_compact_policy_bytes',max_bytes,'coverage',modes)
+          PY
+
+      - name: Upload pilot
+        uses: actions/upload-artifact@v4
+        with:
+          name: MANIEMENTS_V5_DICTIONARY_V3_WORKER_PILOT
+          path: |
+            ${{ runner.temp }}/v3-state/dictionary
+            ${{ runner.temp }}/pilot-result.json
+          if-no-files-found: error
+          retention-days: 14
