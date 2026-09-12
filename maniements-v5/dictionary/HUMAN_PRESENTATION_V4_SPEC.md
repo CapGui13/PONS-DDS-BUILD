@@ -1,79 +1,76 @@
-# MANIEMENTS V5 — Human presentation V4
+# MANIEMENTS V5 — Human presentation V4.1
 
-Status: PILOT / review-first. The exact V3 solver remains the oracle; this document replaces the idea that the raw policy automaton is itself a user-facing explanation.
+Status: PILOT / review-first. The exact V3 solver remains the oracle; raw policy states are evidence, never the user-facing explanation.
 
 ## Product contract
 
-A dictionary entry must answer a bridge player's question, in this order:
+A dictionary entry must answer a bridge player's question in this order:
 
-1. **Holding + goal + exact probability.** Example: `X98 / ARD7`, goal `4 levées`, `60,90 %`.
-2. **Standard assumption.** Unless the user constrains entries, assume enough outside entries to return to either hand between rounds of the suit. Say this explicitly whenever the line uses such a return.
-3. **Maniement.** Give an imperative bridge line: `jouer petit vers le Valet`, `tirer l'As puis...`, `faire l'impasse au 10`, etc.
-4. **Observable branches only.** Branch on what a player can actually see: an honour appears, a defender shows out, a card is covered, a finesse wins/loses. Never expose internal policy-state counts.
-5. **Why.** Explain which relevant layouts the recommended line gains or protects against. Prefer comparisons such as `cette ligne gagne aussi contre ...`, `jouer l'As d'abord perd contre ...`.
-6. **Expert details (collapsed by default).** Exact fraction, exhaustive layouts, raw public policy, internal contexts, hashes. These are evidence, not the explanation.
+1. **Holding, vertically displayed + goal + exact probability.** The two partnership hands are shown one above the other, never only as `hand1 / hand2`.
+2. **Maniement.** Give the shortest playable bridge instruction: `petit vers le 9`, `tirer l'As puis petit vers la Dame`, `impasse au Roi en jouant vers la Dame`.
+3. **Why / position sought.** Always say what layout is being targeted or protected against. A line without its bridge reason is incomplete.
+4. **Observable branches only.** Branch only on what a player can see: an honour appears, a defender shows out, an opponent takes, a finesse holds/fails.
+5. **Standard assumptions only when needed.** Outside entries are assumed available in classical isolated-suit analysis, but mention an outside return only if the recommended line actually uses it.
+6. **Expert evidence collapsed.** Exact fraction, exhaustive layouts, public policy and hashes remain available as proof, but never replace the human line.
 
-## Language rules
+## Language rules learned from pilot review
 
-- French notation: A, R, D, V, X (=10); lowercase `x` means an irrelevant small card, only when the whole family has been certified.
-- Prefer `petit` when several low spot cards are genuinely equivalent. Never arbitrarily promote one pip (for example `le 8`) into the pedagogical line merely because the deterministic solver chose it as a tie-break.
-- `Revenir en Nord/Sud` means an outside entry is required. Do not write a sequence that silently assumes impossible suit-only communication.
-- If several first plays are co-optimal but strategically different, say so. Pick one as the reference line only after validating that its continuation is complete.
-- Do not use `politique`, `contexte de décision`, `automate`, `état`, `masque`, or `witness` in the main bridge explanation.
-- A raw exact policy that has not yet been humanized is displayed as **calcul exact disponible — explication en cours de certification**, not as machine-generated prose.
+- French notation: A, R, D, V, X (=10); lowercase `x` is an irrelevant small card only after family certification.
+- Prefer `petit` when low spot cards are equivalent.
+- Avoid Nord/Sud/Est/Ouest when direction is obvious from the holding. Prefer `petit vers le 9`, `si l'adversaire prend`, `si l'adversaire joue fort en deuxième`.
+- Name a finesse by the **missing card being finessed**, not by the card we own: with `ADX32 / 654`, `jouer vers la Dame` is an **impasse au Roi**, not an “impasse à la Dame”.
+- A `Pourquoi ?` must identify concrete winning/losing layouts whenever possible: `Dame sèche placée`, `A-V seconds`, `Dame seconde`, `10 quatrième`, `partage 4–1`, etc.
+- Do not say merely `cette ligne gagne plus de cas` when the relevant cases can be named.
+- Do not expose `politique`, `contexte de décision`, `automate`, `état`, `masque`, or `witness` in the main explanation.
+- If the exact solver is available but the human line is not yet certified, display **calcul exact disponible — maniement humain en cours de certification**.
 
-## Complex lines: interactive play, not giant prose
+## Complex lines
 
-For a non-trivial exact policy, the preferred interface follows the SuitPlay idea:
+The first pilot showed that a full interactive replay of the exact policy is too complex for the normal dictionary view.
 
-- show the recommended first action;
-- let the user step through defender cards/voids;
-- at every declarer turn, show the good card(s) in bridge notation;
-- if a new round requires returning to the other hand, display `Revenir en ... (entrée extérieure nécessaire)`;
-- group defender cards only when they lead to the same declarer decision and the same future policy;
-- keep a short `Pourquoi ?` paragraph next to the interactive line.
-
-The exact public policy is replayed underneath. The human presentation is accepted only if replay against all defender layouts preserves the solver's exact success fraction.
+For a non-trivial policy:
+- first produce a short human procedure with only bridge-relevant branches;
+- explain the layout/probability logic behind each branch;
+- keep any exhaustive interactive replay hidden in expert/debug tooling;
+- certify the human procedure by replaying it against all defender layouts and requiring the exact same success fraction/set as the solver.
 
 ## Certification levels
 
-- `REFERENCE_VERIFIED`: line taken from a trusted bridge reference and checked against the exact solver for the concrete holding/goal.
-- `HUMAN_TREE_EXACT`: generated human decision tree replayed exhaustively with the same exact success set/fraction as the solver.
-- `SEMANTIC_EXACT`: compact success condition proved from the exact winning worlds (e.g. pure distribution condition).
-- `RAW_EXACT_ONLY`: exact probability/policy exists, but no user-facing bridge explanation is certified yet.
+- `REFERENCE_VERIFIED`: published human line rechecked against the cited source and exact solver when available.
+- `HUMAN_TREE_EXACT`: generated human decision procedure exhaustively replayed with the same exact success set/fraction.
+- `SEMANTIC_EXACT`: compact success condition proved directly from exact winning worlds.
+- `RAW_EXACT_ONLY`: exact calculation exists but no finished human maniement is certified.
 
-Only the first three may be presented as a finished `maniement`.
+Only the first three may be presented as a finished maniement.
 
-## Pilot corpus
-
-Before any new large semantic rollout, qualify the presentation on roughly twenty published combinations covering:
-
-- direct and repeated finesses;
-- safety plays;
-- different goals on the same holding;
-- useful intermediate spots (9/8/10);
-- honour appearances and void branches;
-- lines needing outside re-entries;
-- a few exact V3 cases already materialized.
-
-The pilot is a human review gate. Production expansion of exact probabilities can remain useful, but semantic generation must not be scaled until the presentation is approved.
-
-## Reference style surveyed
-
-- Jeroen Warmerdam, SuitPlay Main Help: results separate goals/probabilities from lines of play; the Play pane lets the user step through cards and shows the good declarer cards. https://jeroenwarmerdam.pythonanywhere.com/suitplay/help/MainHelp.html
-- Jeroen Warmerdam, SuitPlay combination help: entries can be constrained; if unrestricted, new rounds may be led from either hand. https://jeroenwarmerdam.pythonanywhere.com/suitplay/help/Combo.html
-- Brian Senior, “Know your suit combinations”: imperative lines followed by the bridge reason and relevant layouts; explicitly assumes all required entries. https://csbnews.org/en/know-your-suit-combinations-by-brian-senior/
-- Jean-Marc Roudinesco examples quoted in bridge literature: numbered/conditional procedures such as `run the jack; if it loses, cash the ace; if it holds or is covered, finesse the nine`.
-- BridgeHands suit-combination tables: holding + goal + percentage + concise practical instruction. https://www.bridgehands.com/S/Suit_Combination_4.htm
-
-## Two regression rules prompted by the V3 pilot
+## Regression rules from user review
 
 ### `54 / V632`, goal 1
 
-The exact success condition is useful, but the sentence `jouer petit trois fois en conservant le Valet` is ambiguous. A valid human explanation must state the entry assumption, for example:
+Correct human statement:
 
-> Une levée n'est possible que si A-R-D sont secs dans la même main adverse. Ne jouez pas le Valet avant d'avoir forcé ces trois honneurs. Avec les communications extérieures nécessaires, jouez trois petites cartes de la main du Valet, en revenant dans cette main entre les tours; le Valet est alors maître.
+> Une levée n'est possible que si A-R-D sont secs dans la même main adverse. Dans cette position, le maniement est indifférent : quel que soit l'ordre dans lequel on joue les petites cartes, le Valet finit maître.
+
+Do **not** invent a need to return repeatedly to the Valet hand.
+
+### `AV32 / R954`, goal 4
+
+Start immediately with a small card toward the Jack; do not cash the King first. The explanation must identify the layouts gained by the immediate finesse rather than merely saying that it “wins extra cases”.
+
+After source recheck, Brian Senior explicitly says both lines already succeed against a doubleton Queen; the extra gain of the immediate finesse includes the **singleton Queen onside**, which corresponds to the 10 being fourth in the other defender's hand.
+
+### `AX42 / 953`, goal 2
+
+Current reviewed wording:
+
+> Commencer par petit vers le 9. Si l'adversaire prend, tirer ensuite l'As. Si un adversaire joue fort en deuxième avant le 9, repartir ensuite du 9 en forçante. S'il prend, jouer ensuite petit vers le 10.
+
+Do not call the last action an “impasse au 10”: the 10 belongs to declarer.
 
 ### `X98 / ARD7`, goal 4
 
-`14 contextes de décision` is forbidden user-facing output. Until the exact policy has been compiled into observable bridge branches, the entry is `RAW_EXACT_ONLY`. The UI may offer an interactive exact-play explorer, but must not pretend the automaton count is an explanation.
+The raw interactive exact replay is not acceptable as the normal presentation. Current hypothesis to certify is a short line based on two probes and the third-round information about the missing Jack. Until exhaustive replay validates the exact branch structure, keep this entry explicitly provisional.
+
+## Reference corpus gate
+
+The 15 Brian Senior examples/quiz solutions are rechecked against the original article. Roudinesco examples are checked against online quotations, and BridgeHands examples against its tables. Any line whose public source has not been directly re-located remains marked as such rather than silently promoted to `REFERENCE_VERIFIED`.
