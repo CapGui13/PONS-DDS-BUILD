@@ -1,6 +1,6 @@
 # MANIEMENTS V5 — Dictionary materialization
 
-Updated: `2026-09-12T13:34:14+00:00`
+Updated: `2026-09-12T13:34:49+00:00`
 
 - workers seen: **20/20**
 - materialized targets: **36,352**
