@@ -1,0 +1,17 @@
+{
+  "caught_up": false,
+  "checked_entries": 84,
+  "last_pass": {
+    "checked": 84,
+    "corrections": 4,
+    "elapsed_seconds": 61.628647
+  },
+  "next_index": 84,
+  "schema": "MANIEMENTS_V5_SEMANTIC_BACKFILL_STATE_V1",
+  "semantic_entries": 4,
+  "sequence": 1,
+  "source_entry_count": 790,
+  "timeouts": 0,
+  "updated_at_utc": "2026-09-12T12:57:57+00:00",
+  "version": "BRIDGE_SEMANTICS_V2"
+}
