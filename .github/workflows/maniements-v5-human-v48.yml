@@ -12,7 +12,7 @@ permissions:
 
 concurrency:
   group: maniements-v5-human-v48
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   novel-review:
@@ -51,7 +51,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python3 maniements-v5/dictionary/human_novel_v48.py \
+          python3 maniements-v5/dictionary/human_novel_v481.py \
             --runtime-root "$RUNNER_TEMP/v5-runtime" \
             --reference maniements-v5/dictionary/human_reference_cases_v4.json \
             --out-dir dist
@@ -59,17 +59,16 @@ jobs:
       - name: Add summary
         shell: bash
         run: |
-          echo '## Human V4.8 — 10 genuinely novel cases' >> "$GITHUB_STEP_SUMMARY"
+          echo '## Human V4.8.1 — 10 genuinely novel cases' >> "$GITHUB_STEP_SUMMARY"
           echo '' >> "$GITHUB_STEP_SUMMARY"
-          echo '- no human reference answer is supplied to the selected cases' >> "$GITHUB_STEP_SUMMARY"
+          echo '- no human reference answer is supplied to these cases' >> "$GITHUB_STEP_SUMMARY"
           echo '- exact frozen runtime is verified before generation' >> "$GITHUB_STEP_SUMMARY"
-          echo '- selection is based on branching/decision complexity from an unseen pool' >> "$GITHUB_STEP_SUMMARY"
           echo '- output is deliberately marked AUTO, NON RELU' >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload review artifact
         uses: actions/upload-artifact@v4
         with:
-          name: MANIEMENTS_V5_HUMAN_V48_10_NOUVEAUX
+          name: MANIEMENTS_V5_HUMAN_V481_10_NOUVEAUX
           path: dist/*
           if-no-files-found: error
           retention-days: 30
