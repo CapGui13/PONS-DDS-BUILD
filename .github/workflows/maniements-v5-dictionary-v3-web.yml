@@ -33,7 +33,7 @@ jobs:
         run: |
           set -euo pipefail
           rm -rf dist/v3-web
-          python3 maniements-v5/dictionary/build_web_v3.py \
+          python3 maniements-v5/dictionary/build_web_v32.py \
             --repo . \
             --output-dir dist/v3-web
           cat dist/v3-web/manifest.json >> "$GITHUB_STEP_SUMMARY"
