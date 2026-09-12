@@ -1,6 +1,6 @@
 {
   "schema": "MANIEMENTS_V5_HUMAN_REFERENCE_CASES_V2",
-  "status": "PILOT_HUMAN_REVIEW_V4_1",
+  "status": "REVIEWED_BASE_V4_7",
   "default_assumption_fr": "Aucune information particulière sur les cartes adverses. Les communications extérieures sont supposées disponibles dans l'étude isolée d'une couleur, mais ne sont mentionnées dans le texte que lorsqu'elles sont réellement nécessaires au maniement.",
   "presentation_rules": {
     "holding_layout": "STACKED",
@@ -37,7 +37,7 @@
       "south_fr": "DX5",
       "target": 3,
       "maniement_fr": "Jouer petit vers le 10. Si l’adversaire intercale le Valet, couvrir de la Dame. Revenir ensuite dans la main du Roi et rejouer petit vers le 10.",
-      "why_fr": "Le deuxième passage vers D-10 permet de gagner une position supplémentaire très importante : As-Valet seconds dans la main placée devant D-10. Commencer par le Roi ne récupère pas cette position.",
+      "why_fr": "Le deuxième passage vers D-10 gagne notamment lorsque A-V sont seconds dans la main placée devant D-10. Commencer par le Roi ne permet pas de profiter de cette position de cartes.",
       "source": "Brian Senior",
       "review_status": "source vérifiée",
       "source_url": "https://csbnews.org/en/know-your-suit-combinations-by-brian-senior/"
@@ -48,7 +48,7 @@
       "south_fr": "654",
       "target": 4,
       "maniement_fr": "Commencer par l’impasse au Roi en jouant petit vers la Dame. Revenir ensuite dans la main 654 et rejouer petit vers le 10, que la Dame ait tenu ou non.",
-      "why_fr": "Pour quatre levées, cet ordre permet notamment de récupérer un Valet sec mal placé. Commencer par l’impasse au Valet avec le 10 perd cette possibilité.",
+      "why_fr": "Cet ordre permet de faire 4 levées dans le cas du Valet sec mal placé. Commencer par l’impasse au Valet avec le 10 perd cette possibilité.",
       "source": "Brian Senior",
       "review_status": "source vérifiée",
       "source_url": "https://csbnews.org/en/know-your-suit-combinations-by-brian-senior/"
@@ -180,7 +180,7 @@
       "south_fr": "953",
       "target": 2,
       "maniement_fr": "Commencer par petit vers le 9. Si l’adversaire prend, tirer ensuite l’As. Si l’adversaire joue fort en deuxième avant le 9, repartir ensuite du 9 en forçante ; s’il prend, jouer ensuite petit vers le 10.",
-      "why_fr": "Le maniement exploite successivement le 9 puis le 10 sans dépenser l’As trop tôt. La suite dépend de l’honneur réellement montré par la défense, donc elle doit être présentée comme une courte procédure conditionnelle.",
+      "why_fr": "Si le 9 est pris, tirer ensuite l’As vise à écraser l’autre honneur adverse lorsqu’il est devenu sec ou second. Si un honneur est joué en deuxième avant le 9, conserver le 9 puis le jouer en forçante garde ensuite la possibilité de jouer petit vers le 10.",
       "source": "ligne moteur / Warmerdam à revalider",
       "review_status": "texte corrigé, source à revalider"
     },
