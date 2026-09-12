@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   policy-tree-fast:
-    name: Export bounded policy trees for fast MEDIUM cases
+    name: Export bounded policy graphs for fast MEDIUM cases
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -47,7 +47,7 @@ jobs:
           unzip -q "$ZIP" -d "$RUNNER_TEMP/v5-runtime"
           (cd "$RUNNER_TEMP/v5-runtime" && sha256sum -c SHA256SUMS.txt)
 
-      - name: Run four fast MEDIUM policy trees
+      - name: Run four fast MEDIUM policy graphs
         shell: bash
         run: |
           set -euo pipefail
@@ -63,31 +63,31 @@ jobs:
             python3 maniements-v5/dictionary/prototype_v3_policy_tree.py \
               --runtime-root "$RUNNER_TEMP/v5-runtime" \
               --north "$NORTH" --south "$SOUTH" --target "$TARGET" \
-              --max-nodes 1800 --max-depth 36 \
-              > "dist/${NAME}_tree.json"
+              --max-nodes 5000 --max-depth 10 \
+              > "dist/${NAME}_graph.json"
           done < "$RUNNER_TEMP/cases.tsv"
 
-      - name: Summarize trees
+      - name: Summarize graphs
         shell: bash
         run: |
           set -euo pipefail
-          python3 - <<'PY' > dist/POLICY_TREE_SUMMARY.md
-          import glob,json,os
-          print('# MANIEMENTS V5 — V3 fast policy-tree diagnostics')
+          python3 - <<'PY' > dist/POLICY_GRAPH_SUMMARY.md
+          import glob,json
+          print('# MANIEMENTS V5 — V3 fast policy-graph diagnostics')
           print()
-          print('| Cas | Proba | Lead | Nodes | DECL | DEF | Branches | Truncated | Depth |')
-          print('|---|---:|---|---:|---:|---:|---:|---:|---:|')
-          for p in sorted(glob.glob('dist/*_tree.json')):
+          print('| Cas | Proba | Lead | Unique | DECL | DEF | Branches | Depth-limited | Budget links | Dedup links | Depth |')
+          print('|---|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|')
+          for p in sorted(glob.glob('dist/*_graph.json')):
               d=json.load(open(p,encoding='utf-8'))
-              c=d['case']; s=d['policy_tree_stats']
-              print(f"| {c['north']} / {c['south']} → {c['target']} | {d['probability_fraction']} | {d['root_lead']} | {s['nodes']} | {s['declarer_nodes']} | {s['defender_nodes']} | {s['defender_branches']} | {s['truncated_nodes']} | {s['max_depth_seen']} |")
+              c=d['case']; s=d['policy_graph_stats']
+              print(f"| {c['north']} / {c['south']} → {c['target']} | {d['probability_fraction']} | {d['root_lead']} | {s['unique_nodes']} | {s['declarer_nodes']} | {s['defender_nodes']} | {s['defender_branches']} | {s['depth_limited_nodes']} | {s['budget_limited_links']} | {s['deduplicated_links']} | {s['max_depth_seen']} |")
           PY
-          cat dist/POLICY_TREE_SUMMARY.md >> "$GITHUB_STEP_SUMMARY"
+          cat dist/POLICY_GRAPH_SUMMARY.md >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Upload fast policy trees
+      - name: Upload fast policy graphs
         uses: actions/upload-artifact@v4
         with:
-          name: MANIEMENTS_V5_DICTIONARY_V3_POLICY_TREE_FAST
+          name: MANIEMENTS_V5_DICTIONARY_V3_POLICY_GRAPH_FAST
           path: dist/*
           if-no-files-found: error
           retention-days: 30
