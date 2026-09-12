@@ -1,0 +1,69 @@
+name: MANIEMENTS V5 — Dictionary V3 web snapshot
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "maniements-v5/dictionary/V3_WEB_START"
+
+permissions:
+  contents: read
+
+jobs:
+  build-v3-web:
+    name: Build scalable V3 dictionary web snapshot
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Fetch current V3 dictionary branches
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin '+refs/heads/maniements-v5-dictionary-v3-p1-*:refs/remotes/origin/maniements-v5-dictionary-v3-p1-*' || true
+
+      - name: Build sharded V3 web snapshot
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf dist/v3-web
+          python3 maniements-v5/dictionary/build_web_v3.py \
+            --repo . \
+            --output-dir dist/v3-web
+          cat dist/v3-web/manifest.json >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Validate snapshot
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json,glob,os,re
+          from pathlib import Path
+          m=json.load(open('dist/v3-web/manifest.json',encoding='utf-8'))
+          assert m['schema']=='MANIEMENTS_V5_DICTIONARY_WEB_V3'
+          assert m['target_count']>0, 'No V3 entries available yet'
+          shards=glob.glob('dist/v3-web/data/*.json')
+          assert len(shards)==m['shard_count']
+          max_bytes=max(os.path.getsize(p) for p in shards)
+          assert max_bytes < 5_000_000, max_bytes
+          html=Path('dist/v3-web/index.html').read_text(encoding='utf-8')
+          js=re.search(r'<script>\n(.*?)\n</script>',html,re.S)
+          assert js
+          Path('/tmp/v3-app.js').write_text(js.group(1),encoding='utf-8')
+          print('states',m['state_count'],'targets',m['target_count'],'shards',m['shard_count'],'max_shard_bytes',max_bytes)
+          PY
+          node --check /tmp/v3-app.js
+
+      - name: Upload V3 web snapshot
+        uses: actions/upload-artifact@v4
+        with:
+          name: MANIEMENTS_V5_DICTIONNAIRE_V3_WEB
+          path: dist/v3-web/**
+          if-no-files-found: error
+          retention-days: 30
