@@ -33,7 +33,7 @@ jobs:
         run: |
           set -euo pipefail
           rm -rf dist/v3-web
-          python3 maniements-v5/dictionary/build_web_v33.py \
+          python3 maniements-v5/dictionary/build_web_v34.py \
             --repo . \
             --output-dir dist/v3-web
           cat dist/v3-web/manifest.json >> "$GITHUB_STEP_SUMMARY"
@@ -48,6 +48,7 @@ jobs:
           m=json.load(open('dist/v3-web/manifest.json',encoding='utf-8'))
           assert m['schema']=='MANIEMENTS_V5_DICTIONARY_WEB_V3'
           assert m['target_count']>0, 'No V3 entries available yet'
+          assert m.get('human_layer')=='LEGACY_SEMANTIC_BACKFILL_HIDDEN_PENDING_V5_QUALIFICATION'
           shards=glob.glob('dist/v3-web/data/*.json')
           assert len(shards)==m['shard_count']
           max_bytes=max(os.path.getsize(p) for p in shards)
