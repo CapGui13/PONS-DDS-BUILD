@@ -5,19 +5,19 @@
   "extractor": "NATIVE_PUBLIC_POLICY_COMPRESSED_V3_SEMANTIC_V1",
   "last_pass": {
     "deferred_targets": 0,
-    "elapsed_seconds": 987.352396,
+    "elapsed_seconds": 989.092062,
     "extractor": "NATIVE_PUBLIC_POLICY_COMPRESSED_V3_SEMANTIC_V1",
-    "materialized_targets": 314,
-    "sequence": 0
+    "materialized_targets": 214,
+    "sequence": 1
   },
-  "materialized_targets": 314,
-  "next_source_state_id": 119217,
+  "materialized_targets": 528,
+  "next_source_state_id": 126264,
   "next_target": 1,
   "plan_id": "MANIEMENTS_V5_PRIORITY_P1_COMMON_SPLITS_PLUS_BOUNDARY_V1",
   "schema": "MANIEMENTS_V5_DICTIONARY_WORKER_STATE_V2",
-  "sequence": 1,
+  "sequence": 2,
   "source_done": false,
   "target_cap_seconds": 210.0,
-  "updated_at_utc": "2026-09-12T11:14:55+00:00",
+  "updated_at_utc": "2026-09-12T11:48:46+00:00",
   "worker_id": 14
 }
