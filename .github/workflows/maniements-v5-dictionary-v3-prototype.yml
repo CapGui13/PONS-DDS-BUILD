@@ -10,6 +10,12 @@ on:
 permissions:
   contents: read
 
+# Share the V2 concurrency group so this one-run prototype waits for any
+# already-started V2 cycle instead of consuming the intentionally reserved slot.
+concurrency:
+  group: maniements-v5-dictionary-backfill
+  cancel-in-progress: false
+
 jobs:
   inspect-v3:
     name: Inspect exact multi-trick witness for AD2-V963
