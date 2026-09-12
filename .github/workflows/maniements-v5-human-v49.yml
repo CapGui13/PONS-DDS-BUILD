@@ -1,0 +1,64 @@
+name: MANIEMENTS V5 — Human V4.9 multi-objective review
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "maniements-v5/dictionary/HUMAN_V49_START"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: maniements-v5-human-v49
+  cancel-in-progress: true
+
+jobs:
+  multi-objective-review:
+    name: Build holding-centric multi-objective review
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Reconstruct and verify frozen V5 runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          ZIP="$RUNNER_TEMP/MANIEMENTS_V3_GENERATION_V5_PASS_ORBIT_RUNTIME_V2.zip"
+          EXPECTED="a0b580531f3c9e8bb00710b9c3e1c183b27cbfe9231c9d584e29a374ba88835d"
+          cat \
+            maniements-v5/runtime/runtime_v2.b64.part-00 \
+            maniements-v5/runtime/runtime_v2.b64.part-01 \
+            maniements-v5/runtime/runtime_v2.b64.part-02a \
+            maniements-v5/runtime/runtime_v2.b64.part-02b \
+            maniements-v5/runtime/runtime_v2.b64.part-03 \
+            maniements-v5/runtime/runtime_v2.b64.part-04 \
+            maniements-v5/runtime/runtime_v2.b64.part-05 \
+            maniements-v5/runtime/runtime_v2.b64.part-06 \
+            | base64 -d > "$ZIP"
+          test "$(sha256sum "$ZIP" | awk '{print $1}')" = "$EXPECTED"
+          mkdir -p "$RUNNER_TEMP/v5-runtime"
+          unzip -q "$ZIP" -d "$RUNNER_TEMP/v5-runtime"
+          (cd "$RUNNER_TEMP/v5-runtime" && sha256sum -c SHA256SUMS.txt)
+
+      - name: Generate all objectives for the 10 review holdings
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 maniements-v5/dictionary/human_multi_target_v49.py \
+            --runtime-root "$RUNNER_TEMP/v5-runtime" \
+            --out-dir dist
+
+      - name: Upload review artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: MANIEMENTS_V5_HUMAN_V49_MULTI_TARGET
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 30
