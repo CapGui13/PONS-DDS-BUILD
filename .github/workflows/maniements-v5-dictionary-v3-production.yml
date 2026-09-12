@@ -93,6 +93,16 @@ jobs:
             --close-reserve-seconds 120 \
             --target-cap-seconds "$TARGET_CAP"
 
+      - name: Backfill human bridge summaries
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 maniements-v5/dictionary/semantic_backfill_v32.py \
+            --runtime-root "$RUNNER_TEMP/v5-runtime" \
+            --state-root "$RUNNER_TEMP/dict-v3-state" \
+            --budget-seconds 60 \
+            --target-cap-seconds 5
+
       - name: Persist V3 dictionary state
         shell: bash
         env:
@@ -110,6 +120,9 @@ jobs:
             git push origin "HEAD:${DEST}"
           fi
           cat dictionary/state.json >> "$GITHUB_STEP_SUMMARY"
+          if test -f dictionary/semantic_backfill/state.json; then
+            cat dictionary/semantic_backfill/state.json >> "$GITHUB_STEP_SUMMARY"
+          fi
 
   controller:
     name: Dictionary V3 status + continuation
