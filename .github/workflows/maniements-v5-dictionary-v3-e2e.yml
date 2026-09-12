@@ -1,0 +1,151 @@
+name: MANIEMENTS V5 — Dictionary V3 end-to-end qualification
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "maniements-v5/dictionary/V3_E2E_START"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: maniements-v5-dictionary-v3-e2e
+  cancel-in-progress: false
+
+jobs:
+  qualify-v3-e2e:
+    name: Qualify V3 compiler end-to-end on nine bridge cases
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Reconstruct and verify frozen V5 runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          ZIP="$RUNNER_TEMP/MANIEMENTS_V3_GENERATION_V5_PASS_ORBIT_RUNTIME_V2.zip"
+          EXPECTED="a0b580531f3c9e8bb00710b9c3e1c183b27cbfe9231c9d584e29a374ba88835d"
+          cat \
+            maniements-v5/runtime/runtime_v2.b64.part-00 \
+            maniements-v5/runtime/runtime_v2.b64.part-01 \
+            maniements-v5/runtime/runtime_v2.b64.part-02a \
+            maniements-v5/runtime/runtime_v2.b64.part-02b \
+            maniements-v5/runtime/runtime_v2.b64.part-03 \
+            maniements-v5/runtime/runtime_v2.b64.part-04 \
+            maniements-v5/runtime/runtime_v2.b64.part-05 \
+            maniements-v5/runtime/runtime_v2.b64.part-06 \
+            | base64 -d > "$ZIP"
+          test "$(sha256sum "$ZIP" | awk '{print $1}')" = "$EXPECTED"
+          mkdir -p "$RUNNER_TEMP/v5-runtime"
+          unzip -q "$ZIP" -d "$RUNNER_TEMP/v5-runtime"
+          (cd "$RUNNER_TEMP/v5-runtime" && sha256sum -c SHA256SUMS.txt)
+
+      - name: Compile four structural HIGH cases
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          cat > "$RUNNER_TEMP/structural.tsv" <<'EOF'
+          AQ2 J963 4 AD2_V963_t4 13/140
+          AQJ 5432 2 ADV_5432_t2 1
+          AQJ 5432 3 ADV_5432_t3 1091/1610
+          KJ2 A963 4 RV2_A963_t4 663/3220
+          EOF
+          while read -r NORTH SOUTH TARGET NAME EXPECTED; do
+            echo "=== structural $NAME ==="
+            python3 maniements-v5/dictionary/prototype_v3_inspect.py \
+              --runtime-root "$RUNNER_TEMP/v5-runtime" \
+              --north "$NORTH" --south "$SOUTH" --target "$TARGET" \
+              > "dist/${NAME}_report.json"
+            python3 - "$EXPECTED" "dist/${NAME}_report.json" <<'PY'
+          import json,sys
+          from fractions import Fraction
+          expected,path=sys.argv[1:]
+          d=json.load(open(path,encoding='utf-8'))
+          assert Fraction(d['probability_fraction']) == Fraction(expected), (path,d['probability_fraction'],expected)
+          PY
+            python3 maniements-v5/dictionary/prototype_v3_compile.py \
+              "dist/${NAME}_report.json" --output "dist/${NAME}_compiled.json" > /dev/null
+          done < "$RUNNER_TEMP/structural.tsv"
+
+      - name: Compile five exact policy-program cases
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > "$RUNNER_TEMP/policy.tsv" <<'EOF'
+          AQ2 J963 3 AD2_V963_t3 - 24/35
+          AJ2 Q963 3 AV2_D963_t3 - 24/35
+          AK2 Q963 4 AR2_D963_t4 - 3783/8050
+          A92 QJ63 3 A92_DV63_t3 - 18/23
+          KJ2 A963 3 RV2_A963_t3 18441915018640280703 135/161
+          EOF
+          while read -r NORTH SOUTH TARGET NAME MASK EXPECTED; do
+            echo "=== policy $NAME ==="
+            EXTRA=()
+            if [ "$MASK" != "-" ]; then
+              EXTRA+=(--winning-mask "$MASK" --expected-probability "$EXPECTED")
+            fi
+            python3 maniements-v5/dictionary/prototype_v3_builtin_policy.py \
+              --runtime-root "$RUNNER_TEMP/v5-runtime" \
+              --north "$NORTH" --south "$SOUTH" --target "$TARGET" \
+              "${EXTRA[@]}" > "dist/${NAME}_native_policy.json"
+            python3 maniements-v5/dictionary/prototype_v3_policy_compress.py \
+              "dist/${NAME}_native_policy.json" \
+              --output "dist/${NAME}_policy_program.json" > /dev/null
+            python3 maniements-v5/dictionary/prototype_v3_compile.py \
+              --policy-program "dist/${NAME}_policy_program.json" \
+              --output "dist/${NAME}_compiled.json" > /dev/null
+            python3 - "$EXPECTED" "dist/${NAME}_compiled.json" <<'PY'
+          import json,sys
+          from fractions import Fraction
+          expected,path=sys.argv[1:]
+          d=json.load(open(path,encoding='utf-8'))
+          assert Fraction(d['probability_fraction']) == Fraction(expected), (path,d['probability_fraction'],expected)
+          assert d['policy_program_stats']['unseparable_contexts'] == 0
+          PY
+          done < "$RUNNER_TEMP/policy.tsv"
+
+      - name: Gate and summarize all nine compiled plans
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY' > dist/V3_E2E_SUMMARY.md
+          import glob,json,os
+          files=sorted(glob.glob('dist/*_compiled.json'))
+          assert len(files)==9, len(files)
+          print('# MANIEMENTS V5 — V3 end-to-end qualification')
+          print()
+          print('| Cas | Objectif | Proba | Confiance | Couverture | Motif |')
+          print('|---|---:|---:|---|---|---|')
+          counts={}
+          for p in files:
+              d=json.load(open(p,encoding='utf-8')); c=d['case']
+              assert d['confidence']=='HIGH', (p,d['confidence'])
+              assert d['pattern']!='GENERIC_SAFE_FALLBACK', p
+              assert d['coverage'] not in ('OPENING_ONLY',None), (p,d.get('coverage'))
+              if d['coverage']=='EXACT_POLICY_PROGRAM':
+                  assert d['policy_program_stats']['unseparable_contexts']==0, p
+                  assert d.get('decision_program_fr'), p
+              counts[d['coverage']]=counts.get(d['coverage'],0)+1
+              print(f"| {c['north']} / {c['south']} | {c['target']} | {d['probability_fraction']} | {d['confidence']} | {d['coverage']} | {d['pattern']} |")
+          print()
+          print('Total:',len(files))
+          print('Coverage counts:',counts)
+          print('Verdict: GREEN — 9/9 HIGH, 0 MEDIUM, 0 LOW, 0 fallback.')
+          PY
+          cat dist/V3_E2E_SUMMARY.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload V3 end-to-end qualification
+        uses: actions/upload-artifact@v4
+        with:
+          name: MANIEMENTS_V5_DICTIONARY_V3_E2E_GREEN
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 30
