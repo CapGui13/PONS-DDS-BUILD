@@ -6,6 +6,7 @@ import materialize_worker_v3 as base
 import prototype_v3_semantics as sem
 
 SEMANTIC_EXTRACTOR='NATIVE_PUBLIC_POLICY_COMPRESSED_V3_SEMANTIC_V1'
+RAW_EXACT_SUMMARY="Calcul exact disponible — explication du maniement en cours de certification."
 
 
 def supported_plan(eng,bp,pc,cc,north,south,target,expected_prob):
@@ -41,7 +42,7 @@ def supported_plan(eng,bp,pc,cc,north,south,target,expected_prob):
     compact=pc.compact_policy_program(program)
 
     semantic=sem.semantic_success_explanation(eng,e,best,prob,north,south,target)
-    summary=semantic['summary_fr'] if semantic else compiled['summary_fr']
+    summary=semantic['summary_fr'] if semantic else RAW_EXACT_SUMMARY
 
     out={
         'kind':'native_public_policy_v31',
@@ -56,12 +57,12 @@ def supported_plan(eng,bp,pc,cc,north,south,target,expected_prob):
         'policy_source':source,
         'program_stats':program['program_stats'],
         'policy_program':compact,
+        # V4 presentation rule: an exact automaton is proof/data, not finished prose.
+        'humanization_status':'SEMANTIC_EXACT' if semantic else 'RAW_EXACT_ONLY',
+        'display_policy_by_default':False,
     }
     if semantic:
         out['semantic']=semantic
-        out['display_policy_by_default']=False
-    else:
-        out['display_policy_by_default']=True
     return out,native['policy_state_count']
 
 
