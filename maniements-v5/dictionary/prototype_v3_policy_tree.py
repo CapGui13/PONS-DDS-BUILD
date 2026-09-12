@@ -88,7 +88,7 @@ def build_policy_graph(eng, e, start_state, start_mask, max_nodes=5000, max_dept
             if not cands:
                 nodes[str(node_id)]={**common,'role':'DECL','seat':seat,'error':'no declarer witness'}
                 continue
-            r,ns,cm=cands[0]
+            r,ns,_cm=cands[0]
             alternatives=[]
             action_seen=set()
             for ar,_,acm in cands:
@@ -98,10 +98,12 @@ def build_policy_graph(eng, e, start_state, start_mask, max_nodes=5000, max_dept
                 action_seen.add(txt)
                 alternatives.append({
                     'card':txt,
-                    'support_mass':str(e.model.weight(acm)),
-                    'support_bits':acm.bit_count(),
+                    'frontier_mass':str(e.model.weight(acm)),
+                    'frontier_bits':acm.bit_count(),
                 })
-            child_id=register(ns,cm,depth+1)
+            # Declarer play reveals no hidden card, so keep exactly the same
+            # optimal support instead of expanding to the chosen frontier mask.
+            child_id=register(ns,support,depth+1)
             nodes[str(node_id)]={
                 **common,
                 'role':'DECL',
@@ -121,8 +123,10 @@ def build_policy_graph(eng, e, start_state, start_mask, max_nodes=5000, max_dept
             child=base.select_def_child(e,state,support,seat,r,legal)
             if child is None:
                 continue
-            ns,cm=child
-            child_id=register(ns,cm,depth+1)
+            ns,_cm=child
+            # A defender card reveals information: the surviving optimal support
+            # is precisely the compatible subset, never a larger frontier mask.
+            child_id=register(ns,need,depth+1)
             stats['defender_branches'] += 1
             branches.append({
                 'card':card_text(eng,r),
@@ -157,14 +161,14 @@ def main():
     solved=e.solve(include_policy=False)
     root=e.initial(); fr=e.frontier(root)
     best=max(fr,key=lambda m:(e.model.weight(m),m))
-    seat,rank,after_lead,lead_mask=base.select_root(eng,e,root,best)
+    seat,rank,after_lead,_lead_mask=base.select_root(eng,e,root,best)
     graph,stats=build_policy_graph(
-        eng,e,after_lead,lead_mask,
+        eng,e,after_lead,best,
         max_nodes=a.max_nodes,
         max_depth=a.max_depth,
     )
     out={
-        'schema':'MANIEMENTS_V5_DICTIONARY_V3_POLICY_GRAPH_V2',
+        'schema':'MANIEMENTS_V5_DICTIONARY_V3_POLICY_GRAPH_V3',
         'case':{'north':a.north,'south':a.south,'target':a.target},
         'probability_fraction':solved['probability_fraction'],
         'root_lead':f'{seat}:{rank}',
