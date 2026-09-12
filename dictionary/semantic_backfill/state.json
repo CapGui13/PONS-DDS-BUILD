@@ -1,17 +1,17 @@
 {
   "caught_up": false,
-  "checked_entries": 239,
+  "checked_entries": 256,
   "last_pass": {
-    "checked": 26,
+    "checked": 17,
     "corrections": 0,
-    "elapsed_seconds": 58.398425
+    "elapsed_seconds": 59.718365
   },
-  "next_index": 239,
+  "next_index": 256,
   "schema": "MANIEMENTS_V5_SEMANTIC_BACKFILL_STATE_V1",
   "semantic_entries": 8,
   "sequence": 3,
-  "source_entry_count": 6018,
-  "timeouts": 10,
-  "updated_at_utc": "2026-09-12T17:47:18+00:00",
+  "source_entry_count": 6266,
+  "timeouts": 11,
+  "updated_at_utc": "2026-09-12T18:22:54+00:00",
   "version": "BRIDGE_SEMANTICS_V2"
 }
