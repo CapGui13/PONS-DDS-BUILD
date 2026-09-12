@@ -50,8 +50,6 @@ def choose_human_action(eng,e,s,need,cands):
     bestw=max(e.model.weight(x[3]) for x in cands)
     top=[x for x in cands if e.model.weight(x[3])==bestw]
     if s.pos==0:
-        # If an exact-equivalent direct honour cash exists, prefer it over the
-        # cosmetically equivalent route "small towards that honour".
         honours=[x for x in top if eng.I2R[x[1]] in 'AKQJ']
         if honours:
             return max(honours,key=lambda x:(v45.b.RANK_VALUE[eng.I2R[x[1]]],-((s.north if x[0]=='N' else s.south).bit_count())))
@@ -94,7 +92,6 @@ def collapse(n):
         n.branches=[collapse(n.branches[0])]
         return n
     bs=[(c,collapse(ch)) for c,ch in n.branches]
-    # First merge exact future semantic policies, ignoring concrete low-card pips.
     grouped={}
     for c,ch in bs:
         grouped.setdefault(sig(ch),[ch,[]])[1].extend(_flatten(c))
@@ -119,6 +116,20 @@ def card_condition(cards):
     return "si l’adversaire fournit " + ", ".join(names[:-1]) + " ou " + names[-1]
 
 
+def first_decl_action_mode(n):
+    vals=[]
+    def walk(x,depth=0):
+        if depth>2:return
+        if x.kind=='D':
+            vals.append((x.action[0],sem_rank(x.action[1])));return
+        if x.kind=='F':
+            for _,ch in x.branches or []:walk(ch,depth+1)
+    walk(n)
+    if not vals:return None
+    counts=Counter(vals)
+    return counts.most_common(1)[0][0]
+
+
 def action_phrase(n,first=False):
     seat,rank=n.action
     s=n.state
@@ -136,29 +147,14 @@ def action_phrase(n,first=False):
             if nxt and nxt[0]!=seat and nxt[1] not in ('-','x'):
                 return f"{'Commencer' if first else 'Jouer'} par {v45.b.fr_article(rank)} vers {v45.b.fr_article(nxt[1])}."
             return f"Jouer {v45.b.fr_article(rank)}."
-    prev=v45.previous_def_card(_ENG,_E,s)
-    prev_rank=None if prev is None else ('-' if not prev else _ENG.I2R[prev])
+    prev=v45.previous_def_card(v45._ENG,v45._E,s)
+    prev_rank=None if prev is None else ('-' if not prev else v45._ENG.I2R[prev])
     if prev_rank and prev_rank!='-' and v45.b.RANK_VALUE.get(rank,0)>v45.b.RANK_VALUE.get(prev_rank,99):
         return f"Couvrir avec {v45.b.fr_article(rank)}."
     if rank in '765432':return "Fournir petit."
     return f"Passer {v45.b.fr_article(rank)}."
 
 
-def first_decl_action_mode(n):
-    vals=[]
-    def walk(x,depth=0):
-        if depth>2:return
-        if x.kind=='D':
-            vals.append((x.action[0],sem_rank(x.action[1])));return
-        if x.kind=='F':
-            for _,ch in x.branches or []:walk(ch,depth+1)
-    walk(n)
-    if not vals:return None
-    counts=Counter(vals)
-    return counts.most_common(1)[0][0]
-
-
-_ENG=None;_E=None
 v45.feasible_actions=feasible_actions
 v45.choose_human_action=choose_human_action
 v45.sig=sig
@@ -166,18 +162,5 @@ v45.collapse=collapse
 v45.card_condition=card_condition
 v45.action_phrase=action_phrase
 
-_orig_main=v45.main
-
-def main():
-    # v45.main assigns its engine to v45 globals; mirror these through a small
-    # previous-card adapter used by the renderer.
-    global _ENG,_E
-    old_prev=v45.previous_def_card_cached
-    def prev_cached(s):
-        r=v45.previous_def_card(v45._ENG,v45._E,s)
-        return None if r is None else ('-' if not r else v45._ENG.I2R[r])
-    v45.previous_def_card_cached=prev_cached
-    return _orig_main()
-
 if __name__=='__main__':
-    main()
+    v45.main()
