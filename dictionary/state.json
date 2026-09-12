@@ -1,23 +1,23 @@
 {
-  "active_state_id": 1130167,
+  "active_state_id": 1137744,
   "caught_up": false,
   "deferred_targets": 5,
   "extractor": "LOCAL_WITNESS_FIRST_DEFENSE_V2",
   "last_pass": {
     "deferred_targets": 0,
-    "elapsed_seconds": 1003.619282,
+    "elapsed_seconds": 1008.847917,
     "extractor": "LOCAL_WITNESS_FIRST_DEFENSE_V2",
-    "materialized_targets": 194,
-    "sequence": 36
+    "materialized_targets": 168,
+    "sequence": 37
   },
-  "materialized_targets": 7185,
-  "next_source_state_id": 1130124,
+  "materialized_targets": 7353,
+  "next_source_state_id": 1137513,
   "next_target": 3,
   "plan_id": "MANIEMENTS_V5_PRIORITY_P1_COMMON_SPLITS_PLUS_BOUNDARY_V1",
   "schema": "MANIEMENTS_V5_DICTIONARY_WORKER_STATE_V1",
-  "sequence": 37,
+  "sequence": 38,
   "source_done": false,
   "target_cap_seconds": 210.0,
-  "updated_at_utc": "2026-09-12T00:43:45+00:00",
+  "updated_at_utc": "2026-09-12T01:17:31+00:00",
   "worker_id": 16
 }
