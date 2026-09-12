@@ -1,23 +1,23 @@
 {
-  "active_state_id": null,
+  "active_state_id": 131288,
   "caught_up": false,
   "deferred_targets": 0,
   "extractor": "NATIVE_PUBLIC_POLICY_COMPRESSED_V3_SEMANTIC_V1",
   "last_pass": {
     "deferred_targets": 0,
-    "elapsed_seconds": 990.988989,
+    "elapsed_seconds": 988.858657,
     "extractor": "NATIVE_PUBLIC_POLICY_COMPRESSED_V3_SEMANTIC_V1",
-    "materialized_targets": 208,
-    "sequence": 1
+    "materialized_targets": 170,
+    "sequence": 2
   },
-  "materialized_targets": 434,
-  "next_source_state_id": 123395,
-  "next_target": 1,
+  "materialized_targets": 604,
+  "next_source_state_id": 131068,
+  "next_target": 2,
   "plan_id": "MANIEMENTS_V5_PRIORITY_P1_COMMON_SPLITS_PLUS_BOUNDARY_V1",
   "schema": "MANIEMENTS_V5_DICTIONARY_WORKER_STATE_V2",
-  "sequence": 2,
+  "sequence": 3,
   "source_done": false,
   "target_cap_seconds": 210.0,
-  "updated_at_utc": "2026-09-12T11:48:48+00:00",
+  "updated_at_utc": "2026-09-12T12:22:23+00:00",
   "worker_id": 13
 }
