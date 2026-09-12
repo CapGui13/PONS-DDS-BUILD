@@ -1,4 +1,4 @@
-# MANIEMENTS V5 — Human presentation V4.1
+# MANIEMENTS V5 — Human presentation V4.9
 
 Status: PILOT / review-first. The exact V3 solver remains the oracle; raw policy states are evidence, never the user-facing explanation.
 
@@ -7,11 +7,25 @@ Status: PILOT / review-first. The exact V3 solver remains the oracle; raw policy
 A dictionary entry must answer a bridge player's question in this order:
 
 1. **Holding, vertically displayed + goal + exact probability.** The two partnership hands are shown one above the other, never only as `hand1 / hand2`.
-2. **Maniement.** Give the shortest playable bridge instruction: `petit vers le 9`, `tirer l'As puis petit vers la Dame`, `impasse au Roi en jouant vers la Dame`.
-3. **Why / position sought.** Always say what layout is being targeted or protected against. A line without its bridge reason is incomplete.
-4. **Observable branches only.** Branch only on what a player can see: an honour appears, a defender shows out, an opponent takes, a finesse holds/fails.
-5. **Standard assumptions only when needed.** Outside entries are assumed available in classical isolated-suit analysis, but mention an outside return only if the recommended line actually uses it.
-6. **Expert evidence collapsed.** Exact fraction, exhaustive layouts, public policy and hashes remain available as proof, but never replace the human line.
+2. **Target is a first-class dimension.** A holding must not be reduced to one generator-chosen goal. For each attainable number of tricks, compute and store the exact probability and the corresponding optimal maniement separately. The optimal line may change when the target changes. User-facing UI should let the player choose the trick objective explicitly.
+3. **Maniement.** Give the shortest playable bridge instruction: `petit vers le 9`, `tirer l'As puis petit vers la Dame`, `impasse au Roi en jouant vers la Dame`.
+4. **Why / position sought.** Always say what layout is being targeted or protected against. A line without its bridge reason is incomplete.
+5. **Observable branches only.** Branch only on what a player can see: an honour appears, a defender shows out, an opponent takes, a finesse holds/fails.
+6. **Standard assumptions only when needed.** Outside entries are assumed available in classical isolated-suit analysis, but mention an outside return only if the recommended line actually uses it.
+7. **Expert evidence collapsed.** Exact fraction, exhaustive layouts, public policy and hashes remain available as proof, but never replace the human line.
+
+## Multi-objective holding rule
+
+The canonical key is the **holding**, with one sub-record per target. Example: `AD854 / X32` has a distinct exact record for 4 tricks and for 5 tricks. The 4-trick optimum is not evidence that 5 tricks are impossible; every target up to the maximum number of suit rounds must be queried independently.
+
+For each target store at minimum:
+- exact success fraction / probability;
+- optimal root action or a chosen human-readable co-optimal root;
+- human procedure for that target;
+- explanation of the layouts targeted by that procedure;
+- certification status for that target.
+
+Do not silently omit a non-zero higher target merely because the probability is small.
 
 ## Language rules learned from pilot review
 
@@ -69,7 +83,9 @@ Do not call the last action an “impasse au 10”: the 10 belongs to declarer.
 
 ### `X98 / ARD7`, goal 4
 
-The raw interactive exact replay is not acceptable as the normal presentation. Current hypothesis to certify is a short line based on two probes and the third-round information about the missing Jack. Until exhaustive replay validates the exact branch structure, keep this entry explicitly provisional.
+Certified human line: play progressively from `X98` toward `ARD7` — 8 toward the Queen, 9 toward the King, then 10 toward the Ace; cover the Jack if it appears in second seat, and use a revealed shortage to localise the Jack and finesse it when appropriate. This human tree has been replayed exhaustively and matches the exact solver at `1961/3220 = 60.90%`.
+
+Do not replace it in the normal view by a raw interactive exact replay.
 
 ## Reference corpus gate
 
