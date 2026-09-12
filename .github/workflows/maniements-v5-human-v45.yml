@@ -51,7 +51,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python3 maniements-v5/dictionary/human_batch_v45.py \
+          python3 maniements-v5/dictionary/human_batch_v45_runner.py \
             --runtime-root "$RUNNER_TEMP/v5-runtime" \
             --reference maniements-v5/dictionary/human_reference_cases_v4.json \
             --x98-reference maniements-v5/dictionary/HUMAN_V43_X98_ARD7_QUALIFICATION.json \
