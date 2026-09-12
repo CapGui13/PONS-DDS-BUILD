@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 import argparse, json
+from fractions import Fraction
 from pathlib import Path
 
 FR_RANK = {'A':'A','K':'R','Q':'D','J':'V','T':'X','9':'9','8':'8','7':'7','6':'6','5':'5','4':'4','3':'3','2':'2','-':'-'}
 FR_SEAT = {'N':'Nord','S':'Sud','E':'Est','W':'Ouest'}
 HONORS = 'AKQJT'
+RANKS = 'AKQJT98765432'
 
 
 def fr_rank(r):
@@ -27,10 +29,36 @@ def parse_action(a):
     return seat, rank
 
 
+def action_text(a):
+    seat, rank = parse_action(a)
+    if rank in HONORS:
+        return f'{article(rank)} de {FR_SEAT[seat]}'
+    return f'petit de {FR_SEAT[seat]}'
+
+
+def with_de(r):
+    x = fr_rank(r)
+    if x == 'A': return "de l'As"
+    if x == 'D': return 'de la Dame'
+    if x == 'V': return 'du Valet'
+    if x == 'R': return 'du Roi'
+    return 'du ' + x
+
+
+def probability_value(s):
+    return Fraction(s)
+
+
+def equivalent_best_actions(report):
+    best = probability_value(report['probability_fraction'])
+    return [x['action'] for x in report.get('root_action_probabilities', [])
+            if probability_value(x['probability_fraction']) == best]
+
+
 def missing_cards(report):
     c = report['case']
     visible = set(c['north'] + c['south'])
-    return [r for r in 'AKQJT98765432' if r not in visible]
+    return [r for r in RANKS if r not in visible]
 
 
 def fixed_honor_conditions(report):
@@ -55,7 +83,6 @@ def fixed_honor_conditions(report):
             continue
         seat=loc[0]
         mn=min(lens); mx=max(lens)
-        rank=fr_rank(r)
         side=FR_SEAT[seat]
         if mn == mx == 1:
             text=f'{article(r)} sec en {side}'
@@ -81,51 +108,143 @@ def group_first_responses(report):
     return dseat, groups
 
 
-def bridge_plan(report):
-    lead_seat, lead_rank = parse_action(report['root_lead'])
-    dseat, groups = group_first_responses(report)
-    c=report['case']
-    north=set(c['north']); south=set(c['south'])
-    other = 'N' if lead_seat == 'S' else 'S'
-    other_hand = north if other == 'N' else south
-    lead_is_low = lead_rank not in HONORS
+def rank_is_higher(a, b):
+    return a in RANKS and b in RANKS and RANKS.index(a) < RANKS.index(b)
 
-    # Recognize the common finesse pattern: low towards Q/A, with K requiring A.
-    q_act=f'{other}:Q'; a_act=f'{other}:A'
-    if lead_is_low and q_act in groups and a_act in groups and 'Q' in other_hand and 'A' in other_hand and dseat:
-        king_cards=set(groups[a_act])
-        if king_cards == {'K'}:
-            lead_txt=f'Jouer petit de {FR_SEAT[lead_seat]} vers la Dame.'
-            first_txt=f'Si {FR_SEAT[dseat]} fournit le Roi, prendre de l\'As ; sinon, passer la Dame.'
+
+def recognize_low_toward_honor(report):
+    lead_seat, lead_rank = parse_action(report['root_lead'])
+    if lead_rank in HONORS:
+        return None
+    dseat, groups = group_first_responses(report)
+    if not dseat:
+        return None
+    other = 'N' if lead_seat == 'S' else 'S'
+    c=report['case']
+    other_hand = set(c['north'] if other == 'N' else c['south'])
+
+    action_groups=[]
+    for act, cards in groups.items():
+        if ':' not in act:
+            continue
+        seat, rank = parse_action(act)
+        if seat != other or rank not in HONORS or rank not in other_hand:
+            continue
+        action_groups.append((rank, set(cards)))
+    if len(action_groups) < 2:
+        return None
+
+    # Look for one singleton honor from the defender that triggers a higher cover,
+    # while all other compatible cards trigger a lower honor in the target hand.
+    for cover_response, cover_cards in action_groups:
+        if len(cover_cards) != 1:
+            continue
+        cover_card = next(iter(cover_cards))
+        if cover_card not in HONORS:
+            continue
+        for normal_response, normal_cards in action_groups:
+            if normal_response == cover_response or not normal_cards:
+                continue
+            if not rank_is_higher(cover_response, cover_card):
+                continue
+            if not rank_is_higher(cover_card, normal_response):
+                continue
+
+            lead_txt=f'Jouer petit de {FR_SEAT[lead_seat]} vers {article(normal_response)}.'
+            if cover_response == 'A':
+                cover_verb=f'prendre {with_de(cover_response)}'
+            else:
+                cover_verb=f'couvrir {with_de(cover_response)}'
+            branch_txt=(f'Si {FR_SEAT[dseat]} fournit {article(cover_card)}, {cover_verb} ; '
+                        f'sinon, passer {article(normal_response)}.')
             conds=fixed_honor_conditions(report)
-            kcond=next((x for x in conds if x['rank']=='K'), None)
-            if kcond and kcond['seat']==dseat and kcond['max_len'] <= 2:
-                follow='Si la Dame fait la levée, tirer ensuite l\'As.'
-                success=f'Le maniement réussit lorsque {kcond["text"]}.'
-                return {
-                    'confidence':'HIGH',
-                    'pattern':'LOW_TO_Q_THEN_A_DROP_K',
-                    'summary_fr':' '.join([lead_txt, first_txt, follow, success]),
-                    'condition_fr':kcond['text'],
-                }
+            hcond=next((x for x in conds if x['rank']==cover_card and x['seat']==dseat), None)
+            pieces=[lead_txt, branch_txt]
+            pattern=f'LOW_TO_{normal_response}_COVER_{cover_card}_WITH_{cover_response}'
+            if normal_response == 'Q' and cover_card == 'K' and cover_response == 'A' and hcond and hcond['max_len'] <= 2:
+                pieces.append("Si la Dame fait la levée, tirer ensuite l'As.")
+                pattern='LOW_TO_Q_THEN_A_DROP_K'
+            if hcond:
+                pieces.append(f'Condition compacte observée dans les mondes gagnants : {hcond["text"]}.')
             return {
-                'confidence':'MEDIUM',
-                'pattern':'LOW_TO_Q_WITH_K_COVER',
-                'summary_fr':' '.join([lead_txt, first_txt]),
-                'condition_fr':None,
+                'confidence':'HIGH',
+                'coverage':'PATTERN',
+                'pattern':pattern,
+                'summary_fr':' '.join(pieces),
+                'condition_fr':hcond['text'] if hcond else None,
             }
+    return None
+
+
+def recognize_guaranteed(report):
+    if probability_value(report['probability_fraction']) != 1:
+        return None
+    target=report['case']['target']
+    roots=equivalent_best_actions(report)
+    lead=report['root_lead']
+    summary=(f'L’objectif de {target} levées est garanti quelle que soit la répartition. '
+             f'Le moteur peut commencer par {action_text(lead)}.')
+    if len(roots) > 1:
+        summary += f' {len(roots)} premiers coups sont équivalents à 100 % dans le calcul exact.'
+    return {
+        'confidence':'HIGH',
+        'coverage':'FULL_TARGET',
+        'pattern':'GUARANTEED_TARGET',
+        'summary_fr':summary,
+        'condition_fr':'Toujours',
+    }
+
+
+def recognize_honor_start(report):
+    lead_seat, lead_rank = parse_action(report['root_lead'])
+    if lead_rank not in HONORS:
+        return None
+    roots=equivalent_best_actions(report)
+    summary=f'Commencer par {article(lead_rank)} de {FR_SEAT[lead_seat]}.'
+    alts=[a for a in roots if a != report['root_lead']]
+    if alts:
+        rendered=[]
+        seen=set()
+        for a in alts:
+            seat, rank=parse_action(a)
+            key=(seat, 'H' if rank in HONORS else 'L')
+            if key in seen:
+                continue
+            seen.add(key)
+            rendered.append(action_text(a))
+        if rendered:
+            summary += ' Le calcul exact donne la même probabilité avec ' + ' ou '.join(rendered) + ' en premier coup.'
+    conds=fixed_honor_conditions(report)
+    if conds:
+        summary += ' Condition compacte observée : ' + ' ; '.join(x['text'] for x in conds) + '.'
+    return {
+        'confidence':'MEDIUM',
+        'coverage':'OPENING_ONLY',
+        'pattern':'HONOR_START_OPTIMAL',
+        'summary_fr':summary,
+        'condition_fr':' ; '.join(x['text'] for x in conds) if conds else None,
+    }
+
+
+def bridge_plan(report):
+    # Strongest recognizers first. They are structural, not case-specific.
+    for recognizer in (recognize_guaranteed, recognize_low_toward_honor, recognize_honor_start):
+        plan=recognizer(report)
+        if plan:
+            return plan
 
     # Conservative generic fallback: say only what is safely inferred.
-    lead_desc = article(lead_rank) if lead_rank in HONORS else f'petit de {FR_SEAT[lead_seat]}'
+    lead_seat, lead_rank = parse_action(report['root_lead'])
     if lead_rank in HONORS:
-        summary=f'Commencer par {lead_desc} de {FR_SEAT[lead_seat]}.'
+        summary=f'Commencer par {article(lead_rank)} de {FR_SEAT[lead_seat]}.'
     else:
-        summary=f'Commencer par {lead_desc}.'
+        summary=f'Commencer par petit de {FR_SEAT[lead_seat]}.'
     conds=fixed_honor_conditions(report)
     if conds:
         summary += ' Condition de réussite compacte : ' + ' ; '.join(x['text'] for x in conds) + '.'
     return {
         'confidence':'LOW',
+        'coverage':'OPENING_ONLY',
         'pattern':'GENERIC_SAFE_FALLBACK',
         'summary_fr':summary,
         'condition_fr':' ; '.join(x['text'] for x in conds) if conds else None,
@@ -140,10 +259,11 @@ def main():
     report=json.loads(Path(a.report).read_text(encoding='utf-8'))
     plan=bridge_plan(report)
     out={
-        'schema':'MANIEMENTS_V5_DICTIONARY_V3_COMPILED_PLAN_PROTOTYPE_V1',
+        'schema':'MANIEMENTS_V5_DICTIONARY_V3_COMPILED_PLAN_PROTOTYPE_V2',
         'case':report['case'],
         'probability_fraction':report['probability_fraction'],
         'root_lead':report['root_lead'],
+        'equivalent_root_actions':equivalent_best_actions(report),
         'winning_world_count':len(report.get('winning_worlds') or []),
         'fixed_honor_conditions':fixed_honor_conditions(report),
         **plan,
