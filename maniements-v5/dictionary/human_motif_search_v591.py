@@ -28,14 +28,11 @@ def specs(north,south):
 
     for feeder,target,fh,th in [('N','S',north,south),('S','N',south,north)]:
         ss=m.seqs(th)
-        # Safety duck after an ordinary low lead.
         for seq in ss:
             for cash in cash_opts:
                 if set(cash)&set(seq):continue
                 add({'cash':cash,'feeder':feeder,'target':target,'seq':seq,'probe':None,'mode':'duck','probe_mode':'cover'})
 
-        # Honour probe, optionally followed by no finesse at all (probe then play top)
-        # or by one of the short finesse sequences.
         probes=[c for c in fh if c in 'KQJT']
         for probe in probes:
             for seq in [tuple()]+ss[:4]:
@@ -47,7 +44,38 @@ def specs(north,south):
     return out
 
 
+def article(c):
+    name=m.fr(c)
+    if c=='A':return 'l’As'
+    if c=='Q':return 'la Dame'
+    return 'le '+name
+
+
+def toward(c):
+    if c=='A':return "vers l’As"
+    if c=='Q':return 'vers la Dame'
+    return 'vers le '+m.fr(c)
+
+
+def lines(spec,display):
+    out=[]
+    if spec['cash']:out.append('Commencer par tirer '+' puis '.join(article(c) for c in spec['cash'])+'.')
+    h=display[0] if spec['feeder']=='N' else display[1]
+    if spec.get('probe'):
+        out.append(f"Présenter {article(spec['probe'])} de {h}.")
+        if spec['probe_mode']=='cover':out.append('Si l’adversaire en deuxième monte au-dessus, couvrir au plus juste ; sinon laisser courir.')
+        else:out.append('Laisser courir ce premier honneur, même si l’adversaire en deuxième monte au-dessus.')
+    if spec['seq']:
+        ts=list(spec['seq'])
+        out.append('Puis jouer '+('successivement ' if len(ts)>1 else '')+'petit de '+h+' '+', puis '.join(toward(c) for c in ts)+'.')
+        if spec['mode']=='duck':out.append('Si l’adversaire en deuxième monte au-dessus de la carte visée, laisser prendre au lieu de couvrir.')
+        else:out.append('Si l’adversaire en deuxième monte au-dessus de la carte visée, couvrir au plus juste.')
+    out.append('Finir en jouant la couleur en tête avec les cartes restantes si nécessaire.')
+    return out
+
+
 m.specs=specs
+m.lines=lines
 
 if __name__=='__main__':
     m.main()
