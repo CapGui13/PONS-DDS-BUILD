@@ -1,32 +1,32 @@
 # MANIEMENTS V5 — Dictionary materialization
 
-Updated: `2026-09-12T13:53:54+00:00`
+Updated: `2026-09-12T14:29:41+00:00`
 
 - workers seen: **20/20**
-- materialized targets: **36,492**
+- materialized targets: **87,315**
 - deferred targets: **0**
 - caught-up workers: **0/20**
 - source-done workers: **20/20**
 
 | Worker | Materialized | Deferred | Next state | Active | Caught up | Source done |
 |---:|---:|---:|---:|---:|:---:|:---:|
-| 00 | 3,114 | 0 | 1 |  | no | yes |
-| 01 | 3,067 | 0 | 1 |  | no | yes |
-| 02 | 998 | 0 | 1 |  | no | yes |
-| 03 | 953 | 0 | 1 |  | no | yes |
-| 04 | 3,178 | 0 | 1 |  | no | yes |
-| 05 | 3,142 | 0 | 1 |  | no | yes |
-| 06 | 964 | 0 | 1 |  | no | yes |
-| 07 | 952 | 0 | 1 |  | no | yes |
-| 08 | 906 | 0 | 1 |  | no | yes |
-| 09 | 889 | 0 | 1 |  | no | yes |
-| 10 | 881 | 0 | 1 |  | no | yes |
-| 11 | 883 | 0 | 1 |  | no | yes |
-| 12 | 853 | 0 | 1 |  | no | yes |
-| 13 | 883 | 0 | 1 |  | no | yes |
-| 14 | 3,571 | 0 | 1 |  | no | yes |
-| 15 | 3,157 | 0 | 1 |  | no | yes |
-| 16 | 3,273 | 0 | 1 |  | no | yes |
-| 17 | 3,075 | 0 | 1 |  | no | yes |
-| 18 | 979 | 0 | 1 |  | no | yes |
-| 19 | 774 | 0 | 1 |  | no | yes |
+| 00 | 4,203 | 0 | 1 |  | no | yes |
+| 01 | 4,423 | 0 | 1 |  | no | yes |
+| 02 | 4,454 | 0 | 1 |  | no | yes |
+| 03 | 4,528 | 0 | 1 |  | no | yes |
+| 04 | 4,317 | 0 | 1 |  | no | yes |
+| 05 | 4,531 | 0 | 1 |  | no | yes |
+| 06 | 3,978 | 0 | 1 |  | no | yes |
+| 07 | 4,336 | 0 | 1 |  | no | yes |
+| 08 | 4,382 | 0 | 1 |  | no | yes |
+| 09 | 4,292 | 0 | 1 |  | no | yes |
+| 10 | 4,054 | 0 | 1 |  | no | yes |
+| 11 | 4,268 | 0 | 1 |  | no | yes |
+| 12 | 4,434 | 0 | 1 |  | no | yes |
+| 13 | 4,229 | 0 | 1 |  | no | yes |
+| 14 | 4,921 | 0 | 1 |  | no | yes |
+| 15 | 4,387 | 0 | 1 |  | no | yes |
+| 16 | 4,536 | 0 | 1 |  | no | yes |
+| 17 | 4,398 | 0 | 1 |  | no | yes |
+| 18 | 4,431 | 0 | 1 |  | no | yes |
+| 19 | 4,213 | 0 | 1 |  | no | yes |
