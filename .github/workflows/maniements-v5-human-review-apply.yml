@@ -1,0 +1,61 @@
+name: MANIEMENTS V5 — Apply human review corrections
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "maniements-v5/dictionary/HUMAN_REVIEW_APPLY_START"
+
+permissions:
+  contents: write
+
+jobs:
+  apply-review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Apply reviewed wording to canonical reference corpus
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('maniements-v5/dictionary/human_reference_cases_v4.json')
+          d=json.loads(p.read_text(encoding='utf-8'))
+          d['status']='REVIEWED_BASE_V4_7'
+          updates={
+            'BS_C': {
+              'why_fr': 'Le deuxième passage vers D-10 gagne notamment lorsque A-V sont seconds dans la main placée devant D-10. Commencer par le Roi ne permet pas de profiter de cette position de cartes.'
+            },
+            'BS_D': {
+              'why_fr': 'Cet ordre permet de faire 4 levées dans le cas du Valet sec mal placé. Commencer par l’impasse au Valet avec le 10 perd cette possibilité.'
+            },
+            'SUITPLAY_ENC': {
+              'why_fr': 'Si le 9 est pris, tirer ensuite l’As vise à écraser l’autre honneur adverse lorsqu’il est devenu sec ou second. Si un honneur est joué en deuxième avant le 9, conserver le 9 puis le jouer en forçante garde ensuite la possibilité de jouer petit vers le 10.'
+            }
+          }
+          for case in d['cases']:
+              if case['id'] in updates:
+                  case.update(updates[case['id']])
+          p.write_text(json.dumps(d,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          PY
+
+      - name: Commit canonical review corrections
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- maniements-v5/dictionary/human_reference_cases_v4.json; then
+            echo 'No changes to commit.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add maniements-v5/dictionary/human_reference_cases_v4.json
+          git commit -m 'MANIEMENTS V5 human: apply reviewed bridge wording'
+          git push origin HEAD:main
