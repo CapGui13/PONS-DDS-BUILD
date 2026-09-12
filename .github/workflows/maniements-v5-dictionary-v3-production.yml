@@ -177,6 +177,16 @@ jobs:
           done
           exit 42
 
+      - name: Queue refreshed V3 web snapshot
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api --method POST \
+            "repos/${GITHUB_REPOSITORY}/actions/workflows/maniements-v5-dictionary-v3-web.yml/dispatches" \
+            -f ref=main
+
       - name: Decide continuation
         id: decide
         shell: bash
