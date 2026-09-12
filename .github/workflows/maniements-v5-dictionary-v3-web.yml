@@ -33,7 +33,7 @@ jobs:
         run: |
           set -euo pipefail
           rm -rf dist/v3-web
-          python3 maniements-v5/dictionary/build_web_v32.py \
+          python3 maniements-v5/dictionary/build_web_v33.py \
             --repo . \
             --output-dir dist/v3-web
           cat dist/v3-web/manifest.json >> "$GITHUB_STEP_SUMMARY"
@@ -53,6 +53,8 @@ jobs:
           max_bytes=max(os.path.getsize(p) for p in shards)
           assert max_bytes < 5_000_000, max_bytes
           html=Path('dist/v3-web/index.html').read_text(encoding='utf-8')
+          assert 'X = 10' in html and 'x = petite carte quelconque de 2 à 7' in html
+          assert 'function expandWild' in html and 'famille x certifiée' in html
           js=re.search(r'<script>\n(.*?)\n</script>',html,re.S)
           assert js
           Path('/tmp/v3-app.js').write_text(js.group(1),encoding='utf-8')
