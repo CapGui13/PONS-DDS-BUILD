@@ -1,0 +1,67 @@
+name: MANIEMENTS V5 — Dictionary V3 prototype
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "maniements-v5/dictionary/V3_PROTOTYPE_START"
+
+permissions:
+  contents: read
+
+jobs:
+  inspect-v3:
+    name: Inspect exact multi-trick witness for AD2-V963
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Reconstruct and verify frozen V5 runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          ZIP="$RUNNER_TEMP/MANIEMENTS_V3_GENERATION_V5_PASS_ORBIT_RUNTIME_V2.zip"
+          EXPECTED="a0b580531f3c9e8bb00710b9c3e1c183b27cbfe9231c9d584e29a374ba88835d"
+          cat \
+            maniements-v5/runtime/runtime_v2.b64.part-00 \
+            maniements-v5/runtime/runtime_v2.b64.part-01 \
+            maniements-v5/runtime/runtime_v2.b64.part-02a \
+            maniements-v5/runtime/runtime_v2.b64.part-02b \
+            maniements-v5/runtime/runtime_v2.b64.part-03 \
+            maniements-v5/runtime/runtime_v2.b64.part-04 \
+            maniements-v5/runtime/runtime_v2.b64.part-05 \
+            maniements-v5/runtime/runtime_v2.b64.part-06 \
+            | base64 -d > "$ZIP"
+          test "$(sha256sum "$ZIP" | awk '{print $1}')" = "$EXPECTED"
+          mkdir -p "$RUNNER_TEMP/v5-runtime"
+          unzip -q "$ZIP" -d "$RUNNER_TEMP/v5-runtime"
+          (cd "$RUNNER_TEMP/v5-runtime" && sha256sum -c SHA256SUMS.txt)
+
+      - name: Inspect target 4 and target 3 multi-trick witnesses
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          python3 maniements-v5/dictionary/prototype_v3_inspect.py \
+            --runtime-root "$RUNNER_TEMP/v5-runtime" \
+            --north AQ2 --south J963 --target 4 \
+            > dist/AD2_V963_target4.json
+          python3 maniements-v5/dictionary/prototype_v3_inspect.py \
+            --runtime-root "$RUNNER_TEMP/v5-runtime" \
+            --north AQ2 --south J963 --target 3 \
+            > dist/AD2_V963_target3.json
+          cat dist/AD2_V963_target4.json >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload prototype inspection
+        uses: actions/upload-artifact@v4
+        with:
+          name: MANIEMENTS_V5_DICTIONARY_V3_PROTOTYPE
+          path: dist/*.json
+          if-no-files-found: error
+          retention-days: 30
