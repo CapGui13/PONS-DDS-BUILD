@@ -65,11 +65,12 @@ def supported_plan(eng,bp,pc,cc,north,south,target,expected_prob):
     return out,native['policy_state_count']
 
 
-# Install the qualified exact semantic solver. The production entrypoint below now
-# uses an honor-first scheduler which groups 2–7 as generalized lowercase x families.
+# Install the qualified exact semantic solver. Existing production workflows call
+# this file directly; route that entrypoint to V3.5 so every next cycle is really
+# honor-first (A/K/Q/J/T) and grouped by lowercase-x low-card families (2–7).
 base.supported_plan=supported_plan
 base.EXTRACTOR=SEMANTIC_EXTRACTOR
 
 if __name__=='__main__':
-    import materialize_worker_v34_honor_first as honor_first
+    import materialize_worker_v35_honor_first as honor_first
     honor_first.main()
