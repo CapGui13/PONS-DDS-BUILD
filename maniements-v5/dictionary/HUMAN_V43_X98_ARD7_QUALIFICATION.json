@@ -1,0 +1,26 @@
+{
+  "schema": "MANIEMENTS_V5_HUMAN_QUALIFICATION_V1",
+  "case": {
+    "north": "T98",
+    "south": "AKQ7",
+    "display_fr": ["X98", "ARD7"],
+    "target": 4
+  },
+  "exact_optimum_fraction": "1961/3220",
+  "exact_optimum_percent": 60.90062111801242,
+  "reviewed_two_probe_fraction": "83/140",
+  "reviewed_two_probe_percent": 59.285714285714285,
+  "certified_human_fraction": "1961/3220",
+  "certified_human_percent": 60.90062111801242,
+  "certification": "HUMAN_TREE_EXACT",
+  "human_line_fr": "Jouer successivement de X98 vers ARD7 : le 8 vers la Dame, puis le 9 vers le Roi, puis le 10 vers l'As. Si le Valet apparaît en deuxième, le couvrir. Si l'adversaire qui joue après ARD7 a déjà montré qu'il n'avait plus de carte dans la couleur et que le Valet n'est pas encore apparu, jouer le 7 au lieu de dépenser l'honneur suivant : la carte partie de X98 est alors laissée courir en impasse contre le Valet désormais localisé en deuxième. Sinon, continuer Dame, Roi, As.",
+  "why_fr": "Les deux coups de sonde puis l'impasse sont proches mais sous-optimaux : ils gagnent une famille 4-2 avec le Valet quatrième du bon côté, mais abandonnent la famille opposée 3-3 avec le Valet troisième. Les poids exacts de ces deux familles sont environ 16,15 % et 17,76 %, soit une perte nette d'environ 1,62 point.",
+  "successful_layout_classes": [
+    "tous les partages 3-3",
+    "partages 4-2 lorsque le Valet est dans le doubleton",
+    "partages 5-1 lorsque le Valet est sec",
+    "partages 5-1 avec le Valet dans la main longue située en deuxième sur les départs de X98",
+    "partage 6-0 lorsque la main de six cartes est située en deuxième sur les départs de X98"
+  ],
+  "qualification_script": "maniements-v5/dictionary/qualify_human_x98_ard7_v43.py"
+}
