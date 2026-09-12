@@ -1,0 +1,207 @@
+{
+  "schema": "MANIEMENTS_V5_HUMAN_REFERENCE_CASES_V1",
+  "status": "PILOT_HUMAN_REVIEW",
+  "default_assumption_fr": "Aucune information particulière sur les cartes adverses et communications extérieures suffisantes pour revenir dans la main voulue entre deux tours de la couleur, sauf indication contraire.",
+  "cases": [
+    {
+      "id": "BS_A",
+      "north_fr": "RV98765",
+      "south_fr": "2",
+      "target": 5,
+      "maniement_fr": "Jouer petit vers le Roi.",
+      "why_fr": "Sur les partages 4–1 pertinents, le Roi ne coûte jamais par rapport aux autres choix et gagne certaines positions supplémentaires.",
+      "source": "Brian Senior — Know your suit combinations",
+      "source_url": "https://csbnews.org/en/know-your-suit-combinations-by-brian-senior/"
+    },
+    {
+      "id": "BS_B",
+      "north_fr": "AX987",
+      "south_fr": "D432",
+      "target": 4,
+      "maniement_fr": "Tirer l'As puis rejouer la couleur.",
+      "why_fr": "Cette ligne gère mieux les deux honneurs groupés à droite et limite aussi la casse lorsque R-V sont seconds.",
+      "source": "Brian Senior — Know your suit combinations",
+      "source_url": "https://csbnews.org/en/know-your-suit-combinations-by-brian-senior/"
+    },
+    {
+      "id": "BS_C",
+      "north_fr": "R432",
+      "south_fr": "DX5",
+      "target": 3,
+      "maniement_fr": "Jouer petit vers le 10. Si Est fournit le Valet, couvrir de la Dame. Revenir ensuite en Nord et rejouer petit vers le 10.",
+      "why_fr": "Le deuxième passage vers D-10 permet notamment de gagner contre certaines positions As-Valet seconds que Roi d'abord ne traite pas.",
+      "source": "Brian Senior — Know your suit combinations",
+      "source_url": "https://csbnews.org/en/know-your-suit-combinations-by-brian-senior/"
+    },
+    {
+      "id": "BS_D",
+      "north_fr": "ADX32",
+      "south_fr": "654",
+      "target": 4,
+      "maniement_fr": "Faire d'abord l'impasse à la Dame. Revenir ensuite en Sud et jouer de nouveau vers le 10, que la Dame ait tenu ou non.",
+      "why_fr": "Pour quatre levées, commencer par la Dame récupère notamment le Valet sec mal placé, avantage que n'a pas l'impasse au 10 en premier.",
+      "source": "Brian Senior — Know your suit combinations",
+      "source_url": "https://csbnews.org/en/know-your-suit-combinations-by-brian-senior/"
+    },
+    {
+      "id": "BS_E",
+      "north_fr": "AV32",
+      "south_fr": "R954",
+      "target": 4,
+      "maniement_fr": "Faire immédiatement l'impasse à la Dame : petit de Sud vers le Valet. Ne pas tirer le Roi d'abord.",
+      "why_fr": "L'impasse immédiate gagne des positions supplémentaires, notamment Dame sèche en Ouest et certains 10 quatrièmes en Est.",
+      "source": "Brian Senior — Know your suit combinations",
+      "source_url": "https://csbnews.org/en/know-your-suit-combinations-by-brian-senior/"
+    },
+    {
+      "id": "BS_1",
+      "north_fr": "ARDXx",
+      "south_fr": "x",
+      "target": 5,
+      "maniement_fr": "Faire l'impasse au Valet en passant le 10.",
+      "why_fr": "Avec cet objectif, la seule chance supplémentaire utile est de trouver le Valet placé.",
+      "source": "Brian Senior — quiz solution 1",
+      "source_url": "https://csbnews.org/en/know-your-suit-combinations-by-brian-senior/"
+    },
+    {
+      "id": "BS_2",
+      "north_fr": "ARDX9",
+      "south_fr": "x",
+      "target": 5,
+      "maniement_fr": "Jouer la couleur en tête.",
+      "why_fr": "La présence du 9 modifie le calcul par rapport à ARDXx : l'impasse n'est plus la meilleure ligne.",
+      "source": "Brian Senior — quiz solution 2",
+      "source_url": "https://csbnews.org/en/know-your-suit-combinations-by-brian-senior/"
+    },
+    {
+      "id": "BS_3",
+      "north_fr": "ARDxx",
+      "south_fr": "DX",
+      "target": 5,
+      "maniement_fr": "Faire l'impasse au Valet en passant le 10.",
+      "why_fr": "Pour cinq levées, l'impasse au Valet est nettement supérieure au jeu en tête.",
+      "source": "Brian Senior — quiz solution 3",
+      "source_url": "https://csbnews.org/en/know-your-suit-combinations-by-brian-senior/"
+    },
+    {
+      "id": "BS_4",
+      "north_fr": "AVxx",
+      "south_fr": "R9xx",
+      "target": 3,
+      "maniement_fr": "Tirer l'As, puis jouer petit vers le 9, sauf si le défenseur intermédiaire fournit un honneur ou montre une chicane.",
+      "why_fr": "C'est un jeu de sécurité : l'objectif de trois levées peut être garanti.",
+      "source": "Brian Senior — quiz solution 4",
+      "source_url": "https://csbnews.org/en/know-your-suit-combinations-by-brian-senior/"
+    },
+    {
+      "id": "BS_5",
+      "north_fr": "AD9x",
+      "south_fr": "Vx",
+      "target": 3,
+      "maniement_fr": "Jouer petit vers le Valet. Qu'il fasse ou non la levée, revenir dans la main opposée et faire ensuite l'impasse avec le 9.",
+      "why_fr": "L'ordre des deux impasses permet de couvrir davantage de positions des honneurs manquants.",
+      "source": "Brian Senior — quiz solution 5",
+      "source_url": "https://csbnews.org/en/know-your-suit-combinations-by-brian-senior/"
+    },
+    {
+      "id": "BS_6",
+      "north_fr": "AX98",
+      "south_fr": "Dxxx",
+      "target": 3,
+      "maniement_fr": "Faire deux impasses. Commencer par une petite carte plutôt que par la Dame, afin de pouvoir changer de ligne si le défenseur intermédiaire montre une chicane.",
+      "why_fr": "Le premier petit coup conserve davantage d'options après l'information donnée par la défense.",
+      "source": "Brian Senior — quiz solution 6",
+      "source_url": "https://csbnews.org/en/know-your-suit-combinations-by-brian-senior/"
+    },
+    {
+      "id": "BS_7",
+      "north_fr": "Rxxx",
+      "south_fr": "DXx",
+      "target": 2,
+      "maniement_fr": "Jouer petit vers la Dame. Qu'elle gagne ou perde, revenir dans la première main et jouer ensuite petit vers le 10.",
+      "why_fr": "L'objectif de deux levées change le bon ordre des cartes par rapport à d'autres objectifs sur la même figure.",
+      "source": "Brian Senior — quiz solution 7",
+      "source_url": "https://csbnews.org/en/know-your-suit-combinations-by-brian-senior/"
+    },
+    {
+      "id": "BS_8",
+      "north_fr": "RVXxxxx",
+      "south_fr": "x",
+      "target": 6,
+      "maniement_fr": "Jouer petit vers le Valet.",
+      "why_fr": "La seule chance de six levées est de trouver la Dame seconde placée.",
+      "source": "Brian Senior — quiz solution 8",
+      "source_url": "https://csbnews.org/en/know-your-suit-combinations-by-brian-senior/"
+    },
+    {
+      "id": "BS_9",
+      "north_fr": "RVXxxxx",
+      "south_fr": "x",
+      "target": 5,
+      "maniement_fr": "Jouer petit vers le Roi.",
+      "why_fr": "Dès qu'on peut se permettre deux perdantes, le maniement optimal n'est plus celui qui vise six levées.",
+      "source": "Brian Senior — quiz solution 9",
+      "source_url": "https://csbnews.org/en/know-your-suit-combinations-by-brian-senior/"
+    },
+    {
+      "id": "BS_10",
+      "north_fr": "ARVXxxx",
+      "south_fr": "xx",
+      "target": 6,
+      "maniement_fr": "Faire deux fois l'impasse à la Dame. Ne pas tirer l'As en premier.",
+      "why_fr": "Tirer l'As supprime une partie des positions gagnantes lorsque la Dame est placée.",
+      "source": "Brian Senior — quiz solution 10",
+      "source_url": "https://csbnews.org/en/know-your-suit-combinations-by-brian-senior/"
+    },
+    {
+      "id": "SUITPLAY_ENC",
+      "north_fr": "AX42",
+      "south_fr": "953",
+      "target": 2,
+      "maniement_fr": "Commencer par une petite de Nord vers le 9. Si le 9 perd à Ouest, tirer ensuite l'As. Si Est fournit un honneur au premier tour, laisser courir le 9 ; s'il perd, faire ensuite l'impasse au 10.",
+      "why_fr": "Cette ligne issue de l'analyse exhaustive améliore sensiblement une ancienne recommandation publiée et montre pourquoi une procédure conditionnelle est nécessaire.",
+      "source": "Warmerdam / correction informatisée de l'Official Encyclopedia of Bridge",
+      "source_url": "https://kiwix.drnathanhutchins.com/content/wikipedia_en_all_maxi_2026-02/Suit_combination"
+    },
+    {
+      "id": "ROUD_1",
+      "north_fr": "AD987",
+      "south_fr": "Vxx",
+      "target": 5,
+      "maniement_fr": "Présenter le Valet. S'il perd, tirer l'As. S'il tient ou s'il est couvert, faire ensuite l'impasse avec le 9.",
+      "why_fr": "La ligne est formulée comme une procédure conditionnelle sur le résultat observable du premier tour.",
+      "source": "Jean-Marc Roudinesco — Dictionary of Suit Combinations (ligne citée en ligne)",
+      "source_url": "https://groups.google.com/g/rec.games.bridge/c/hXJtXXrzvGw"
+    },
+    {
+      "id": "ROUD_2",
+      "north_fr": "R62",
+      "south_fr": "AV853",
+      "target": 5,
+      "maniement_fr": "Tirer le Roi. Si Ouest fournit la Dame, le 10 ou le 9, faire ensuite l'impasse avec le 8 ; sinon faire l'impasse avec le Valet.",
+      "why_fr": "Le rang exact de la carte fournie au premier tour modifie le second choix ; c'est le type de branche observable que le dictionnaire doit savoir afficher.",
+      "source": "Jean-Marc Roudinesco — ligne citée dans Puzzling suit combination",
+      "source_url": "https://bridgewinners.com/article/view/puzzling-suit-combination/"
+    },
+    {
+      "id": "BH_1",
+      "north_fr": "AD9",
+      "south_fr": "xx",
+      "target": 2,
+      "maniement_fr": "Jouer petit vers le 9, puis revenir dans l'autre main et jouer petit vers la Dame.",
+      "why_fr": "La ligne est donnée sous forme d'une séquence très courte et directement jouable à la table.",
+      "source": "BridgeHands — Suit Combinations",
+      "source_url": "https://www.bridgehands.com/S/Suit_Combination_4.htm"
+    },
+    {
+      "id": "BH_2",
+      "north_fr": "AX9",
+      "south_fr": "Dxx",
+      "target": 3,
+      "maniement_fr": "Présenter la Dame puis jouer petit vers le 9 ; l'ordre inverse, petit vers le 10 puis Dame, est également donné comme équivalent.",
+      "why_fr": "Le dictionnaire doit pouvoir signaler plusieurs lignes équivalentes sans choisir arbitrairement une petite carte de tie-break.",
+      "source": "BridgeHands — Suit Combinations",
+      "source_url": "https://www.bridgehands.com/S/Suit_Combination_4.htm"
+    }
+  ]
+}
