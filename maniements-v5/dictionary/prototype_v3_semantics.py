@@ -137,7 +137,7 @@ def _bare_higher_honors_promotion(eng,e,best_mask,probability,north,south,target
         hero_text=RANK_FR[hero]
         n=len(higher)
         times={1:'une fois',2:'deux fois',3:'trois fois',4:'quatre fois',5:'cinq fois'}.get(n,f'{n} fois')
-        summary+=(f' Jouer {times} une petite carte en conservant {hero_text} : '
+        summary+=(f' Jouer petit {times} en conservant {hero_text} : '
                   f'{higher_text} sont forcés, puis {hero_text} est maître.')
 
     root_probs=_root_action_probabilities(eng,e,e.initial())
