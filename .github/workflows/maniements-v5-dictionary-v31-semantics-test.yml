@@ -65,7 +65,20 @@ jobs:
           assert x['summary_fr']=='On peut faire une levée si les cartes adverses sont réparties 3–3. Quel que soit le maniement adopté.',x
           print(x['summary_fr'])
 
+          base,z=analyze('54','J632',1)
+          assert base['probability_fraction']=='143/8050',base
+          assert z is not None,z
+          assert z['semantic_kind']=='BARE_HIGHER_HONORS_PROMOTION',z
+          assert z['promoted_card']=='J',z
+          assert z['higher_missing']==['A','K','Q'],z
+          assert z['other_defender_cards']==['T','9','8','7'],z
+          assert z['first_small_irrelevant'] is True,z
+          assert z['summary_fr']==("Une levée n'est possible que si l'As, le Roi et la Dame sont groupés dans une même main adverse, "
+                                  "sans autre carte dans la couleur, tandis que l'autre adversaire détient 10-9-8-7. "
+                                  "Jouer petit trois fois en conservant le Valet : l'As, le Roi et la Dame sont forcés, puis le Valet est maître."),z
+          print(z['summary_fr'])
+
           _,y=analyze('AQ2','J963',4)
           assert y is None,y
-          print('honor-dependent case correctly left to exact policy')
+          print('complex honor-dependent case correctly left to exact policy')
           PY
