@@ -1,4 +1,4 @@
-name: MANIEMENTS V5 — Human V5.9 safety/probe motifs
+name: MANIEMENTS V5 — Human V5.9.1 safety/probe motifs
 on:
   workflow_dispatch:
   push:
@@ -33,11 +33,11 @@ jobs:
       - name: Rebuild baseline motif search
         run: python3 maniements-v5/dictionary/human_motif_search_v572.py --input v52/HUMAN_V52_NORMALIZED.json --runtime-root "$RUNNER_TEMP/v5-runtime" --out-dir v57
       - name: Search safety and honor-probe motifs
-        run: python3 maniements-v5/dictionary/human_motif_search_v59.py --v52 v52/HUMAN_V52_NORMALIZED.json --v57 v57/HUMAN_V57_MOTIF_SEARCH.json --runtime-root "$RUNNER_TEMP/v5-runtime" --out-dir dist
+        run: python3 maniements-v5/dictionary/human_motif_search_v591.py --v52 v52/HUMAN_V52_NORMALIZED.json --v57 v57/HUMAN_V57_MOTIF_SEARCH.json --runtime-root "$RUNNER_TEMP/v5-runtime" --out-dir dist
       - run: cat dist/SUMMARY.txt
       - uses: actions/upload-artifact@v4
         with:
-          name: MANIEMENTS_V5_HUMAN_V59_SAFETY_PROBE
+          name: MANIEMENTS_V5_HUMAN_V591_SAFETY_PROBE
           path: dist/*
           if-no-files-found: error
           retention-days: 30
