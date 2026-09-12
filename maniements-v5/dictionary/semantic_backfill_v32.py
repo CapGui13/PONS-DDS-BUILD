@@ -105,6 +105,7 @@ def main():
     state=load_state(root)
     rows=latest_entries(root)
     i=min(int(state.get('next_index',0)),len(rows))
+    start_i=i
     seq=int(state.get('sequence',0))
     corrections=[]
     started=time.monotonic()
@@ -143,14 +144,14 @@ def main():
     state['caught_up']=i>=len(rows)
     state['updated_at_utc']=utcnow()
     state['last_pass']={
-        'checked':i-int(state.get('next_index_before_pass',0)) if 'next_index_before_pass' in state else None,
+        'checked':i-start_i,
         'corrections':len(corrections),
         'elapsed_seconds':round(time.monotonic()-started,6),
     }
-    state.pop('next_index_before_pass',None)
     (outdir/'state.json').write_text(json.dumps(state,ensure_ascii=False,sort_keys=True,indent=2)+'\n',encoding='utf-8')
     print(json.dumps({
         'version':VERSION,
+        'pass_checked':i-start_i,
         'next_index':state['next_index'],
         'source_entry_count':len(rows),
         'pass_corrections':len(corrections),
