@@ -42,5 +42,10 @@ def family_priority(row):
 
 v34.family_priority = family_priority
 
+
+def main():
+    return v34.main()
+
+
 if __name__ == '__main__':
-    v34.main()
+    main()
