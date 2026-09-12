@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   native-policy-fast:
-    name: Export native V5 policies for fast MEDIUM cases
+    name: Export and compress native V5 policies for fast MEDIUM cases
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -47,7 +47,7 @@ jobs:
           unzip -q "$ZIP" -d "$RUNNER_TEMP/v5-runtime"
           (cd "$RUNNER_TEMP/v5-runtime" && sha256sum -c SHA256SUMS.txt)
 
-      - name: Export four native policies
+      - name: Export and compress four native policies
         shell: bash
         run: |
           set -euo pipefail
@@ -64,6 +64,10 @@ jobs:
               --runtime-root "$RUNNER_TEMP/v5-runtime" \
               --north "$NORTH" --south "$SOUTH" --target "$TARGET" \
               > "dist/${NAME}_native_policy.json"
+            python3 maniements-v5/dictionary/prototype_v3_policy_compress.py \
+              "dist/${NAME}_native_policy.json" \
+              --output "dist/${NAME}_policy_program.json" \
+              > /dev/null
           done < "$RUNNER_TEMP/cases.tsv"
 
       - name: Summarize native policies
@@ -71,16 +75,16 @@ jobs:
         run: |
           set -euo pipefail
           python3 - <<'PY' > dist/NATIVE_POLICY_SUMMARY.md
-          import glob,json
+          import glob,json,os
           print('# MANIEMENTS V5 — V3 native public-policy diagnostics')
           print()
-          print('| Cas | Proba | Policy states | Fresh-trick actions |')
-          print('|---|---:|---:|---|')
-          for p in sorted(glob.glob('dist/*_native_policy.json')):
+          print('| Cas | Proba | Native states | Contexts | Conditional | Leaves | Max depth | Errors |')
+          print('|---|---:|---:|---:|---:|---:|---:|---:|')
+          for p in sorted(glob.glob('dist/*_policy_program.json')):
               d=json.load(open(p,encoding='utf-8'))
-              c=d['case']; s=d['summary']
-              fresh=', '.join(f"{k}={v}" for k,v in s['fresh_trick_actions'].items())
-              print(f"| {c['north']} / {c['south']} → {c['target']} | {d['solve']['probability_fraction']} | {d['policy_state_count']} | {fresh} |")
+              c=d['case']; s=d['program_stats']
+              print(f"| {c['north']} / {c['south']} → {c['target']} | {d['probability_fraction']} | {d['native_policy_states']} | {d['context_count']} | {d['conditional_context_count']} | {s['leaves']} | {s['max_conditional_depth']} | {s['unseparable_contexts']} |")
+              assert s['unseparable_contexts']==0
           PY
           cat dist/NATIVE_POLICY_SUMMARY.md >> "$GITHUB_STEP_SUMMARY"
 
