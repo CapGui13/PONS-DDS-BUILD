@@ -8,17 +8,32 @@ import prototype_v3_inspect as base
 
 
 def declarer_candidates(eng, e, s, mask):
-    seat = e.order(s.leader)[s.pos]
-    hand = s.north if seat == 'N' else s.south
-    acts = eng.ranks(hand) if hand else (eng.VOID,)
     cands=[]
-    for r in acts:
-        ns=e.close(e.decl_play(s,seat,r))
-        for cm in e.frontier(ns):
-            if (mask | cm) == cm:
-                cands.append((r,ns,cm))
-    cands.sort(key=lambda x:(x[0],-float(e.model.weight(x[2])),-x[2]))
-    return seat, cands
+    if s.pos == 0:
+        # At the start of a fresh trick this engine deliberately assumes
+        # outside entries: declarer may start from either N or S.
+        for seat,hand in (('N',s.north),('S',s.south)):
+            acts=eng.ranks(hand) if hand else (eng.VOID,)
+            for r in acts:
+                lead=eng.PublicState(
+                    s.north,s.south,s.west_seen,s.east_seen,
+                    s.west_void,s.east_void,seat,0,tuple(),s.won,
+                )
+                ns=e.decl_play(lead,seat,r)
+                for cm in e.frontier(ns):
+                    if (mask | cm) == cm:
+                        cands.append((seat,r,ns,cm))
+    else:
+        seat=e.order(s.leader)[s.pos]
+        hand=s.north if seat == 'N' else s.south
+        acts=eng.ranks(hand) if hand else (eng.VOID,)
+        for r in acts:
+            ns=e.close(e.decl_play(s,seat,r))
+            for cm in e.frontier(ns):
+                if (mask | cm) == cm:
+                    cands.append((seat,r,ns,cm))
+    cands.sort(key=lambda x:(0 if x[0]=='N' else 1,x[1],-float(e.model.weight(x[3])),-x[3]))
+    return cands
 
 
 def card_text(eng, r):
@@ -43,6 +58,7 @@ def build_policy_graph(eng, e, start_state, start_mask, max_nodes=5000, max_dept
         'budget_limited_links':0,
         'deduplicated_links':0,
         'max_depth_seen':0,
+        'declarer_errors':0,
     }
 
     def register(state, support, depth):
@@ -81,34 +97,38 @@ def build_policy_graph(eng, e, start_state, start_mask, max_nodes=5000, max_dept
             nodes[str(node_id)]={**common,'role':'TRUNCATED','reason':'DEPTH_LIMIT'}
             continue
 
-        seat=e.order(state.leader)[state.pos]
-        if seat in eng.DECL:
+        # Fresh trick: this engine exposes a declarer choice from either hand.
+        # Otherwise role follows the four-seat order of the current trick.
+        fresh = state.pos == 0
+        seat = None if fresh else e.order(state.leader)[state.pos]
+        if fresh or seat in eng.DECL:
             stats['declarer_nodes'] += 1
-            dseat,cands=declarer_candidates(eng,e,state,support)
+            cands=declarer_candidates(eng,e,state,support)
             if not cands:
+                stats['declarer_errors'] += 1
                 nodes[str(node_id)]={**common,'role':'DECL','seat':seat,'error':'no declarer witness'}
                 continue
-            r,ns,_cm=cands[0]
+            chosen_seat,r,ns,_cm=cands[0]
             alternatives=[]
             action_seen=set()
-            for ar,_,acm in cands:
-                txt=card_text(eng,ar)
-                if txt in action_seen:
+            for aseat,ar,_,acm in cands:
+                key=(aseat,card_text(eng,ar))
+                if key in action_seen:
                     continue
-                action_seen.add(txt)
+                action_seen.add(key)
                 alternatives.append({
-                    'card':txt,
+                    'action':f'{aseat}:{card_text(eng,ar)}',
                     'frontier_mass':str(e.model.weight(acm)),
                     'frontier_bits':acm.bit_count(),
                 })
-            # Declarer play reveals no hidden card, so keep exactly the same
-            # optimal support instead of expanding to the chosen frontier mask.
             child_id=register(ns,support,depth+1)
             nodes[str(node_id)]={
                 **common,
                 'role':'DECL',
-                'seat':dseat,
+                'seat':chosen_seat,
                 'card':card_text(eng,r),
+                'action':f'{chosen_seat}:{card_text(eng,r)}',
+                'fresh_trick_choice':fresh,
                 'equivalent_preserving_actions':alternatives,
                 'next_id':child_id,
             }
@@ -124,8 +144,6 @@ def build_policy_graph(eng, e, start_state, start_mask, max_nodes=5000, max_dept
             if child is None:
                 continue
             ns,_cm=child
-            # A defender card reveals information: the surviving optimal support
-            # is precisely the compatible subset, never a larger frontier mask.
             child_id=register(ns,need,depth+1)
             stats['defender_branches'] += 1
             branches.append({
@@ -168,7 +186,7 @@ def main():
         max_depth=a.max_depth,
     )
     out={
-        'schema':'MANIEMENTS_V5_DICTIONARY_V3_POLICY_GRAPH_V3',
+        'schema':'MANIEMENTS_V5_DICTIONARY_V3_POLICY_GRAPH_V4',
         'case':{'north':a.north,'south':a.south,'target':a.target},
         'probability_fraction':solved['probability_fraction'],
         'root_lead':f'{seat}:{rank}',
