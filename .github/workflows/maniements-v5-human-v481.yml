@@ -1,4 +1,4 @@
-name: MANIEMENTS V5 — Human V4.8.1 fast novel review
+name: MANIEMENTS V5 — Human V4.8.2 fast novel review
 
 on:
   workflow_dispatch:
@@ -51,7 +51,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python3 maniements-v5/dictionary/human_novel_v481.py \
+          python3 maniements-v5/dictionary/human_novel_v482.py \
             --runtime-root "$RUNNER_TEMP/v5-runtime" \
             --reference maniements-v5/dictionary/human_reference_cases_v4.json \
             --out-dir dist
@@ -59,7 +59,7 @@ jobs:
       - name: Upload review artifact
         uses: actions/upload-artifact@v4
         with:
-          name: MANIEMENTS_V5_HUMAN_V481_10_NOUVEAUX
+          name: MANIEMENTS_V5_HUMAN_V482_10_NOUVEAUX
           path: dist/*
           if-no-files-found: error
           retention-days: 30
