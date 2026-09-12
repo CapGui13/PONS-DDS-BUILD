@@ -1,4 +1,4 @@
-name: MANIEMENTS V5 — Human V5.7.1 motif-first exact search
+name: MANIEMENTS V5 — Human V5.7.2 motif-first exact search
 on:
   workflow_dispatch:
     inputs:
@@ -42,11 +42,11 @@ jobs:
         env:
           MAX_CANDIDATES: ${{ inputs.max_candidates || '0' }}
         run: |
-          python3 maniements-v5/dictionary/human_motif_search_v571.py --input v52/HUMAN_V52_NORMALIZED.json --runtime-root "$RUNNER_TEMP/v5-runtime" --out-dir dist --max-candidates "$MAX_CANDIDATES"
+          python3 maniements-v5/dictionary/human_motif_search_v572.py --input v52/HUMAN_V52_NORMALIZED.json --runtime-root "$RUNNER_TEMP/v5-runtime" --out-dir dist --max-candidates "$MAX_CANDIDATES"
       - run: cat dist/SUMMARY.txt
       - uses: actions/upload-artifact@v4
         with:
-          name: MANIEMENTS_V5_HUMAN_V571_MOTIF_SEARCH
+          name: MANIEMENTS_V5_HUMAN_V572_MOTIF_SEARCH
           path: dist/*
           if-no-files-found: error
           retention-days: 30
