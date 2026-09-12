@@ -70,8 +70,7 @@ def leaf_rules(t,path=None):
     cond=t['condition_fr']; feat=t['if']
     return leaf_rules(t['no'],path+[{'feature':feat,'condition':cond,'value':False}])+leaf_rules(t['yes'],path+[{'feature':feat,'condition':cond,'value':True}])
 
-def main():
-    ap=argparse.ArgumentParser(); ap.add_argument('policy'); ap.add_argument('--output'); a=ap.parse_args(); d=json.loads(Path(a.policy).read_text(encoding='utf-8'))
+def compress_policy_dict(d):
     groups=defaultdict(list)
     for r in d['policy_states']:groups[context_key(r)].append(r)
     contexts=[]; total_nodes=total_leaves=max_depth=conditional=errors=0
@@ -87,8 +86,31 @@ def main():
             n,l,depth=tree_stats(tree)
             if any('error' in z for z in item['rules']):errors+=1
         item['tree_stats']={'nodes':n,'leaves':l,'depth':depth}; total_nodes+=n; total_leaves+=l; max_depth=max(max_depth,depth); contexts.append(item)
-    out={'schema':'MANIEMENTS_V5_DICTIONARY_V3_POLICY_PROGRAM_V2','case':d['case'],'probability_fraction':d['solve']['probability_fraction'],'native_policy_states':d['policy_state_count'],'context_count':len(contexts),'conditional_context_count':conditional,'program_stats':{'nodes':total_nodes,'leaves':total_leaves,'max_conditional_depth':max_depth,'unseparable_contexts':errors},'contexts':contexts}
-    text=json.dumps(out,ensure_ascii=False,indent=2,sort_keys=True)
+    return {'schema':'MANIEMENTS_V5_DICTIONARY_V3_POLICY_PROGRAM_V2','case':d['case'],'probability_fraction':d['solve']['probability_fraction'],'native_policy_states':d['policy_state_count'],'context_count':len(contexts),'conditional_context_count':conditional,'program_stats':{'nodes':total_nodes,'leaves':total_leaves,'max_conditional_depth':max_depth,'unseparable_contexts':errors},'contexts':contexts}
+
+def _slim_tree(t):
+    if 'action' in t:return t['action']
+    if 'error' in t:raise ValueError('cannot compact an unseparable policy tree')
+    return [t['if'],_slim_tree(t['no']),_slim_tree(t['yes'])]
+
+def compact_policy_program(program):
+    if program['program_stats']['unseparable_contexts']:
+        raise ValueError('cannot compact policy with unseparable contexts')
+    contexts=[]
+    for item in program['contexts']:
+        c=item['context']
+        key=[c['north_remaining'],c['south_remaining'],c['leader'],c['pos'],c['won'],[[t['seat'],t['card']] for t in c['trick_shape']]]
+        value=item['unconditional_action'] if 'unconditional_action' in item else _slim_tree(item['decision_tree'])
+        contexts.append([key,value])
+    case=program['case']
+    return {'schema':'MANIEMENTS_V5_DICTIONARY_V3_COMPACT_POLICY_V1','case':[case['north'],case['south'],case['target']],'probability_fraction':program['probability_fraction'],'contexts':contexts}
+
+def main():
+    ap=argparse.ArgumentParser(); ap.add_argument('policy'); ap.add_argument('--output'); ap.add_argument('--compact-output'); a=ap.parse_args(); d=json.loads(Path(a.policy).read_text(encoding='utf-8'))
+    out=compress_policy_dict(d); text=json.dumps(out,ensure_ascii=False,indent=2,sort_keys=True)
     if a.output:Path(a.output).write_text(text+'\n',encoding='utf-8')
+    if a.compact_output:
+        compact=compact_policy_program(out)
+        Path(a.compact_output).write_text(json.dumps(compact,ensure_ascii=False,separators=(',',':'),sort_keys=True)+'\n',encoding='utf-8')
     print(text)
 if __name__=='__main__':main()
