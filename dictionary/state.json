@@ -5,19 +5,19 @@
   "extractor": "LOCAL_WITNESS_FIRST_DEFENSE_V2",
   "last_pass": {
     "deferred_targets": 0,
-    "elapsed_seconds": 987.219779,
+    "elapsed_seconds": 989.340433,
     "extractor": "LOCAL_WITNESS_FIRST_DEFENSE_V2",
-    "materialized_targets": 217,
-    "sequence": 36
+    "materialized_targets": 176,
+    "sequence": 37
   },
-  "materialized_targets": 6600,
-  "next_source_state_id": 1107200,
+  "materialized_targets": 6776,
+  "next_source_state_id": 1114157,
   "next_target": 1,
   "plan_id": "MANIEMENTS_V5_PRIORITY_P1_COMMON_SPLITS_PLUS_BOUNDARY_V1",
   "schema": "MANIEMENTS_V5_DICTIONARY_WORKER_STATE_V1",
-  "sequence": 37,
+  "sequence": 38,
   "source_done": false,
   "target_cap_seconds": 210.0,
-  "updated_at_utc": "2026-09-12T00:09:49+00:00",
+  "updated_at_utc": "2026-09-12T00:43:31+00:00",
   "worker_id": 8
 }
