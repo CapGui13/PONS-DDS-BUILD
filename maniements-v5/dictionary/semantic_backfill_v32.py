@@ -8,6 +8,13 @@ from pathlib import Path
 VERSION='BRIDGE_SEMANTICS_V2'
 STATE_SCHEMA='MANIEMENTS_V5_SEMANTIC_BACKFILL_STATE_V1'
 
+# IMPORTANT: the V3 exact dictionary is allowed to keep materializing, but this
+# legacy semantic layer predates the reviewed human-presentation contract.  It
+# is therefore frozen by default while V5.1+ human compression is qualified.
+# Historical semantic chunks are left untouched; no new ones are generated
+# unless a developer explicitly opts in with --enable-legacy-backfill.
+LEGACY_BACKFILL_FROZEN=True
+
 class TargetTimeout(Exception):
     pass
 
@@ -91,7 +98,18 @@ def main():
     ap.add_argument('--state-root',required=True)
     ap.add_argument('--budget-seconds',type=float,default=90.0)
     ap.add_argument('--target-cap-seconds',type=float,default=8.0)
+    ap.add_argument('--enable-legacy-backfill',action='store_true',help='Explicitly re-enable pre-V5.1 semantic generation. Not for normal production.')
     a=ap.parse_args()
+
+    if LEGACY_BACKFILL_FROZEN and not a.enable_legacy_backfill:
+        print(json.dumps({
+            'version':VERSION,
+            'status':'FROZEN_BY_HUMAN_PRESENTATION_QUALIFICATION',
+            'legacy_backfill_enabled':False,
+            'exact_dictionary_materialization_affected':False,
+            'message':'No legacy human summaries were generated. Exact V3 production is unchanged.'
+        },sort_keys=True))
+        return
 
     sys.path.insert(0,str(Path(a.runtime_root)/'runtime'))
     import integrated_engine as eng
