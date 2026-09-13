@@ -5,27 +5,14 @@
   "extractor": "NATIVE_PUBLIC_POLICY_COMPRESSED_V3_SEMANTIC_V1",
   "last_pass": {
     "deferred_targets": 0,
-    "elapsed_seconds": 955.813182,
+    "elapsed_seconds": 0.000167,
     "extractor": "NATIVE_PUBLIC_POLICY_COMPRESSED_V3_SEMANTIC_V1",
-    "families_touched": 641,
-    "first_families": [
-      "8xxx/Kxx",
-      "8xxx/Axx",
-      "8xx/Axxx",
-      "xxx/K9x",
-      "xxx/K8x",
-      "xxx/A9x",
-      "9xx/Kxx",
-      "9xx/Axx",
-      "8xx/Kxx",
-      "8xx/Axx",
-      "xxxx/K9",
-      "xxxx/A9"
-    ],
+    "families_touched": 0,
+    "first_families": [],
     "fresh_targets_remaining": 0,
-    "materialized_targets": 7877,
+    "materialized_targets": 0,
     "priority_mode": "HONOR_FIRST_X_FAMILY_V2_AKQJT",
-    "sequence": 56
+    "sequence": 57
   },
   "materialized_targets": 23517,
   "next_source_state_id": 1,
@@ -33,9 +20,9 @@
   "plan_id": "MANIEMENTS_V5_PRIORITY_P1_COMMON_SPLITS_PLUS_BOUNDARY_V1",
   "priority_mode": "HONOR_FIRST_X_FAMILY_V2_AKQJT",
   "schema": "MANIEMENTS_V5_DICTIONARY_WORKER_STATE_V2",
-  "sequence": 57,
+  "sequence": 58,
   "source_done": true,
   "target_cap_seconds": 210.0,
-  "updated_at_utc": "2026-09-13T19:15:45+00:00",
+  "updated_at_utc": "2026-09-13T19:24:58+00:00",
   "worker_id": 7
 }
