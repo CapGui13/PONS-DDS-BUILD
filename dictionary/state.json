@@ -5,14 +5,14 @@
   "extractor": "NATIVE_PUBLIC_POLICY_COMPRESSED_V3_SEMANTIC_V1",
   "last_pass": {
     "deferred_targets": 0,
-    "elapsed_seconds": 0.000199,
+    "elapsed_seconds": 0.000162,
     "extractor": "NATIVE_PUBLIC_POLICY_COMPRESSED_V3_SEMANTIC_V1",
     "families_touched": 0,
     "first_families": [],
     "fresh_targets_remaining": 0,
     "materialized_targets": 0,
     "priority_mode": "HONOR_FIRST_X_FAMILY_V2_AKQJT",
-    "sequence": 62
+    "sequence": 63
   },
   "materialized_targets": 23655,
   "next_source_state_id": 1,
@@ -20,9 +20,9 @@
   "plan_id": "MANIEMENTS_V5_PRIORITY_P1_COMMON_SPLITS_PLUS_BOUNDARY_V1",
   "priority_mode": "HONOR_FIRST_X_FAMILY_V2_AKQJT",
   "schema": "MANIEMENTS_V5_DICTIONARY_WORKER_STATE_V2",
-  "sequence": 63,
+  "sequence": 64,
   "source_done": true,
   "target_cap_seconds": 210.0,
-  "updated_at_utc": "2026-09-13T20:57:50+00:00",
+  "updated_at_utc": "2026-09-13T21:14:54+00:00",
   "worker_id": 4
 }
