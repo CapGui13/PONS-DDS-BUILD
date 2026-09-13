@@ -1,32 +1,32 @@
 # MANIEMENTS V5 — Dictionary materialization
 
-Updated: `2026-09-13T15:36:44+00:00`
+Updated: `2026-09-13T16:10:36+00:00`
 
 - workers seen: **20/20**
-- materialized targets: **278,016**
-- deferred targets: **66**
+- materialized targets: **281,255**
+- deferred targets: **67**
 - caught-up workers: **0/20**
 - source-done workers: **20/20**
 
 | Worker | Materialized | Deferred | Next state | Active | Caught up | Source done |
 |---:|---:|---:|---:|---:|:---:|:---:|
-| 00 | 13,506 | 5 | 1 |  | no | yes |
-| 01 | 14,573 | 2 | 1 |  | no | yes |
-| 02 | 14,078 | 1 | 1 |  | no | yes |
-| 03 | 13,817 | 8 | 1 |  | no | yes |
-| 04 | 13,684 | 5 | 1 |  | no | yes |
-| 05 | 13,610 | 1 | 1 |  | no | yes |
-| 06 | 13,530 | 7 | 1 |  | no | yes |
-| 07 | 14,265 | 0 | 1 |  | no | yes |
-| 08 | 13,889 | 5 | 1 |  | no | yes |
-| 09 | 13,123 | 5 | 1 |  | no | yes |
-| 10 | 13,522 | 1 | 1 |  | no | yes |
-| 11 | 13,786 | 2 | 1 |  | no | yes |
-| 12 | 14,011 | 3 | 1 |  | no | yes |
-| 13 | 13,859 | 1 | 1 |  | no | yes |
-| 14 | 14,636 | 2 | 1 |  | no | yes |
-| 15 | 13,487 | 8 | 1 |  | no | yes |
-| 16 | 14,283 | 6 | 1 |  | no | yes |
-| 17 | 14,231 | 1 | 1 |  | no | yes |
-| 18 | 14,381 | 0 | 1 |  | no | yes |
-| 19 | 13,745 | 3 | 1 |  | no | yes |
+| 00 | 13,562 | 5 | 1 |  | no | yes |
+| 01 | 14,679 | 2 | 1 |  | no | yes |
+| 02 | 14,229 | 1 | 1 |  | no | yes |
+| 03 | 13,984 | 8 | 1 |  | no | yes |
+| 04 | 13,848 | 5 | 1 |  | no | yes |
+| 05 | 13,706 | 1 | 1 |  | no | yes |
+| 06 | 13,664 | 7 | 1 |  | no | yes |
+| 07 | 14,449 | 0 | 1 |  | no | yes |
+| 08 | 13,998 | 5 | 1 |  | no | yes |
+| 09 | 13,349 | 5 | 1 |  | no | yes |
+| 10 | 13,704 | 1 | 1 |  | no | yes |
+| 11 | 14,014 | 2 | 1 |  | no | yes |
+| 12 | 14,145 | 3 | 1 |  | no | yes |
+| 13 | 14,035 | 1 | 1 |  | no | yes |
+| 14 | 14,923 | 2 | 1 |  | no | yes |
+| 15 | 13,683 | 8 | 1 |  | no | yes |
+| 16 | 14,403 | 6 | 1 |  | no | yes |
+| 17 | 14,293 | 2 | 1 |  | no | yes |
+| 18 | 14,583 | 0 | 1 |  | no | yes |
+| 19 | 14,004 | 3 | 1 |  | no | yes |
