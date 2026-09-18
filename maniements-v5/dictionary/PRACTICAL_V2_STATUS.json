@@ -1,0 +1,9 @@
+{
+  "schema": "MANIEMENTS_V5_PRACTICAL_V2_GLOBAL_STATUS",
+  "workers_seen": 0,
+  "completed_families": 0,
+  "deferred_families": 0,
+  "target_family_count": 120,
+  "target_reached": false,
+  "runtime_frozen_sha256": "a0b580531f3c9e8bb00710b9c3e1c183b27cbfe9231c9d584e29a374ba88835d"
+}
