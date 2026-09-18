@@ -33,27 +33,27 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          rm -rf dist/direct-v1
-          mkdir -p dist/direct-v1/runtime dist/direct-v1/engine_tools
-          cp maniements-v5/product/v1_direct/server.py dist/direct-v1/
-          cp maniements-v5/product/v1_direct/smoke_test.py dist/direct-v1/
-          cp maniements-v5/product/v1_direct/README.md dist/direct-v1/
-          cp maniements-v5/product/v1_direct/START.bat dist/direct-v1/
-          cp -a "$RUNNER_TEMP/unpacked/runtime/." dist/direct-v1/runtime/
-          cp maniements-v5/dictionary/materialize_worker_v3.py dist/direct-v1/engine_tools/
-          cp maniements-v5/dictionary/prototype_v3_builtin_policy.py dist/direct-v1/engine_tools/
-          cp maniements-v5/dictionary/prototype_v3_policy_compress.py dist/direct-v1/engine_tools/
-          cp maniements-v5/dictionary/prototype_v3_compile.py dist/direct-v1/engine_tools/
+          rm -rf dist/MANIEMENTS_V5_CALCUL_DIRECT_V1
+          mkdir -p dist/MANIEMENTS_V5_CALCUL_DIRECT_V1/runtime dist/MANIEMENTS_V5_CALCUL_DIRECT_V1/engine_tools
+          cp maniements-v5/product/v1_direct/server.py dist/MANIEMENTS_V5_CALCUL_DIRECT_V1/
+          cp maniements-v5/product/v1_direct/smoke_test.py dist/MANIEMENTS_V5_CALCUL_DIRECT_V1/
+          cp maniements-v5/product/v1_direct/README.md dist/MANIEMENTS_V5_CALCUL_DIRECT_V1/
+          cp maniements-v5/product/v1_direct/START.bat dist/MANIEMENTS_V5_CALCUL_DIRECT_V1/
+          cp -a "$RUNNER_TEMP/unpacked/runtime/." dist/MANIEMENTS_V5_CALCUL_DIRECT_V1/runtime/
+          cp maniements-v5/dictionary/materialize_worker_v3.py dist/MANIEMENTS_V5_CALCUL_DIRECT_V1/engine_tools/
+          cp maniements-v5/dictionary/prototype_v3_builtin_policy.py dist/MANIEMENTS_V5_CALCUL_DIRECT_V1/engine_tools/
+          cp maniements-v5/dictionary/prototype_v3_policy_compress.py dist/MANIEMENTS_V5_CALCUL_DIRECT_V1/engine_tools/
+          cp maniements-v5/dictionary/prototype_v3_compile.py dist/MANIEMENTS_V5_CALCUL_DIRECT_V1/engine_tools/
 
       - name: Direct 5-3 smoke test
-        working-directory: dist/direct-v1
+        working-directory: dist/MANIEMENTS_V5_CALCUL_DIRECT_V1
         shell: bash
         run: |
           set -euo pipefail
           python3 smoke_test.py | tee SMOKE.txt
 
       - name: Write package manifest
-        working-directory: dist/direct-v1
+        working-directory: dist/MANIEMENTS_V5_CALCUL_DIRECT_V1
         shell: bash
         run: |
           set -euo pipefail
@@ -74,8 +74,15 @@ jobs:
           PY
           rm -f smoke_cache.sqlite smoke_cache.sqlite-shm smoke_cache.sqlite-wal
 
+      - name: Build user ZIP with same-named top folder
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd dist
+          zip -qr MANIEMENTS_V5_CALCUL_DIRECT_V1.zip MANIEMENTS_V5_CALCUL_DIRECT_V1
+
       - uses: actions/upload-artifact@v4
         with:
           name: MANIEMENTS_V5_CALCUL_DIRECT_V1
-          path: dist/direct-v1/**
+          path: dist/MANIEMENTS_V5_CALCUL_DIRECT_V1.zip
           retention-days: 30
