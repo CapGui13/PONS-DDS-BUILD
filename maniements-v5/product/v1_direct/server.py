@@ -199,7 +199,7 @@ PAGE = r'''<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name
 h1{margin:0 0 5px}.muted{color:var(--m)}.card{background:var(--p);border:1px solid var(--l);border-radius:15px;padding:18px;margin-top:16px}.grid{display:grid;grid-template-columns:1fr;gap:14px}@media(min-width:650px){.grid{grid-template-columns:1fr 1fr}}
 label{display:block;font-weight:800;margin-bottom:6px}input{width:100%;padding:13px 14px;border:1px solid #3c4959;border-radius:11px;background:#0a1016;color:#fff;font:800 1.2rem ui-monospace,Consolas,monospace}
 button{border:0;border-radius:11px;padding:12px 17px;font-weight:850;font-size:1rem;cursor:pointer}.entry{background:var(--p2);border:1px solid var(--l);border-radius:13px;padding:15px;margin-top:11px}.head{display:flex;justify-content:space-between;gap:12px;align-items:baseline;flex-wrap:wrap}.prob{color:var(--g);font-weight:850}.badge{display:inline-block;font-size:.73rem;font-weight:850;padding:2px 8px;border:1px solid #496172;border-radius:999px;margin-left:7px}.exact{border-color:#6c5d2c;color:var(--gold)}.tree{border-color:#347450;color:var(--g)}
-details{margin-top:10px;border-top:1px solid #29333f;padding-top:9px}summary{cursor:pointer;font-weight:800}.ctx{margin:10px 0;padding:10px 12px;background:#0c1219;border-left:3px solid #46576a;border-radius:8px}.branch{margin:6px 0 0 16px;padding-left:12px;border-left:1px solid #34414e}.small{font-size:.88rem}.error{border-left:3px solid #ff9898;padding-left:11px}
+details{margin-top:10px;border-top:1px solid #29333f;padding-top:9px}summary{cursor:pointer;font-weight:800}.ctx{margin:10px 0;padding:10px 12px;background:#0c1219;border-left:3px solid #46576a;border-radius:8px}.branch{margin:6px 0 0 16px;padding-left:12px;border-left:1px solid #34414e}.small{font-size:.88rem}.plan{margin-top:10px;padding:11px 12px;background:#0c1513;border-left:3px solid var(--g);border-radius:8px}.useful{border-left-color:#4d8d70}.act{margin:5px 0;font-weight:700}.otherwise{margin-top:5px}.decision{margin-top:7px}.error{border-left:3px solid #ff9898;padding-left:11px}
 </style></head><body><main><h1>Calcul direct des maniements <span class="badge exact">V1</span></h1>
 <p class="muted">Cette version calcule la combinaison demandée avec le moteur exact. Pour l’instant, saisis les petites cartes réelles : <b>ARX92 / 765</b>, par exemple. Le français automatique n’est pas considéré comme un maniement humain validé.</p>
 <section class="card"><form id="f"><div class="grid"><div><label>Main 1</label><input id="n" value="ARX92"></div><div><label>Main 2</label><input id="s" value="765"></div></div><div style="margin-top:14px"><button>Calculer</button></div></form></section>
@@ -211,10 +211,42 @@ function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&l
 function rankFr(r){return {A:"l’As",K:'le Roi',Q:'la Dame',J:'le Valet',T:'le 10'}[r]||'le '+r}
 function seatFr(s){return {N:'Main 1',S:'Main 2',E:'Est',W:'Ouest'}[s]||s}
 function actionFr(a){if(!a)return '—';let [s,r]=a.split(':');if(r==='-')return seatFr(s)+' est chicane';return 'jouer '+rankFr(r)+' de '+seatFr(s)}
-function featureFr(f){let p=f.split('_');const side=x=>x==='W'?'Ouest':'Est';if((p[0]==='W'||p[0]==='E')&&p[1]==='VOID')return side(p[0])+' a déjà montré une chicane';if((p[0]==='W'||p[0]==='E')&&p[1]==='SEEN')return side(p[0])+' a déjà fourni '+rankFr(p[2]);if(p[0]==='CUR'){if(p[2]==='-')return side(p[1])+' défausse sur ce tour';return side(p[1])+' fournit '+rankFr(p[2])+' sur ce tour'}return f}
-function decision(v){if(typeof v==='string')return '<div>→ '+esc(actionFr(v))+'</div>';const [feat,no,yes]=v;return '<div><b>Si '+esc(featureFr(feat))+'</b><div class="branch">Oui : '+decision(yes)+'</div><div class="branch">Sinon : '+decision(no)+'</div></div>'}
-function policy(pp){if(!pp||!pp.contexts)return '<div class="muted">Arbre non disponible.</div>';let rows=[...pp.contexts];return rows.map(([k,v],i)=>'<div class="ctx"><b>Contexte exact '+(i+1)+'</b><div class="small muted">Main 1 '+esc(k[0])+' · Main 2 '+esc(k[1])+' · '+esc(k[4])+' levée(s) gagnée(s)</div>'+decision(v)+'</div>').join('')}
-function render(r){let h='<div><b>'+esc(r.north_fr)+' — '+esc(r.south_fr)+'</b> <span class="muted small">cache '+esc(r.cache)+'</span></div>';for(const e of [...r.curve].sort((a,b)=>b.target-a.target)){h+='<div class="entry"><div class="head"><div><b>Pour '+e.target+' levée'+(e.target===1?'':'s')+'</b> <span class="badge exact">exact</span>'+(e.strategy_kind==='EXACT_POLICY_PROGRAM'?' <span class="badge tree">arbre exact</span>':'')+'</div><div class="prob">'+Number(e.percent).toFixed(2).replace('.',',')+' %</div></div>';if(e.strategy_kind==='TRIVIAL')h+='<div class="muted" style="margin-top:8px">'+(e.fraction==='1/1'?'Objectif assuré.':'Objectif impossible.')+'</div>';else if(e.strategy_kind==='EXACT_POLICY_PROGRAM'){h+='<div style="margin-top:8px"><b>Premier choix exact :</b> '+esc(actionFr(e.lead))+'</div><details><summary>Voir l’arbre de jeu exact</summary>'+policy(e.policy_program)+'</details><details><summary>Résumé automatique non validé</summary><div class="muted">'+esc(e.automatic_summary_unreviewed||'—')+'</div></details>'}else h+='<div class="muted" style="margin-top:8px">Probabilité exacte calculée ; arbre non matérialisé pour ce cas.</div>';h+='</div>'}out.innerHTML=h}
+function featureFr(f){
+  let p=f.split('_');const side=x=>x==='W'?'Ouest':'Est';
+  if((p[0]==='W'||p[0]==='E')&&p[1]==='VOID')return side(p[0])+' a déjà montré qu’il était chicane';
+  if((p[0]==='W'||p[0]==='E')&&p[1]==='SEEN')return rankFr(p[2])+' est déjà tombé chez '+side(p[0]);
+  if(p[0]==='CUR'){
+    if(p[2]==='-')return side(p[1])+' défausse';
+    return side(p[1])+' fournit '+rankFr(p[2]);
+  }
+  return f;
+}
+function leaves(v,out=new Set()){if(typeof v==='string'){out.add(v);return out}leaves(v[1],out);leaves(v[2],out);return out}
+function decision(v,depth=0){
+  if(typeof v==='string')return '<div class="act">→ '+esc(actionFr(v))+'</div>';
+  const [feat,no,yes]=v;
+  return '<div class="decision"><b>Si '+esc(featureFr(feat))+' :</b><div class="branch">'+decision(yes,depth+1)+'</div><div class="otherwise"><span class="muted">Sinon :</span><div class="branch">'+decision(no,depth+1)+'</div></div></div>';
+}
+function handFrRaw(x){return String(x||'-').replaceAll('K','R').replaceAll('Q','D').replaceAll('J','V').replaceAll('T','X')}
+function contextTitle(k){
+  const n=handFrRaw(k[0]),s=handFrRaw(k[1]),won=Number(k[4]||0),pos=Number(k[3]||0);
+  let lead=pos===0?'Nouveau tour de couleur':'Pendant la levée';
+  return lead+' · '+won+' levée'+(won===1?'':'s')+' déjà gagnée'+(won===1?'':'s')+' · reste '+n+' / '+s;
+}
+function policyUseful(pp){
+  if(!pp||!pp.contexts)return '<div class="muted">Arbre non disponible.</div>';
+  let rows=[...pp.contexts].filter(([k,v])=>Number(k[3])===0 || leaves(v).size>1);
+  if(!rows.length)return '<div class="muted">Aucune décision stratégique supplémentaire : la suite est forcée.</div>';
+  let shown=rows.slice(0,14);
+  let h=shown.map(([k,v],i)=>'<div class="ctx useful"><b>'+esc(contextTitle(k))+'</b>'+decision(v)+'</div>').join('');
+  if(rows.length>shown.length)h+='<div class="muted small">'+(rows.length-shown.length)+' autres contextes stratégiques sont conservés dans le diagnostic technique.</div>';
+  return h;
+}
+function policyRaw(pp){
+  if(!pp||!pp.contexts)return '<div class="muted">Arbre non disponible.</div>';
+  return [...pp.contexts].map(([k,v],i)=>'<div class="ctx"><b>Contexte exact '+(i+1)+'</b><div class="small muted">'+esc(contextTitle(k))+'</div>'+decision(v)+'</div>').join('');
+}
+function render(r){let h='<div><b>'+esc(r.north_fr)+' — '+esc(r.south_fr)+'</b> <span class="muted small">cache '+esc(r.cache)+'</span></div>';for(const e of [...r.curve].sort((a,b)=>b.target-a.target)){h+='<div class="entry"><div class="head"><div><b>Pour '+e.target+' levée'+(e.target===1?'':'s')+'</b> <span class="badge exact">exact</span>'+(e.strategy_kind==='EXACT_POLICY_PROGRAM'?' <span class="badge tree">arbre exact</span>':'')+'</div><div class="prob">'+Number(e.percent).toFixed(2).replace('.',',')+' %</div></div>';if(e.strategy_kind==='TRIVIAL')h+='<div class="muted" style="margin-top:8px">'+(e.fraction==='1/1'?'Objectif assuré.':'Objectif impossible.')+'</div>';else if(e.strategy_kind==='EXACT_POLICY_PROGRAM'){h+='<div class="plan"><div><b>Premier coup exact :</b> '+esc(actionFr(e.lead))+'</div><div class="muted small">Lecture simplifiée de la politique exacte — ce n’est pas encore le maniement humain final.</div></div><details open><summary>Voir les décisions utiles</summary>'+policyUseful(e.policy_program)+'</details><details><summary>Diagnostic technique complet</summary>'+policyRaw(e.policy_program)+'</details>'}else h+='<div class="muted" style="margin-top:8px">Probabilité exacte calculée ; arbre non matérialisé pour ce cas.</div>';h+='</div>'}out.innerHTML=h}
 document.getElementById('f').onsubmit=async e=>{e.preventDefault();out.innerHTML='<div class="muted">Calcul exact en cours… la première requête peut prendre un peu de temps.</div>';try{const u='/api/query?north='+encodeURIComponent(n.value)+'&south='+encodeURIComponent(s.value);const resp=await fetch(u),j=await resp.json();if(!resp.ok)throw Error(j.error||'Erreur');render(j)}catch(err){out.innerHTML='<div class="error"><b>Erreur :</b> '+esc(err.message||err)+'</div>'}};
 </script></main></body></html>'''
 
