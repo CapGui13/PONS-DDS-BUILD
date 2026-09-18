@@ -1,0 +1,225 @@
+name: MANIEMENTS V5 — Human dictionary V1 honor-first
+
+on:
+  workflow_dispatch:
+    inputs:
+      max_new_holdings:
+        description: "Maximum de nouvelles combinaisons par worker et par cycle"
+        required: false
+        default: "10"
+      target_cap_seconds:
+        description: "Timeout d'humanisation par objectif"
+        required: false
+        default: "720"
+      target_total_holdings:
+        description: "Taille visée de la première base humaine"
+        required: false
+        default: "400"
+  push:
+    branches: [main]
+    paths:
+      - "maniements-v5/dictionary/HUMAN_LAYER_V1_START"
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: maniements-v5-human-dictionary-v1
+  cancel-in-progress: false
+
+jobs:
+  workers:
+    name: Human V1 worker ${{ matrix.worker }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 100
+    strategy:
+      fail-fast: false
+      max-parallel: 19
+      matrix:
+        worker: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Verify frozen V5 runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          ZIP="$RUNNER_TEMP/runtime.zip"
+          EXPECTED="a0b580531f3c9e8bb00710b9c3e1c183b27cbfe9231c9d584e29a374ba88835d"
+          cat             maniements-v5/runtime/runtime_v2.b64.part-00             maniements-v5/runtime/runtime_v2.b64.part-01             maniements-v5/runtime/runtime_v2.b64.part-02a             maniements-v5/runtime/runtime_v2.b64.part-02b             maniements-v5/runtime/runtime_v2.b64.part-03             maniements-v5/runtime/runtime_v2.b64.part-04             maniements-v5/runtime/runtime_v2.b64.part-05             maniements-v5/runtime/runtime_v2.b64.part-06             | base64 -d > "$ZIP"
+          test "$(sha256sum "$ZIP" | awk '{print $1}')" = "$EXPECTED"
+          mkdir -p "$RUNNER_TEMP/v5-runtime"
+          unzip -q "$ZIP" -d "$RUNNER_TEMP/v5-runtime"
+          (cd "$RUNNER_TEMP/v5-runtime" && sha256sum -c SHA256SUMS.txt)
+
+      - name: Checkout exact source and persistent human state
+        shell: bash
+        env:
+          WORKER: ${{ matrix.worker }}
+        run: |
+          set -euo pipefail
+          PAD=$(printf '%02d' "$WORKER")
+          SOURCE="maniements-v5-dictionary-v3-p1-${PAD}"
+          DEST="maniements-v5-human-v1-p1-${PAD}"
+
+          git fetch origin "$SOURCE:refs/remotes/origin/$SOURCE"
+          git worktree add --detach "$RUNNER_TEMP/exact-source" "refs/remotes/origin/$SOURCE"
+
+          if git ls-remote --exit-code --heads origin "$DEST" >/dev/null 2>&1; then
+            git fetch origin "$DEST:$DEST"
+            git worktree add "$RUNNER_TEMP/human-state" "$DEST"
+          else
+            git worktree add -b "$DEST" "$RUNNER_TEMP/human-state" main
+          fi
+
+      - name: Humanize priority holdings
+        shell: bash
+        env:
+          WORKER: ${{ matrix.worker }}
+          MAX_HOLDINGS: ${{ inputs.max_new_holdings || '10' }}
+          TARGET_CAP: ${{ inputs.target_cap_seconds || '720' }}
+        run: |
+          set -euo pipefail
+          python3 maniements-v5/dictionary/human_layer_worker_v1.py             --runtime-root "$RUNNER_TEMP/v5-runtime"             --source-root "$RUNNER_TEMP/exact-source"             --state-root "$RUNNER_TEMP/human-state"             --worker-id "$WORKER"             --budget-seconds 4800             --close-reserve-seconds 240             --target-cap-seconds "$TARGET_CAP"             --max-new-holdings "$MAX_HOLDINGS"
+
+      - name: Persist human layer state
+        shell: bash
+        env:
+          WORKER: ${{ matrix.worker }}
+        run: |
+          set -euo pipefail
+          PAD=$(printf '%02d' "$WORKER")
+          DEST="maniements-v5-human-v1-p1-${PAD}"
+          cd "$RUNNER_TEMP/human-state"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add human
+          if ! git diff --cached --quiet; then
+            git commit -m "MANIEMENTS V5 human dictionary V1 ${PAD}: honor-first expansion"
+            git push origin "HEAD:${DEST}"
+          fi
+          cat human/state.json >> "$GITHUB_STEP_SUMMARY"
+
+  controller:
+    name: Build practical dictionary + continue
+    needs: workers
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Fetch exact and human branches
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin '+refs/heads/maniements-v5-dictionary-v3-p1-*:refs/remotes/origin/maniements-v5-dictionary-v3-p1-*'
+          git fetch --no-tags origin '+refs/heads/maniements-v5-human-v1-p1-*:refs/remotes/origin/maniements-v5-human-v1-p1-*' || true
+
+      - name: Build practical standalone dictionary
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf dist/human-v1
+          python3 maniements-v5/dictionary/build_human_layer_web_v1.py             --repo .             --output-dir dist/human-v1
+          cat dist/human-v1/manifest.json >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Aggregate human-layer status
+        id: status
+        shell: bash
+        env:
+          TARGET_TOTAL: ${{ inputs.target_total_holdings || '400' }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, os, subprocess
+          states=[]
+          for w in range(20):
+              ref=f"refs/remotes/origin/maniements-v5-human-v1-p1-{w:02d}"
+              try:
+                  raw=subprocess.check_output(["git","show",f"{ref}:human/state.json"],text=True)
+                  states.append(json.loads(raw))
+              except Exception:
+                  pass
+          keys=["eligible_holdings","processed_holdings","analyzed_targets","prefix_targets","compact_targets","noncompact_targets","missing_prefix_targets","deferred_targets"]
+          agg={k:sum(int(s.get(k,0)) for s in states) for k in keys}
+          agg["workers_seen"]=len(states)
+          agg["schema"]="MANIEMENTS_V5_HUMAN_LAYER_V1_GLOBAL_STATUS"
+          agg["runtime_frozen_sha256"]="a0b580531f3c9e8bb00710b9c3e1c183b27cbfe9231c9d584e29a374ba88835d"
+          target=int(os.environ["TARGET_TOTAL"])
+          agg["target_total_holdings"]=target
+          agg["target_reached"]=agg["processed_holdings"]>=target
+          open("dist/human-v1/STATUS.json","w",encoding="utf-8").write(json.dumps(agg,ensure_ascii=False,indent=2)+"\n")
+          with open("dist/human-v1/STATUS.md","w",encoding="utf-8") as f:
+              f.write("# MANIEMENTS V5 — Human dictionary V1\n\n")
+              for k,v in agg.items(): f.write(f"- {k}: **{v}**\n")
+          print(json.dumps(agg,ensure_ascii=False))
+          print(f"processed={agg['processed_holdings']}")
+          print(f"target={target}")
+          with open(os.environ["GITHUB_OUTPUT"],"a",encoding="utf-8") as f:
+              f.write(f"processed={agg['processed_holdings']}\n")
+              f.write(f"target={target}\n")
+              f.write(f"reached={'true' if agg['target_reached'] else 'false'}\n")
+          PY
+          cat dist/human-v1/STATUS.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload current practical dictionary
+        uses: actions/upload-artifact@v4
+        with:
+          name: MANIEMENTS_V5_DICTIONNAIRE_HUMAIN_V1
+          path: dist/human-v1/*
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Publish global status on main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          for ATTEMPT in 1 2 3 4; do
+            git fetch origin main
+            git reset --hard origin/main
+            cp "$GITHUB_WORKSPACE/dist/human-v1/STATUS.json" maniements-v5/dictionary/HUMAN_LAYER_V1_STATUS.json
+            cp "$GITHUB_WORKSPACE/dist/human-v1/STATUS.md" maniements-v5/dictionary/HUMAN_LAYER_V1_STATUS.md
+            git add maniements-v5/dictionary/HUMAN_LAYER_V1_STATUS.json maniements-v5/dictionary/HUMAN_LAYER_V1_STATUS.md
+            if git diff --cached --quiet; then exit 0; fi
+            git commit -m "MANIEMENTS V5 human dictionary V1: update status"
+            if git push origin HEAD:main; then exit 0; fi
+            sleep $((ATTEMPT*2))
+          done
+          exit 42
+
+      - name: Queue next expansion cycle
+        if: ${{ steps.status.outputs.reached != 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          MAX_HOLDINGS: ${{ inputs.max_new_holdings || '10' }}
+          TARGET_CAP: ${{ inputs.target_cap_seconds || '720' }}
+          TARGET_TOTAL: ${{ inputs.target_total_holdings || '400' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY' > "$RUNNER_TEMP/dispatch.json"
+          import json, os
+          print(json.dumps({
+            "ref":"main",
+            "inputs":{
+              "max_new_holdings":os.environ["MAX_HOLDINGS"],
+              "target_cap_seconds":os.environ["TARGET_CAP"],
+              "target_total_holdings":os.environ["TARGET_TOTAL"],
+            }
+          }))
+          PY
+          gh api --method POST             "repos/${GITHUB_REPOSITORY}/actions/workflows/maniements-v5-human-layer-v1.yml/dispatches"             --input "$RUNNER_TEMP/dispatch.json"
