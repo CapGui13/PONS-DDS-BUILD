@@ -1,0 +1,243 @@
+name: MANIEMENTS V5 — Practical dictionary V2 families
+
+on:
+  workflow_dispatch:
+    inputs:
+      plan_limit:
+        description: "Nombre de familles pratiques dans le plan"
+        required: false
+        default: "800"
+      max_new_families:
+        description: "Nouvelles familles exactes par worker et par cycle"
+        required: false
+        default: "3"
+      target_cap_seconds:
+        description: "Timeout par objectif exact"
+        required: false
+        default: "180"
+      target_family_count:
+        description: "Premier palier de familles V2"
+        required: false
+        default: "120"
+  push:
+    branches: [main]
+    paths:
+      - "maniements-v5/dictionary/PRACTICAL_V2_START"
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: maniements-v5-practical-v2
+  cancel-in-progress: false
+
+jobs:
+  workers:
+    name: Practical V2 family worker ${{ matrix.worker }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 100
+    strategy:
+      fail-fast: false
+      max-parallel: 19
+      matrix:
+        worker: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Build deterministic practical-family plan
+        shell: bash
+        env:
+          PLAN_LIMIT: ${{ inputs.plan_limit || '800' }}
+        run: |
+          set -euo pipefail
+          python3 maniements-v5/dictionary/build_practical_family_plan_v2.py             --output "$RUNNER_TEMP/plan.json"             --limit "$PLAN_LIMIT"
+          python3 - <<'PY'
+          import json, os
+          p=json.load(open(os.path.join(os.environ["RUNNER_TEMP"],"plan.json"),encoding="utf-8"))
+          wanted=[f for f in p["families"] if set((f["north_pattern"],f["south_pattern"]))==set(("AKT9x","xxx"))]
+          print("ARX9x/xxx in plan:", bool(wanted), wanted[:1])
+          PY
+
+      - name: Verify frozen V5 runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          ZIP="$RUNNER_TEMP/runtime.zip"
+          EXPECTED="a0b580531f3c9e8bb00710b9c3e1c183b27cbfe9231c9d584e29a374ba88835d"
+          cat             maniements-v5/runtime/runtime_v2.b64.part-00             maniements-v5/runtime/runtime_v2.b64.part-01             maniements-v5/runtime/runtime_v2.b64.part-02a             maniements-v5/runtime/runtime_v2.b64.part-02b             maniements-v5/runtime/runtime_v2.b64.part-03             maniements-v5/runtime/runtime_v2.b64.part-04             maniements-v5/runtime/runtime_v2.b64.part-05             maniements-v5/runtime/runtime_v2.b64.part-06             | base64 -d > "$ZIP"
+          test "$(sha256sum "$ZIP" | awk '{print $1}')" = "$EXPECTED"
+          mkdir -p "$RUNNER_TEMP/v5-runtime"
+          unzip -q "$ZIP" -d "$RUNNER_TEMP/v5-runtime"
+          (cd "$RUNNER_TEMP/v5-runtime" && sha256sum -c SHA256SUMS.txt)
+
+      - name: Checkout persistent family state
+        shell: bash
+        env:
+          WORKER: ${{ matrix.worker }}
+        run: |
+          set -euo pipefail
+          PAD=$(printf '%02d' "$WORKER")
+          BR="maniements-v5-practical-family-v2-${PAD}"
+          if git ls-remote --exit-code --heads origin "$BR" >/dev/null 2>&1; then
+            git fetch origin "$BR:$BR"
+            git worktree add "$RUNNER_TEMP/family-state" "$BR"
+          else
+            git worktree add -b "$BR" "$RUNNER_TEMP/family-state" main
+          fi
+
+      - name: Compute exact practical families
+        shell: bash
+        env:
+          WORKER: ${{ matrix.worker }}
+          MAX_FAMILIES: ${{ inputs.max_new_families || '3' }}
+          TARGET_CAP: ${{ inputs.target_cap_seconds || '180' }}
+        run: |
+          set -euo pipefail
+          python3 maniements-v5/dictionary/practical_family_exact_worker_v2.py             --runtime-root "$RUNNER_TEMP/v5-runtime"             --plan "$RUNNER_TEMP/plan.json"             --state-root "$RUNNER_TEMP/family-state"             --worker-id "$WORKER"             --worker-count 20             --budget-seconds 4800             --close-reserve-seconds 240             --target-cap-seconds "$TARGET_CAP"             --max-new-families "$MAX_FAMILIES"
+
+      - name: Persist family state
+        shell: bash
+        env:
+          WORKER: ${{ matrix.worker }}
+        run: |
+          set -euo pipefail
+          PAD=$(printf '%02d' "$WORKER")
+          BR="maniements-v5-practical-family-v2-${PAD}"
+          cd "$RUNNER_TEMP/family-state"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add family_v2
+          if ! git diff --cached --quiet; then
+            git commit -m "MANIEMENTS V5 practical family V2 ${PAD}: expand exact families"
+            git push origin "HEAD:${BR}"
+          fi
+          cat family_v2/state.json >> "$GITHUB_STEP_SUMMARY"
+
+  controller:
+    name: Build V2 practical dictionary + continue
+    needs: workers
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Fetch exact P1, practical V2 and legacy human branches
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin '+refs/heads/maniements-v5-dictionary-v3-p1-*:refs/remotes/origin/maniements-v5-dictionary-v3-p1-*'
+          git fetch --no-tags origin '+refs/heads/maniements-v5-practical-family-v2-*:refs/remotes/origin/maniements-v5-practical-family-v2-*' || true
+          git fetch --no-tags origin '+refs/heads/maniements-v5-human-v1-p1-*:refs/remotes/origin/maniements-v5-human-v1-p1-*' || true
+
+      - name: Build practical standalone V2
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf dist/practical-v2
+          python3 maniements-v5/dictionary/build_practical_dictionary_v2.py             --repo .             --output-dir dist/practical-v2
+          cat dist/practical-v2/manifest.json >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Aggregate V2 family status
+        id: status
+        shell: bash
+        env:
+          TARGET_FAMILIES: ${{ inputs.target_family_count || '120' }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, os, subprocess
+          states=[]
+          for w in range(20):
+              ref=f"refs/remotes/origin/maniements-v5-practical-family-v2-{w:02d}"
+              try:
+                  raw=subprocess.check_output(["git","show",f"{ref}:family_v2/state.json"],text=True)
+                  states.append(json.loads(raw))
+              except Exception:
+                  pass
+          completed=set();deferred=set()
+          for s in states:
+              completed.update(s.get("completed_family_ids") or [])
+              deferred.update(s.get("deferred_family_ids") or [])
+          target=int(os.environ["TARGET_FAMILIES"])
+          status={
+              "schema":"MANIEMENTS_V5_PRACTICAL_V2_GLOBAL_STATUS",
+              "workers_seen":len(states),
+              "completed_families":len(completed),
+              "deferred_families":len(deferred),
+              "target_family_count":target,
+              "target_reached":len(completed)>=target,
+              "runtime_frozen_sha256":"a0b580531f3c9e8bb00710b9c3e1c183b27cbfe9231c9d584e29a374ba88835d",
+          }
+          open("dist/practical-v2/STATUS.json","w",encoding="utf-8").write(json.dumps(status,ensure_ascii=False,indent=2)+"\n")
+          print(json.dumps(status,ensure_ascii=False))
+          with open(os.environ["GITHUB_OUTPUT"],"a",encoding="utf-8") as f:
+              f.write(f"completed={status['completed_families']}\n")
+              f.write(f"reached={'true' if status['target_reached'] else 'false'}\n")
+          PY
+          cat dist/practical-v2/STATUS.json >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload current V2 dictionary
+        uses: actions/upload-artifact@v4
+        with:
+          name: MANIEMENTS_V5_DICTIONNAIRE_PRATIQUE_V2
+          path: dist/practical-v2/*
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Publish V2 status on main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          cp dist/practical-v2/STATUS.json "$RUNNER_TEMP/PRACTICAL_V2_STATUS.json"
+          cp dist/practical-v2/manifest.json "$RUNNER_TEMP/PRACTICAL_V2_MANIFEST.json"
+          for ATTEMPT in 1 2 3 4; do
+            git fetch origin main
+            git reset --hard origin/main
+            cp "$RUNNER_TEMP/PRACTICAL_V2_STATUS.json" maniements-v5/dictionary/PRACTICAL_V2_STATUS.json
+            cp "$RUNNER_TEMP/PRACTICAL_V2_MANIFEST.json" maniements-v5/dictionary/PRACTICAL_V2_MANIFEST.json
+            git add maniements-v5/dictionary/PRACTICAL_V2_STATUS.json maniements-v5/dictionary/PRACTICAL_V2_MANIFEST.json
+            if git diff --cached --quiet; then exit 0; fi
+            git commit -m "MANIEMENTS V5 practical V2: update status"
+            if git push origin HEAD:main; then exit 0; fi
+            sleep $((ATTEMPT*2))
+          done
+          exit 42
+
+      - name: Queue next practical V2 cycle
+        if: ${{ steps.status.outputs.reached != 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PLAN_LIMIT: ${{ inputs.plan_limit || '800' }}
+          MAX_FAMILIES: ${{ inputs.max_new_families || '3' }}
+          TARGET_CAP: ${{ inputs.target_cap_seconds || '180' }}
+          TARGET_FAMILIES: ${{ inputs.target_family_count || '120' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY' > "$RUNNER_TEMP/dispatch.json"
+          import json, os
+          print(json.dumps({
+            "ref":"main",
+            "inputs":{
+              "plan_limit":os.environ["PLAN_LIMIT"],
+              "max_new_families":os.environ["MAX_FAMILIES"],
+              "target_cap_seconds":os.environ["TARGET_CAP"],
+              "target_family_count":os.environ["TARGET_FAMILIES"],
+            }
+          }))
+          PY
+          gh api --method POST             "repos/${GITHUB_REPOSITORY}/actions/workflows/maniements-v5-practical-v2.yml/dispatches"             --input "$RUNNER_TEMP/dispatch.json"
