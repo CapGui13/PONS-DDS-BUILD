@@ -140,7 +140,15 @@ def main():
         and f["family_id"] not in completed
         and f["family_id"] not in deferred
     ]
-    mine.sort(key=lambda f: int(f["priority_rank"]))
+    # Regression/user-facing seed: make sure the classic ARX9x/xxx family is
+    # computed immediately even though it sits lower in the broad deterministic plan.
+    required_pairs = {
+        frozenset(("AKT9x", "xxx")),
+    }
+    mine.sort(key=lambda f: (
+        0 if frozenset((f["north_pattern"], f["south_pattern"])) in required_pairs else 1,
+        int(f["priority_rank"]),
+    ))
 
     started = time.monotonic()
     deadline = started + a.budget_seconds - a.close_reserve_seconds
