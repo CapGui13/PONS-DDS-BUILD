@@ -2,3 +2,5 @@ MANIEMENTS V5 DIRECT CALCULATOR V1 START
 architecture=direct solve -> exact policy tree -> cache -> human rendering later
 runtime_frozen_sha256=a0b580531f3c9e8bb00710b9c3e1c183b27cbfe9231c9d584e29a374ba88835d
 legacy_precompute=cache_only
+
+rebuild=free_port_and_same_named_folder
