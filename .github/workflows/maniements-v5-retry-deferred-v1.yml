@@ -1,0 +1,142 @@
+name: MANIEMENTS V5 — Retry deferred exact targets
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_cap_seconds:
+        description: "Timeout par objectif différé"
+        required: false
+        default: "600"
+  push:
+    branches: [main]
+    paths:
+      - "maniements-v5/dictionary/RETRY_DEFERRED_V1_START"
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: maniements-v5-retry-deferred-v1
+  cancel-in-progress: false
+
+jobs:
+  retry:
+    name: Retry exact deferred worker ${{ matrix.worker }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 100
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        worker: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Verify frozen V5 runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          ZIP="$RUNNER_TEMP/runtime.zip"
+          EXPECTED="a0b580531f3c9e8bb00710b9c3e1c183b27cbfe9231c9d584e29a374ba88835d"
+          cat             maniements-v5/runtime/runtime_v2.b64.part-00             maniements-v5/runtime/runtime_v2.b64.part-01             maniements-v5/runtime/runtime_v2.b64.part-02a             maniements-v5/runtime/runtime_v2.b64.part-02b             maniements-v5/runtime/runtime_v2.b64.part-03             maniements-v5/runtime/runtime_v2.b64.part-04             maniements-v5/runtime/runtime_v2.b64.part-05             maniements-v5/runtime/runtime_v2.b64.part-06             | base64 -d > "$ZIP"
+          test "$(sha256sum "$ZIP" | awk '{print $1}')" = "$EXPECTED"
+          mkdir -p "$RUNNER_TEMP/v5-runtime"
+          unzip -q "$ZIP" -d "$RUNNER_TEMP/v5-runtime"
+          (cd "$RUNNER_TEMP/v5-runtime" && sha256sum -c SHA256SUMS.txt)
+
+      - name: Checkout persistent exact dictionary branch
+        shell: bash
+        env:
+          WORKER: ${{ matrix.worker }}
+        run: |
+          set -euo pipefail
+          PAD=$(printf '%02d' "$WORKER")
+          BR="maniements-v5-dictionary-v3-p1-${PAD}"
+          git fetch origin "$BR:$BR"
+          git worktree add "$RUNNER_TEMP/exact-state" "$BR"
+
+      - name: Retry unresolved exact targets
+        shell: bash
+        env:
+          WORKER: ${{ matrix.worker }}
+          TARGET_CAP: ${{ inputs.target_cap_seconds || '600' }}
+        run: |
+          set -euo pipefail
+          python3 maniements-v5/dictionary/retry_exact_deferred_v1.py             --runtime-root "$RUNNER_TEMP/v5-runtime"             --state-root "$RUNNER_TEMP/exact-state"             --worker-id "$WORKER"             --budget-seconds 4800             --close-reserve-seconds 240             --target-cap-seconds "$TARGET_CAP"
+
+      - name: Persist recovered exact entries
+        shell: bash
+        env:
+          WORKER: ${{ matrix.worker }}
+        run: |
+          set -euo pipefail
+          PAD=$(printf '%02d' "$WORKER")
+          BR="maniements-v5-dictionary-v3-p1-${PAD}"
+          cd "$RUNNER_TEMP/exact-state"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add dictionary
+          if ! git diff --cached --quiet; then
+            git commit -m "MANIEMENTS V5 dictionary V3 ${PAD}: retry deferred exact targets"
+            git push origin "HEAD:${BR}"
+          fi
+          cat dictionary/state.json >> "$GITHUB_STEP_SUMMARY"
+
+  controller:
+    name: Refresh exact dictionary status
+    needs: retry
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Collect refreshed exact states
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/status"
+          git fetch origin '+refs/heads/maniements-v5-dictionary-v3-p1-*:refs/remotes/origin/maniements-v5-dictionary-v3-p1-*'
+          for W in $(seq 0 19); do
+            PAD=$(printf '%02d' "$W")
+            REF="refs/remotes/origin/maniements-v5-dictionary-v3-p1-${PAD}"
+            git show "$REF:dictionary/state.json" > "$RUNNER_TEMP/status/worker_${PAD}.json"
+          done
+          python3 maniements-v5/dictionary/build_status.py             "$RUNNER_TEMP/status"             "$RUNNER_TEMP/V3_STATUS.json"             "$RUNNER_TEMP/V3_STATUS.md"
+          cat "$RUNNER_TEMP/V3_STATUS.md" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Publish refreshed exact status
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          for ATTEMPT in 1 2 3 4; do
+            git fetch origin main
+            git reset --hard origin/main
+            cp "$RUNNER_TEMP/V3_STATUS.json" maniements-v5/dictionary/V3_STATUS.json
+            cp "$RUNNER_TEMP/V3_STATUS.md" maniements-v5/dictionary/V3_STATUS.md
+            git add maniements-v5/dictionary/V3_STATUS.json maniements-v5/dictionary/V3_STATUS.md
+            if git diff --cached --quiet; then exit 0; fi
+            git commit -m "MANIEMENTS V5 dictionary V3: refresh deferred retry status"
+            if git push origin HEAD:main; then exit 0; fi
+            sleep $((ATTEMPT*2))
+          done
+          exit 42
+
+      - name: Queue refreshed exact web snapshot
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          gh api --method POST             "repos/${GITHUB_REPOSITORY}/actions/workflows/maniements-v5-dictionary-v3-web.yml/dispatches"             -f ref=main
