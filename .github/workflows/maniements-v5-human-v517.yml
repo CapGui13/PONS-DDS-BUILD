@@ -1,0 +1,82 @@
+name: MANIEMENTS V5 — Human V5.17 sharded prefix + residual
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "maniements-v5/dictionary/HUMAN_V517_START"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: maniements-v5-human-v517
+  cancel-in-progress: false
+
+jobs:
+  shard:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        phase: [prefix, residual]
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Verify frozen runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          ZIP="$RUNNER_TEMP/runtime.zip"
+          EXPECTED="a0b580531f3c9e8bb00710b9c3e1c183b27cbfe9231c9d584e29a374ba88835d"
+          cat maniements-v5/runtime/runtime_v2.b64.part-00 maniements-v5/runtime/runtime_v2.b64.part-01 maniements-v5/runtime/runtime_v2.b64.part-02a maniements-v5/runtime/runtime_v2.b64.part-02b maniements-v5/runtime/runtime_v2.b64.part-03 maniements-v5/runtime/runtime_v2.b64.part-04 maniements-v5/runtime/runtime_v2.b64.part-05 maniements-v5/runtime/runtime_v2.b64.part-06 | base64 -d > "$ZIP"
+          test "$(sha256sum "$ZIP" | awk '{print $1}')" = "$EXPECTED"
+          mkdir -p "$RUNNER_TEMP/v5-runtime"
+          unzip -q "$ZIP" -d "$RUNNER_TEMP/v5-runtime"
+          (cd "$RUNNER_TEMP/v5-runtime" && sha256sum -c SHA256SUMS.txt)
+
+      - name: Run sharded exact-prefix / exact-residual audit
+        run: |
+          python3 maniements-v5/dictionary/human_sharded_v517.py             --runtime-root "$RUNNER_TEMP/v5-runtime"             --out-dir dist             --phase "${{ matrix.phase }}"             --shard-index "${{ matrix.shard }}"             --shard-count 20
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MANIEMENTS_V5_HUMAN_V517_${{ matrix.phase }}_${{ matrix.shard }}
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 30
+
+  merge:
+    needs: shard
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: MANIEMENTS_V5_HUMAN_V517_*
+          path: merged
+          merge-multiple: true
+
+      - name: Merge and validate all 35 profiles
+        run: |
+          python3 maniements-v5/dictionary/human_merge_v517.py             --input-dir merged             --out-dir final
+          cat final/SUMMARY.txt
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MANIEMENTS_V5_HUMAN_V517_COMPLETE
+          path: final/*
+          if-no-files-found: error
+          retention-days: 30
