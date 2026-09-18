@@ -1,23 +1,23 @@
 {
   "algorithm": "V515_PREFIX_RESIDUAL_ON_DICTIONARY_V1",
-  "analyzed_targets": 9,
-  "compact_targets": 4,
+  "analyzed_targets": 15,
+  "compact_targets": 8,
   "deferred_targets": 0,
   "eligible_holdings": 3604,
   "last_pass": {
-    "elapsed_seconds": 4802.878,
+    "elapsed_seconds": 5263.163,
     "new_deferred": 0,
-    "new_holdings": 5,
-    "new_results": 5,
-    "pending_holdings_before": 3600
+    "new_holdings": 6,
+    "new_results": 6,
+    "pending_holdings_before": 3595
   },
-  "noncompact_targets": 5,
-  "prefix_targets": 9,
-  "processed_holdings": 9,
+  "noncompact_targets": 7,
+  "prefix_targets": 15,
+  "processed_holdings": 15,
   "runtime_frozen_sha256": "a0b580531f3c9e8bb00710b9c3e1c183b27cbfe9231c9d584e29a374ba88835d",
   "schema": "MANIEMENTS_V5_HUMAN_LAYER_V1_STATE",
-  "sequence": 2,
+  "sequence": 3,
   "target_cap_seconds": 720.0,
-  "updated_at_utc": "2026-09-18T19:13:25+00:00",
+  "updated_at_utc": "2026-09-18T21:57:47+00:00",
   "worker_id": 2
 }
