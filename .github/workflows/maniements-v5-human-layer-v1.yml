@@ -30,6 +30,7 @@ concurrency:
 
 jobs:
   workers:
+    if: ${{ false }} # legacy V1 paused: publication gate and split coverage are being replaced by V2
     name: Human V1 worker ${{ matrix.worker }}
     runs-on: ubuntu-latest
     timeout-minutes: 100
@@ -202,7 +203,7 @@ jobs:
           exit 42
 
       - name: Queue next expansion cycle
-        if: ${{ steps.status.outputs.reached != 'true' }}
+        if: ${{ false }} # V1 auto-loop intentionally paused
         env:
           GH_TOKEN: ${{ github.token }}
           MAX_HOLDINGS: ${{ inputs.max_new_holdings || '10' }}
