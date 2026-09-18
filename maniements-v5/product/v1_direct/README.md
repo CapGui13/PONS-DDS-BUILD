@@ -14,7 +14,7 @@ La source de vérité est l'arbre exact, jamais la phrase générée.
 
 ## Démarrage Windows
 
-Double-cliquer `START.bat`.
+Double-cliquer `START.bat`. Le programme choisit automatiquement un port local libre et ouvre le navigateur.
 
 Ou :
 
