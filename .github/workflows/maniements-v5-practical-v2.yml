@@ -34,6 +34,7 @@ concurrency:
 
 jobs:
   workers:
+    if: ${{ false }} # cache expansion paused: V2 direct calculator becomes the primary product
     name: Practical V2 family worker ${{ matrix.worker }}
     runs-on: ubuntu-latest
     timeout-minutes: 100
@@ -218,7 +219,7 @@ jobs:
           exit 42
 
       - name: Queue next practical V2 cycle
-        if: ${{ steps.status.outputs.reached != 'true' }}
+        if: ${{ false }} # no exhaustive auto-loop
         env:
           GH_TOKEN: ${{ github.token }}
           PLAN_LIMIT: ${{ inputs.plan_limit || '800' }}
