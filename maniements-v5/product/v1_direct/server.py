@@ -257,13 +257,16 @@ def main():
     ap.add_argument("--tools-root", default=str(here / "engine_tools"))
     ap.add_argument("--cache", default=str(here / "direct_cache.sqlite"))
     ap.add_argument("--host", default="127.0.0.1")
-    ap.add_argument("--port", type=int, default=8765)
+    ap.add_argument("--port", type=int, default=0)
     ap.add_argument("--open", action="store_true")
     a = ap.parse_args()
 
     Handler.solver = DirectSolver(Path(a.runtime_root), Path(a.tools_root), Path(a.cache))
+    # port=0 asks the OS for an actually free local port, avoiding collisions
+    # with the user's other local bridge tools.
     srv = ThreadingHTTPServer((a.host, a.port), Handler)
-    url = f"http://{a.host}:{a.port}"
+    actual_port = int(srv.server_address[1])
+    url = f"http://{a.host}:{actual_port}"
     print("MANIEMENTS V5 direct V1:", url)
     if a.open:
         threading.Timer(0.8, lambda: webbrowser.open(url)).start()
