@@ -1,0 +1,81 @@
+name: MANIEMENTS V5 — Direct calculator V1 package
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "maniements-v5/product/v1_direct/DIRECT_V1_START"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 100
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Rebuild and verify frozen runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          ZIP="$RUNNER_TEMP/runtime.zip"
+          EXPECTED="a0b580531f3c9e8bb00710b9c3e1c183b27cbfe9231c9d584e29a374ba88835d"
+          cat             maniements-v5/runtime/runtime_v2.b64.part-00             maniements-v5/runtime/runtime_v2.b64.part-01             maniements-v5/runtime/runtime_v2.b64.part-02a             maniements-v5/runtime/runtime_v2.b64.part-02b             maniements-v5/runtime/runtime_v2.b64.part-03             maniements-v5/runtime/runtime_v2.b64.part-04             maniements-v5/runtime/runtime_v2.b64.part-05             maniements-v5/runtime/runtime_v2.b64.part-06             | base64 -d > "$ZIP"
+          test "$(sha256sum "$ZIP" | awk '{print $1}')" = "$EXPECTED"
+          mkdir -p "$RUNNER_TEMP/unpacked"
+          unzip -q "$ZIP" -d "$RUNNER_TEMP/unpacked"
+          (cd "$RUNNER_TEMP/unpacked" && sha256sum -c SHA256SUMS.txt)
+
+      - name: Assemble direct product
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf dist/direct-v1
+          mkdir -p dist/direct-v1/runtime dist/direct-v1/engine_tools
+          cp maniements-v5/product/v1_direct/server.py dist/direct-v1/
+          cp maniements-v5/product/v1_direct/smoke_test.py dist/direct-v1/
+          cp maniements-v5/product/v1_direct/README.md dist/direct-v1/
+          cp maniements-v5/product/v1_direct/START.bat dist/direct-v1/
+          cp -a "$RUNNER_TEMP/unpacked/runtime/." dist/direct-v1/runtime/
+          cp maniements-v5/dictionary/materialize_worker_v3.py dist/direct-v1/engine_tools/
+          cp maniements-v5/dictionary/prototype_v3_builtin_policy.py dist/direct-v1/engine_tools/
+          cp maniements-v5/dictionary/prototype_v3_policy_compress.py dist/direct-v1/engine_tools/
+          cp maniements-v5/dictionary/prototype_v3_compile.py dist/direct-v1/engine_tools/
+
+      - name: Direct 5-3 smoke test
+        working-directory: dist/direct-v1
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 smoke_test.py | tee SMOKE.txt
+
+      - name: Write package manifest
+        working-directory: dist/direct-v1
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import hashlib,json,pathlib,datetime
+          files={}
+          for p in sorted(pathlib.Path(".").rglob("*")):
+              if p.is_file() and p.name not in {"direct_cache.sqlite","smoke_cache.sqlite"}:
+                  files[str(p)]=hashlib.sha256(p.read_bytes()).hexdigest()
+          m={
+            "schema":"MANIEMENTS_V5_DIRECT_PRODUCT_V1",
+            "runtime_frozen_sha256":"a0b580531f3c9e8bb00710b9c3e1c183b27cbfe9231c9d584e29a374ba88835d",
+            "generated_at_utc":datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0).isoformat(),
+            "smoke_case":"AKT92/765",
+            "files":files,
+          }
+          pathlib.Path("MANIFEST.json").write_text(json.dumps(m,indent=2,sort_keys=True)+"\n")
+          PY
+          rm -f smoke_cache.sqlite smoke_cache.sqlite-shm smoke_cache.sqlite-wal
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MANIEMENTS_V5_CALCUL_DIRECT_V1
+          path: dist/direct-v1/**
+          retention-days: 30
