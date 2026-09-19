@@ -6,3 +6,5 @@ goal=distill exact oracle policy into certified bridge maneuver
 rerun=certify-adaptive-deep-finesse
 
 rerun=fix-runtime-path
+
+rerun=king-after-deep-finesse-loss
