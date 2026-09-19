@@ -54,6 +54,10 @@ def load_modules(runtime_root: Path, tools_root: Path):
     sys.path.insert(0,str(tools_root))
     import integrated_engine as eng
     import human_motif_search_v57 as v57
+    # Importing V5.72 applies the reviewed V5.71 continuation fix to the shared
+    # V57 module: once a finesse sequence is exhausted, finish by cashing the
+    # highest remaining partnership card instead of terminating the maneuver.
+    import human_motif_search_v572 as _v572_patch
     import human_motif_search_v59 as v59
     import human_sequence_search_v512 as v512
     import human_conditional_motifs_v513 as v513
