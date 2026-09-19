@@ -316,22 +316,31 @@ def _label_to_action(eng,s,f,label):
         return (seat,r) if r in rr else None
     return None
 
-def evaluate_program(eng,north,south,goal,program):
+def evaluate_program(eng,north,south,goal,program,debug=False):
     e=eng.Engine2(north,south,goal)
     pm=_program_map(program)
     from functools import lru_cache
+    diag={'missing_group':0,'invalid_action':0,'examples':[]}
 
     def pick(s,rnd):
         f=enrich(v52.base_features(eng,e,s,rnd))
         k=group_key(f)
         item=pm.get(k)
         if item is None:
+            diag['missing_group']+=1
+            if len(diag['examples'])<8:
+                diag['examples'].append({'kind':'missing_group','round':rnd,'key':list(k),'features':f})
             return None
         label=item['default']
         for rule in item['rules']:
             if all(f.get(a)==v for a,v in rule['if']):
                 label=rule['action'];break
-        return _label_to_action(eng,s,f,label)
+        a=_label_to_action(eng,s,f,label)
+        if a is None:
+            diag['invalid_action']+=1
+            if len(diag['examples'])<8:
+                diag['examples'].append({'kind':'invalid_action','round':rnd,'key':list(k),'label':label,'features':f})
+        return a
 
     @lru_cache(maxsize=None)
     def F(s,rnd):
@@ -361,4 +370,6 @@ def evaluate_program(eng,north,south,goal,program):
         return ok
 
     mask=F(e.initial(),1)
+    if debug:
+        return e.model.weight(mask),mask,diag
     return e.model.weight(mask),mask
