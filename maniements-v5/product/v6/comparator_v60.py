@@ -167,6 +167,33 @@ def collect_candidates(mods, north, south, target, oracle):
                       prob=prob,mask=mask,oracle=oracle,target_hand=spec.get("target"))
     stats["V514"]={"tested":tested,"seconds":round(time.monotonic()-t0,3)}
 
+    # If the human maneuver registry does not yet contain an oracle-optimal
+    # candidate, retain the exact public oracle policy as a technical candidate.
+    # This keeps "exact calculation" separate from "human explanation coverage".
+    human_oracle_matched=any(Fraction(r["fraction"])==oracle for r in rows)
+    if not human_oracle_matched:
+        e_oracle=eng.Engine2(north,south,target)
+        solved=e_oracle.solve(include_policy=True)
+        root=e_oracle.initial()
+        frontier=e_oracle.frontier(root)
+        best_mask=max(frontier,key=lambda m:(e_oracle.model.weight(m),m))
+        root_key=repr(e_oracle.public_key(root))
+        lead=(solved.get("policy") or {}).get(root_key) or "—"
+        add_candidate(
+            rows,
+            source="ORACLE",
+            label="POLITIQUE_ADAPTATIVE_EXACTE_A_HUMANISER",
+            spec={"lead":lead,"policy_states":solved.get("policy_states",0)},
+            lines=[
+                "Stratégie adaptative exacte calculée par l’oracle.",
+                "Elle atteint l’optimum mais son motif bridge compact n’est pas encore reconnu."
+            ],
+            prob=oracle,
+            mask=best_mask,
+            oracle=oracle,
+            target_hand=None,
+        )
+
     # Deduplicate by exact success mask. Same mask = same set of layouts covered.
     bymask={}
     for r in rows:
@@ -220,6 +247,7 @@ def compare(runtime_root: Path, tools_root: Path, north: str, south: str):
         t0=time.monotonic()
         candidates,stats=collect_candidates(mods,north,south,t,oracle)
         optimal=[r for r in candidates if r["optimal"]]
+        human_optimal=[r for r in optimal if r["source"]!="ORACLE"]
         objectives.append({
             "target":t,
             "oracle_fraction":str(oracle),
@@ -227,6 +255,8 @@ def compare(runtime_root: Path, tools_root: Path, north: str, south: str):
             "candidate_count":len(candidates),
             "optimal_candidate_count":len(optimal),
             "oracle_matched":bool(optimal),
+            "human_oracle_matched":bool(human_optimal),
+            "needs_humanization":not bool(human_optimal),
             "families":stats,
             "candidates":candidates,
             "elapsed_seconds":round(time.monotonic()-t0,3),
@@ -252,7 +282,7 @@ def render_html(report):
          f"<h1>Comparateur de maniements V6.0</h1><p><b>{html.escape(report['north_fr'])}</b> face à <b>{html.escape(report['south_fr'])}</b></p>"]
     for o in report["objectives"]:
         out.append(f"<section><h2>Objectif : {o['target']} levées <span class='p'>{pct(o['oracle_percent'])}</span></h2>")
-        out.append(f"<p class='muted'>Optimum oracle · {o['candidate_count']} comportements de maniement distincts testés · oracle retrouvé : <b>{'oui' if o['oracle_matched'] else 'NON'}</b></p>")
+        out.append(f"<p class='muted'>Optimum oracle · {o['candidate_count']} comportements distincts · calcul exact couvert : <b>{'oui' if o['oracle_matched'] else 'NON'}</b> · motif humain optimal reconnu : <b>{'oui' if o.get('human_oracle_matched') else 'non, à humaniser'}</b></p>")
         for i,c in enumerate(o["candidates"][:8]):
             cls="best" if c["optimal"] else ""
             out.append(f"<article class='{cls}'><h3>{html.escape(c['label'])} <span class='p'>{pct(c['percent'])}</span></h3>")
@@ -290,6 +320,7 @@ def main():
         "objectives":[{
             "target":o["target"],"oracle":o["oracle_fraction"],"candidates":o["candidate_count"],
             "oracle_matched":o["oracle_matched"],
+            "human_oracle_matched":o["human_oracle_matched"],
             "top":[(x["label"],x["fraction"]) for x in o["candidates"][:5]]
         } for o in report["objectives"]]
     }
