@@ -1,1 +1,1 @@
-V6.2 SEMANTIC ACTION COMPRESSION\nrerun=executable-replay\n
+V6.2 SEMANTIC ACTION COMPRESSION\nrerun=executable-replay\nrerun=preserve-oracle-actions\n
