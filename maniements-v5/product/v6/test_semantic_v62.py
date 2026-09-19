@@ -21,7 +21,8 @@ dec=[];raw=[];v52.v45._ENG=eng;v52.v45._E=e
 tree=v52.v45.explore(eng,e,root,best,dec,raw,{})
 t0=time.monotonic();r=sem.compress(eng,e,tree,top,bottom)
 if r.get('ok'):
-    rp,rm=sem.evaluate_program(eng,n,s,t,r['program'])
+    rp,rm,diag=sem.evaluate_program(eng,n,s,t,r['program'],debug=True)
+    r['replay_diagnostic']=diag
     r['replay_fraction']=str(rp)
     r['replay_percent']=float(rp)*100.0
     r['replay_matches_oracle']=(rp==e.model.weight(best))
