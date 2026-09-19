@@ -1,0 +1,44 @@
+name: MANIEMENTS V6.2 — Roudinesco prefix residual
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "maniements-v5/product/v6/V623_ROUD_PREFIX_START"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Rebuild runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          ZIP="$RUNNER_TEMP/runtime.zip"
+          cat maniements-v5/runtime/runtime_v2.b64.part-00 \
+              maniements-v5/runtime/runtime_v2.b64.part-01 \
+              maniements-v5/runtime/runtime_v2.b64.part-02a \
+              maniements-v5/runtime/runtime_v2.b64.part-02b \
+              maniements-v5/runtime/runtime_v2.b64.part-03 \
+              maniements-v5/runtime/runtime_v2.b64.part-04 \
+              maniements-v5/runtime/runtime_v2.b64.part-05 \
+              maniements-v5/runtime/runtime_v2.b64.part-06 | base64 -d > "$ZIP"
+          mkdir -p "$RUNNER_TEMP/unpacked" && unzip -q "$ZIP" -d "$RUNNER_TEMP/unpacked"
+      - name: Test conditional prefix
+        shell: bash
+        run: |
+          python3 maniements-v5/product/v6/test_roud_prefix_residual_v623.py \
+            --runtime-root "$RUNNER_TEMP/unpacked" \
+            --tools-root maniements-v5/dictionary \
+            --output V623_ROUD_PREFIX.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: V623_ROUD_PREFIX
+          path: V623_ROUD_PREFIX.json
+          retention-days: 30
