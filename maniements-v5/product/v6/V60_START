@@ -9,4 +9,4 @@ rerun=oracle-vs-human-coverage-separation
 rerun=v61-humanizer-integrated
 
 rerun=v61-case-breakdowns
-rerun=v62-adaptive-fallback\n
+rerun=v62-adaptive-fallback\nrerun=v62-semantic-and-probe-label\n
