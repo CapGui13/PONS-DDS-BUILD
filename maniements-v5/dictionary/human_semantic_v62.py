@@ -82,7 +82,8 @@ def enrich(f):
 
 def semantic_label_for_actual(eng,e,s,f,action):
     seat,raw=action
-    rank='-' if not raw else eng.I2R[raw]
+    # Oracle tree actions are already stored as public rank strings in this layer.
+    rank='-' if raw in (None,0,'-') else (raw if isinstance(raw,str) else eng.I2R[raw])
     phase=f['phase']
     hand=s.north if seat=='N' else s.south
     cards=[eng.I2R[r] for r in eng.ranks(hand)]
