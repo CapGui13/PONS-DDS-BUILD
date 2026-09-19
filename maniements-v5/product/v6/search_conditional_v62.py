@@ -24,4 +24,3 @@ out={'oracle':str(oracle),'tested':tested,'found':len(rows),'best':rows[0] if ro
      'elapsed_seconds':round(time.monotonic()-t0,3)}
 Path(a.output).write_text(json.dumps(out,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
 print(json.dumps(out,ensure_ascii=False,indent=2))
-if not rows: raise SystemExit(2)
