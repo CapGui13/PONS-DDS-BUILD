@@ -20,6 +20,12 @@ root=e.initial();best=max(e.frontier(root),key=lambda m:(e.model.weight(m),m))
 dec=[];raw=[];v52.v45._ENG=eng;v52.v45._E=e
 tree=v52.v45.explore(eng,e,root,best,dec,raw,{})
 t0=time.monotonic();r=sem.compress(eng,e,tree,top,bottom)
+if r.get('ok'):
+    rp,rm=sem.evaluate_program(eng,n,s,t,r['program'])
+    r['replay_fraction']=str(rp)
+    r['replay_percent']=float(rp)*100.0
+    r['replay_matches_oracle']=(rp==e.model.weight(best))
+    r['replay_mask_matches_oracle']=(int(rm)==int(best))
 r.update({'id':a.case_id,'fraction':str(e.model.weight(best)),'seconds':round(time.monotonic()-t0,3)})
 Path(a.output).write_text(json.dumps(r,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
 print(json.dumps(r,ensure_ascii=False,indent=2))
