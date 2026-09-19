@@ -74,9 +74,14 @@ def action(eng,e,s,spec):
     if s.leader==feeder and seat==target and cur is not None:
         prev=prev_def(eng,s)
         if prev not in (None,'-') and RVAL.get(prev,0)>RVAL[cur]:
-            if mode=='duck':return target,lowest(eng,hand(s,target))
+            if mode=='duck':
+                return target,lowest(eng,hand(s,target))
             w=cheapest_winner(eng,hand(s,target),prev)
-            if w:return target,w
+            if w:
+                return target,w
+            # In normal cover mode, if the inserted card cannot be covered,
+            # duck cheaply instead of wasting the scheduled finesse card.
+            return target,lowest(eng,hand(s,target))
         return target,cur
     return seat,lowest(eng,hand(s,seat))
 
