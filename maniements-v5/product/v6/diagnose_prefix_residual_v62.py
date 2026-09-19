@@ -14,6 +14,7 @@ ap=argparse.ArgumentParser()
 ap.add_argument('--runtime-root',required=True)
 ap.add_argument('--tools-root',required=True)
 ap.add_argument('--output',required=True)
+ap.add_argument('--case-id')
 a=ap.parse_args()
 sys.path.insert(0,str(Path(a.runtime_root)/'runtime'))
 sys.path.insert(0,a.tools_root)
@@ -22,7 +23,10 @@ import integrated_engine as eng
 import human_prefix_residual_v515 as v515
 
 rows=[];t0=time.monotonic()
-for c in CASES:
+selected=[x for x in CASES if not a.case_id or x['id']==a.case_id]
+if a.case_id and not selected:
+    raise SystemExit(f"unknown case: {a.case_id}")
+for c in selected:
     r=v515.analyze(eng,c)
     rows.append(r)
     b=r.get('best') or {}
