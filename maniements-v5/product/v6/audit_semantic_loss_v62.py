@@ -36,7 +36,7 @@ if a.case_id=='SUITPLAY_ENC' and comp.get('ok'):
     for item in comp['program']:
         k=item['key']
         if k[0]==2 and k[1]=='response' and k[4]==0 and k[5]=='TA' and k[6]=='':
-            item['rules'].insert(0,{'if':[['seen_KQJ',2],['west_KQJ',1],['east_KQJ',1]],'action':'LOW'})
+            item['rules'].insert(0,{'if':[['seen_KQJ',2],['west_KQJ',1],['east_KQJ',1],['prev_class','LOW']],'action':'LOW'})
 pm=sem._program_map(comp.get('program') or [])
 
 losses=[]
