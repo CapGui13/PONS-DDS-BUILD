@@ -175,10 +175,6 @@ def recognize(eng,inspect,north,south,target):
     }
 
 
-def _case_mask(e,side_qj=None,length=None,q_single_behind=False,j_single_behind=False,
-               before='W',behind='E'):
-    qi,ji=e.eng.R2I['Q'],e.eng.R2I['J'] if hasattr(e,'eng') else (None,None)
-
 def explain_qj_mask(eng,north,south,target,mask,target_hand):
     """Recognize exact, disjoint Q/J layout cases for the AKT9 family.
 
