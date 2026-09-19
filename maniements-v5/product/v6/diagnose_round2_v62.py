@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 import argparse,json,sys
+from fractions import Fraction
 from pathlib import Path
 
 CASES=[
@@ -19,10 +20,19 @@ sys.path.insert(0,str(Path(a.runtime_root)/'runtime'))
 sys.path.insert(0,a.tools_root)
 import integrated_engine as eng
 import prototype_v3_inspect as ins
+import human_motif_search_v59 as v59
 
 def seen_cards(e,s,seat):
     m=s.west_seen if seat=='W' else s.east_seen
     return ''.join(eng.I2R[r] for r in sorted(eng.ranks(m),reverse=True)) or '-'
+
+
+REF_SPECS={
+ "BS_B":{'cash':('A',),'feeder':'N','target':'S','seq':('Q',),'probe':None,'mode':'cover','probe_mode':'cover'},
+ "BS_E":{'cash':tuple(),'feeder':'S','target':'N','seq':('J',),'probe':None,'mode':'cover','probe_mode':'cover'},
+ "SUITPLAY_ENC":{'cash':tuple(),'feeder':'N','target':'S','seq':('9',),'probe':None,'mode':'cover','probe_mode':'cover'},
+ "ROUD_2":{'cash':('K',),'feeder':'N','target':'S','seq':('J',),'probe':None,'mode':'cover','probe_mode':'cover'},
+}
 
 out=[]
 for cid,north,south,target in CASES:
@@ -69,8 +79,11 @@ for cid,north,south,target in CASES:
         if key not in uniq or len(b['trace'])<len(uniq[key]['trace']):
             uniq[key]=b
     rows=sorted(uniq.values(),key=lambda z:(z['next'] or '',z['west_seen'],z['east_seen']))
+    rp,rm=v59.evaluate(eng,north,south,target,REF_SPECS[cid])
     item={'id':cid,'north':north,'south':south,'target':target,'oracle':solved['probability_fraction'],
-          'root':f'{seat}:{rank}','after_first_trick':rows}
+          'root':f'{seat}:{rank}','reference_static_fraction':str(rp),
+          'reference_static_gap_points':float((rp-Fraction(solved['probability_fraction']))*100),
+          'after_first_trick':rows}
     out.append(item)
     print('\n'+cid,north,south,'target',target,'oracle',item['oracle'],'root',item['root'])
     for b in rows:
