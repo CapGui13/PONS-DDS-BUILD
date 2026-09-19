@@ -23,4 +23,9 @@ assert [o["target"] for o in r["objectives"]]==[5,4,3],r["objectives"]
 for o in r["objectives"]:
     assert o["candidate_count"]>0,o
     assert o["oracle_matched"],o
-print("GREEN",[(o["target"],o["oracle_fraction"],o["candidate_count"],o["optimal_candidate_count"]) for o in r["objectives"]])
+    if o["target"] in (5,4,3):
+        assert o["human_oracle_matched"],o
+t4=next(o for o in r["objectives"] if o["target"]==4)
+assert t4["candidates"][0]["label"]=="IMPASSE_PROFONDE_ADAPTATIVE",t4["candidates"][:3]
+assert t4["candidates"][0]["source"]=="V61",t4["candidates"][0]
+print("GREEN",[(o["target"],o["oracle_fraction"],o["candidate_count"],o["optimal_candidate_count"],o["human_oracle_matched"]) for o in r["objectives"]])
