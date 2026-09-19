@@ -14,6 +14,16 @@ def highest(eng,mask):
     rr=list(eng.ranks(mask)); return eng.I2R[max(rr)] if rr else '-'
 def seen_union(eng,s):
     return {eng.I2R[r] for r in eng.ranks(s.west_seen|s.east_seen)}
+
+def prior_seen_union(eng,s):
+    # Information available before the current trick. Defender cards already
+    # played on the current trick must not retroactively alter a choice made
+    # from the preceding probe/cash trick.
+    seen=set(seen_union(eng,s))
+    for seat,r in s.trick:
+        if seat not in eng.DECL and r:
+            seen.discard(eng.I2R[r])
+    return seen
 def prev_def(eng,s):
     for q,r in reversed(s.trick):
         if q not in eng.DECL: return '-' if not r else eng.I2R[r]
@@ -29,7 +39,8 @@ def choose_target(eng,s,spec):
     # already been made and executed; do not switch branches on later evidence.
     if not has(eng,s,target,a) or not has(eng,s,target,b):
         return None
-    return a if (seen_union(eng,s)&set(spec['trigger'])) else b
+    evidence = seen_union(eng,s) if s.pos==0 else prior_seen_union(eng,s)
+    return a if (evidence&set(spec['trigger'])) else b
 
 def action(eng,e,s,spec):
     feeder=spec['feeder']; target=spec['target']; cash=spec['cash']
