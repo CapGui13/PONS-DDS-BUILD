@@ -80,6 +80,30 @@ def enrich(f):
     z['s_strat']=''.join(x for x in ranks_from_text(f.get('s_rem')) if x in 'AKQJT98')
     return z
 
+def semantic_label_for_actual(eng,e,s,f,action):
+    seat,raw=action
+    rank='-' if not raw else eng.I2R[raw]
+    phase=f['phase']
+    hand=s.north if seat=='N' else s.south
+    cards=[eng.I2R[r] for r in eng.ranks(hand)]
+    if rank=='-':return 'VOID'
+    if phase=='lead':
+        if cards and rank==min(cards,key=lambda r:RVAL[r]):
+            return seat+':LOW'
+        if cards and rank==max(cards,key=lambda r:RVAL[r]):
+            return seat+':HIGH'
+        return seat+':RANK:'+rank
+    prev=f.get('prev_card')
+    if prev not in (None,'-','x'):
+        wins=[r for r in cards if RVAL[r]>RVAL.get(prev,99)]
+        if wins and rank==min(wins,key=lambda r:RVAL[r]):
+            return 'COVER_CHEAPEST'
+    if cards and rank==min(cards,key=lambda r:RVAL[r]):
+        return 'LOW'
+    if cards and rank==max(cards,key=lambda r:RVAL[r]):
+        return 'HIGH'
+    return 'RANK:'+rank
+
 def collect(eng,e,root):
     rows=[]
     seen=set()
@@ -91,10 +115,12 @@ def collect(eng,e,root):
         if n.kind=='D':
             legal,exact=v52.state_action_sets(eng,e,n)
             f=enrich(v52.base_features(eng,e,n.state,rnd))
-            acts=semantic_action_set(f,exact)
-            # If all legal card actions are exact, there is no strategic instruction.
+            # Keep the oracle's chosen public action, but express that exact same
+            # card as a semantic role whenever possible. This prevents the
+            # compressed program from drifting into untrained public states.
+            label=semantic_label_for_actual(eng,e,n.state,f,n.action)
             if not (legal and legal==exact):
-                rows.append({'features':f,'actions':acts,'raw_exact':exact})
+                rows.append({'features':f,'label':label,'raw_exact':exact})
             ch=n.branches[0]
             walk(ch,v52.v51.edge_round(n,ch,rnd))
             return
@@ -206,18 +232,7 @@ def compress(eng,e,root,top,bottom,max_lines=12):
     for key,grp0 in itertools.groupby(sorted(rows,key=lambda r:str(group_key(r['features']))),
                                        key=lambda r:group_key(r['features'])):
         grp=list(grp0)
-        label=choose_common(grp)
-        if label is not None:
-            z=grp[0].copy();z['label']=label;groups[key].append(z)
-            continue
-        # Keep each abstract public state but never refine by exact low spots.
-        # We will ask the rule learner to separate them using bridge-semantic features.
         for r in grp:
-            if not r['actions']:
-                conflicts.append({'key':key,'features':r['features']})
-                continue
-            # Pick a deterministic preferred exact-preserving semantic action.
-            r=dict(r);r['label']=choose_common([r]) or sorted(r['actions'])[0]
             groups[key].append(r)
     if conflicts:
         return {'ok':False,'reason':'semantic_action_missing','conflicts':conflicts[:5]}
