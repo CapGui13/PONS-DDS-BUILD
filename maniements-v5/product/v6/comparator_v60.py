@@ -65,7 +65,8 @@ def load_modules(runtime_root: Path, tools_root: Path):
     import human_layout_reason_v581 as v581
     import prototype_v3_inspect as inspect
     import human_oracle_v61 as v61
-    return eng,v57,v59,v512,v513,v514,v581,inspect,v61
+    import human_adaptive_prefix_v62 as v62
+    return eng,v57,v59,v512,v513,v514,v581,inspect,v61,v62
 
 
 def motif_label(source, spec, kind=None):
@@ -125,7 +126,7 @@ def add_candidate(rows, *, source, label, spec, lines, prob, mask, oracle, targe
 
 
 def collect_candidates(mods, north, south, target, oracle):
-    eng,v57,v59,v512,v513,v514,v581,inspect,v61=mods
+    eng,v57,v59,v512,v513,v514,v581,inspect,v61,v62=mods
     display=[frhand(north),frhand(south)]
     rows=[];stats={}
 
@@ -192,7 +193,31 @@ def collect_candidates(mods, north, south, target, oracle):
             rows[-1]["certified_humanization"]=h
             human_oracle_matched=True
 
-    # Only if V6.1 still cannot explain the optimum, retain the exact public
+    # V6.2 fallback: compact multi-round adaptive program. This is attempted
+    # only after the cheaper named maneuver families and V6.1 recognizer fail.
+    if not human_oracle_matched:
+        h2=v62.find_candidate(eng,north,south,target,display,oracle)
+        if h2.get("found") and h2.get("certified") and Fraction(h2["probability_fraction"])==oracle:
+            add_candidate(
+                rows,
+                source="V62",
+                label=h2["kind"],
+                spec={
+                    "source_family":h2["source_family"],
+                    "prefix_rounds":h2["prefix_rounds"],
+                    "program":h2["spec"],
+                    "certification":h2["certification"],
+                },
+                lines=h2["lines_fr"],
+                prob=oracle,
+                mask=int(h2["success_mask"]),
+                oracle=oracle,
+                target_hand=h2["spec"].get("target"),
+            )
+            rows[-1]["certified_adaptive_humanization"]=h2
+            human_oracle_matched=True
+
+    # Only if V6.2 still cannot explain the optimum, retain the exact public
     # oracle policy as a technical candidate to humanize later.
     if not human_oracle_matched:
         e_oracle=eng.Engine2(north,south,target)
@@ -241,6 +266,15 @@ def collect_candidates(mods, north, south, target, oracle):
     # Conservative exact layout explanation from the existing certified reasoner.
     e=eng.Engine2(north,south,target)
     for r in unique[:30]:
+        if r.get("certified_adaptive_humanization"):
+            h=r["certified_adaptive_humanization"]
+            r["layout_reason"]={
+                "certified":True,
+                "mode":"CERTIFIED_V62_ADAPTIVE_PROGRAM",
+                "reason":"Programme adaptatif multi-tours certifié par préfixe exact et continuation publique exacte.",
+                "visible_lines":h["certification"]["visible_lines"],
+            }
+            continue
         if r.get("certified_humanization"):
             h=r["certified_humanization"]
             rr=v61.explain_qj_mask(eng,north,south,target,int(r["mask"]),r.get("target_hand"))
