@@ -59,7 +59,9 @@ def load_modules(runtime_root: Path, tools_root: Path):
     import human_conditional_motifs_v513 as v513
     import human_progressive_shortage_v514 as v514
     import human_layout_reason_v581 as v581
-    return eng,v57,v59,v512,v513,v514,v581
+    import prototype_v3_inspect as inspect
+    import human_oracle_v61 as v61
+    return eng,v57,v59,v512,v513,v514,v581,inspect,v61
 
 
 def motif_label(source, spec, kind=None):
@@ -119,7 +121,7 @@ def add_candidate(rows, *, source, label, spec, lines, prob, mask, oracle, targe
 
 
 def collect_candidates(mods, north, south, target, oracle):
-    eng,v57,v59,v512,v513,v514,v581=mods
+    eng,v57,v59,v512,v513,v514,v581,inspect,v61=mods
     display=[frhand(north),frhand(south)]
     rows=[];stats={}
 
@@ -167,10 +169,27 @@ def collect_candidates(mods, north, south, target, oracle):
                       prob=prob,mask=mask,oracle=oracle,target_hand=spec.get("target"))
     stats["V514"]={"tested":tested,"seconds":round(time.monotonic()-t0,3)}
 
-    # If the human maneuver registry does not yet contain an oracle-optimal
-    # candidate, retain the exact public oracle policy as a technical candidate.
-    # This keeps "exact calculation" separate from "human explanation coverage".
+    # First try to humanize the exact oracle with a certified V6.1 recognizer.
     human_oracle_matched=any(Fraction(r["fraction"])==oracle for r in rows)
+    if not human_oracle_matched:
+        h=v61.recognize(eng,inspect,north,south,target)
+        if h and h.get("certified") and Fraction(h["probability_fraction"])==oracle:
+            add_candidate(
+                rows,
+                source="V61",
+                label=h["kind"],
+                spec={"certification":h["certification"],"failure_fraction":h["failure_fraction"]},
+                lines=h["lines_fr"],
+                prob=oracle,
+                mask=int(h["success_mask"]),
+                oracle=oracle,
+                target_hand=h.get("target_hand"),
+            )
+            rows[-1]["certified_humanization"]=h
+            human_oracle_matched=True
+
+    # Only if V6.1 still cannot explain the optimum, retain the exact public
+    # oracle policy as a technical candidate to humanize later.
     if not human_oracle_matched:
         e_oracle=eng.Engine2(north,south,target)
         solved=e_oracle.solve(include_policy=True)
@@ -218,6 +237,16 @@ def collect_candidates(mods, north, south, target, oracle):
     # Conservative exact layout explanation from the existing certified reasoner.
     e=eng.Engine2(north,south,target)
     for r in unique[:30]:
+        if r.get("certified_humanization"):
+            h=r["certified_humanization"]
+            r["layout_reason"]={
+                "certified":True,
+                "reason":h["success_condition_fr"],
+                "mode":"CERTIFIED_V61",
+                "failure_fraction":h["failure_fraction"],
+                "failure_percent":h["failure_percent"],
+            }
+            continue
         try:
             rr=v581.reason_for_mask(eng,e,int(r["mask"]),r.get("target_hand"))
             r["layout_reason"]=rr
