@@ -327,9 +327,27 @@ def evaluate_program(eng,north,south,goal,program,debug=False):
         k=group_key(f)
         item=pm.get(k)
         if item is None:
+            # The exact tree deliberately omits public states where the choice
+            # is non-strategic (several declarer cards preserve the result), and
+            # it also omits states that only occur in already-losing worlds.
+            # Define a deterministic public fallback so the maneuver remains a
+            # complete executable policy; exhaustive replay will decide whether
+            # that fallback preserves the oracle probability.
             diag['missing_group']+=1
             if len(diag['examples'])<8:
                 diag['examples'].append({'kind':'missing_group','round':rnd,'key':list(k),'features':f})
+            if s.pos==0:
+                for seat in ('N','S'):
+                    h=s.north if seat=='N' else s.south
+                    rr=[eng.I2R[r] for r in eng.ranks(h)]
+                    if rr:
+                        return seat,min(rr,key=lambda r:RVAL[r])
+                return None
+            seat=e.order(s.leader)[s.pos]
+            if seat in eng.DECL:
+                h=s.north if seat=='N' else s.south
+                rr=[eng.I2R[r] for r in eng.ranks(h)]
+                return (seat,min(rr,key=lambda r:RVAL[r])) if rr else (seat,'-')
             return None
         label=item['default']
         for rule in item['rules']:
@@ -337,9 +355,19 @@ def evaluate_program(eng,north,south,goal,program,debug=False):
                 label=rule['action'];break
         a=_label_to_action(eng,s,f,label)
         if a is None:
+            # A learned semantic rule can also be reached from a public state
+            # that was non-strategic in the oracle tree (for example a defender
+            # is void, so "cover au plus juste" has no literal cover). Fall
+            # back to the lowest legal card and let replay certify the whole
+            # resulting policy.
             diag['invalid_action']+=1
             if len(diag['examples'])<8:
                 diag['examples'].append({'kind':'invalid_action','round':rnd,'key':list(k),'label':label,'features':f})
+            seat=e.order(s.leader)[s.pos] if s.pos else None
+            if seat in eng.DECL:
+                h=s.north if seat=='N' else s.south
+                rr=[eng.I2R[r] for r in eng.ranks(h)]
+                return (seat,min(rr,key=lambda r:RVAL[r])) if rr else (seat,'-')
         return a
 
     @lru_cache(maxsize=None)
