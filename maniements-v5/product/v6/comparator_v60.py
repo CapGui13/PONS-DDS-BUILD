@@ -239,13 +239,18 @@ def collect_candidates(mods, north, south, target, oracle):
     for r in unique[:30]:
         if r.get("certified_humanization"):
             h=r["certified_humanization"]
-            r["layout_reason"]={
+            rr=v61.explain_qj_mask(eng,north,south,target,int(r["mask"]),r.get("target_hand"))
+            r["layout_reason"]=rr or {
                 "certified":True,
                 "reason":h["success_condition_fr"],
                 "mode":"CERTIFIED_V61",
                 "failure_fraction":h["failure_fraction"],
                 "failure_percent":h["failure_percent"],
             }
+            continue
+        rr=v61.explain_qj_mask(eng,north,south,target,int(r["mask"]),r.get("target_hand"))
+        if rr:
+            r["layout_reason"]=rr
             continue
         try:
             rr=v581.reason_for_mask(eng,e,int(r["mask"]),r.get("target_hand"))
@@ -321,7 +326,12 @@ def render_html(report):
                 out.append("<ol>"+"".join("<li>"+html.escape(x)+"</li>" for x in c["lines_provisional"])+"</ol>")
             rr=c.get("layout_reason") or {}
             if rr.get("certified") and rr.get("reason"):
-                out.append("<p><b>Cas gagnants exacts :</b> "+html.escape(rr["reason"])+"</p>")
+                out.append("<p><b>Cas exacts :</b> "+html.escape(rr["reason"])+"</p>")
+                if rr.get("cases"):
+                    out.append("<ul>"+ "".join(
+                        "<li>"+html.escape(x["name"])+" : <b>"+pct(x["percent"])+"</b></li>"
+                        for x in rr["cases"]
+                    ) +"</ul>")
             else:
                 out.append("<p class='muted'>Description compacte exacte des cas gagnants : pas encore disponible.</p>")
             out.append("<details><summary>Diagnostic</summary><pre>"+html.escape(json.dumps({"source":c["source"],"spec":c["spec"],"fraction":c["fraction"],"mask":c["mask"]},ensure_ascii=False,indent=2))+"</pre></details></article>")
