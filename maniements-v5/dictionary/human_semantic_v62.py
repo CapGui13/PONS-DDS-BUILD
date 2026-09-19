@@ -222,7 +222,7 @@ def compress(eng,e,root,top,bottom,max_lines=12):
     if conflicts:
         return {'ok':False,'reason':'semantic_action_missing','conflicts':conflicts[:5]}
 
-    lines=[];rule_count=0
+    lines=[];rule_count=0;program=[]
     for key,ss in sorted(groups.items(),key=lambda kv:str(kv[0])):
         counts=Counter(s['label'] for s in ss)
         default=counts.most_common(1)[0][0]
@@ -235,7 +235,7 @@ def compress(eng,e,root,top,bottom,max_lines=12):
                 if not found:
                     return {'ok':False,'reason':'semantic_rules_not_separable','group':key,'counts':dict(counts)}
                 _,_,cond,matched=found
-                rules.append((cond,label))
+                rules.append((tuple(cond),label))
                 for i in matched:
                     if ss[i]['label']==label:uncovered.discard(i)
         rnd,phase,leader,seat,won,nstr,sstr=key
@@ -247,11 +247,102 @@ def compress(eng,e,root,top,bottom,max_lines=12):
         leadin='sinon : ' if rules else ''
         lines.append(f"{prefix}, {leadin}{action_fr(default,phase,top,bottom)}.")
         rule_count+=1
+        program.append({
+          'key':[rnd,phase,leader,seat,won,nstr,sstr],
+          'rules':[{'if':[[k,v] for k,v in cond],'action':label} for cond,label in rules],
+          'default':default,
+        })
     ded=[]
     for x in lines:
         if x not in ded:ded.append(x)
     return {
       'ok':True,'lines':ded,'visible_lines':len(ded),'rule_count':rule_count,
       'human_safe':len(ded)<=max_lines,'semantic_states':len(rows),
-      'spot_fallback_used':False
+      'spot_fallback_used':False,'program':program
     }
+
+
+def _program_map(program):
+    return {tuple(x['key']):x for x in program}
+
+def _label_to_action(eng,s,f,label):
+    phase=f['phase']
+    if phase=='lead':
+        parts=label.split(':')
+        seat=parts[0];kind=parts[1]
+        hand=s.north if seat=='N' else s.south
+        rr=[eng.I2R[r] for r in eng.ranks(hand)]
+        if not rr:return None
+        if kind=='LOW':
+            return seat,min(rr,key=lambda r:RVAL[r])
+        if kind=='HIGH':
+            return seat,max(rr,key=lambda r:RVAL[r])
+        if kind=='RANK':
+            r=parts[2]
+            return (seat,r) if r in rr else None
+        return None
+    seat=f.get('seat')
+    if seat not in ('N','S'):return None
+    hand=s.north if seat=='N' else s.south
+    rr=[eng.I2R[r] for r in eng.ranks(hand)]
+    if label=='VOID':
+        return seat,'-' if not rr else None
+    if not rr:return seat,'-'
+    if label=='LOW':return seat,min(rr,key=lambda r:RVAL[r])
+    if label=='HIGH':return seat,max(rr,key=lambda r:RVAL[r])
+    if label=='COVER_CHEAPEST':
+        p=f.get('prev_card')
+        if p in (None,'-','x'):return None
+        wins=[r for r in rr if RVAL[r]>RVAL[p]]
+        return (seat,min(wins,key=lambda r:RVAL[r])) if wins else None
+    if label.startswith('RANK:'):
+        r=label.split(':',1)[1]
+        return (seat,r) if r in rr else None
+    return None
+
+def evaluate_program(eng,north,south,goal,program):
+    e=eng.Engine2(north,south,goal)
+    pm=_program_map(program)
+    from functools import lru_cache
+
+    def pick(s,rnd):
+        f=enrich(v52.base_features(eng,e,s,rnd))
+        k=group_key(f)
+        item=pm.get(k)
+        if item is None:
+            return None
+        label=item['default']
+        for rule in item['rules']:
+            if all(f.get(a)==v for a,v in rule['if']):
+                label=rule['action'];break
+        return _label_to_action(eng,s,f,label)
+
+    @lru_cache(maxsize=None)
+    def F(s,rnd):
+        term=e.terminal(s)
+        if term is not None:return term[0]
+        if s.pos==0:
+            a=pick(s,rnd)
+            if a is None:return 0
+            seat,c=a
+            if c=='-':return 0
+            r=eng.R2I[c]
+            lead=eng.PublicState(s.north,s.south,s.west_seen,s.east_seen,
+                                 s.west_void,s.east_void,seat,0,tuple(),s.won)
+            ns=e.close(e.decl_play(lead,seat,r))
+            return F(ns,rnd)
+        seat=e.order(s.leader)[s.pos]
+        if seat in eng.DECL:
+            a=pick(s,rnd)
+            if a is None or a[0]!=seat:return 0
+            c=a[1];r=eng.VOID if c=='-' else eng.R2I[c]
+            ns=e.close(e.decl_play(s,seat,r))
+            return F(ns,rnd+1 if ns.pos==0 else rnd)
+        belief=e.belief(s);ok=belief
+        for r,legal in e.defender_actions(s,seat):
+            ns=e.close(e.def_play(s,seat,r))
+            ok &= ((belief&~legal)|F(ns,rnd+1 if ns.pos==0 else rnd))
+        return ok
+
+    mask=F(e.initial(),1)
+    return e.model.weight(mask),mask
