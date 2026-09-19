@@ -49,10 +49,10 @@ jobs:
         shell: bash
         run: |
           python3 - <<'PY'
-          import sys
+          import os,sys
           from fractions import Fraction
           from pathlib import Path
-          sys.path.insert(0, str(Path("$RUNNER_TEMP/unpacked")/"runtime"))
+          sys.path.insert(0, str(Path(os.environ["RUNNER_TEMP"])/"unpacked"/"runtime"))
           sys.path.insert(0, "maniements-v5/dictionary")
           import integrated_engine as eng
           import human_motif_v61_adaptive_double_finesse as v61
