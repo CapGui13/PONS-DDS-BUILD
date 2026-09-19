@@ -1,0 +1,38 @@
+name: MANIEMENTS V6.1 — Human coverage benchmark
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "maniements-v5/product/v6/V61_BENCH_START"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - name: Rebuild frozen runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          ZIP="$RUNNER_TEMP/runtime.zip"
+          cat maniements-v5/runtime/runtime_v2.b64.part-00               maniements-v5/runtime/runtime_v2.b64.part-01               maniements-v5/runtime/runtime_v2.b64.part-02a               maniements-v5/runtime/runtime_v2.b64.part-02b               maniements-v5/runtime/runtime_v2.b64.part-03               maniements-v5/runtime/runtime_v2.b64.part-04               maniements-v5/runtime/runtime_v2.b64.part-05               maniements-v5/runtime/runtime_v2.b64.part-06 | base64 -d > "$ZIP"
+          test "$(sha256sum "$ZIP" | awk '{print $1}')" = "a0b580531f3c9e8bb00710b9c3e1c183b27cbfe9231c9d584e29a374ba88835d"
+          mkdir -p "$RUNNER_TEMP/unpacked"
+          unzip -q "$ZIP" -d "$RUNNER_TEMP/unpacked"
+      - name: Run reviewed-case benchmark
+        shell: bash
+        run: |
+          python3 maniements-v5/product/v6/coverage_v61.py             --runtime-root "$RUNNER_TEMP/unpacked"             --tools-root maniements-v5/dictionary             --output V61_COVERAGE.json             | tee V61_COVERAGE.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MANIEMENTS_V61_HUMAN_COVERAGE
+          path: |
+            V61_COVERAGE.json
+            V61_COVERAGE.txt
+          retention-days: 30
