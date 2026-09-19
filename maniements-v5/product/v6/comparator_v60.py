@@ -87,6 +87,12 @@ def motif_label(source, spec, kind=None):
         if cash and seq:
             return "COUP_DE_SONDE_PUIS_IMPASSE" if len(cash)==1 else "TIRAGE_EN_TETE_PUIS_IMPASSE"
         if seq:
+            # An ordered sequence beginning by a top honor reached from the
+            # opposite hand is functionally a probe/cash before the later
+            # finesse rounds, even when V512 encodes it inside seq rather than
+            # in the separate cash field.
+            if len(seq)>1 and seq[0] in ("A","K"):
+                return "COUP_DE_SONDE_PUIS_IMPASSE"
             base="IMPASSE_REPETEE" if len(seq)>1 else "IMPASSE_SIMPLE"
             return base+"_LAISSER_COURIR" if mode=="duck" else base
         return "AUTRE_SEQUENCE"
