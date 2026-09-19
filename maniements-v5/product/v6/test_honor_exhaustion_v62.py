@@ -24,6 +24,7 @@ for item in comp['program']:
     # still needing both tricks, two of the three honors above T have already
     # been forced out. Preserve T by ducking another small card.
     if k[0]==2 and k[1]=='response' and k[4]==0 and k[5]=='TA' and k[6]=='':
+        item['rules'].insert(0,{'if':[['seen_KQJ',2],['west_KQJ',1],['east_KQJ',1],['prev_card','8']],'action':'LOW'})
         item['rules'].insert(0,{'if':[['seen_KQJ',2],['west_KQJ',1],['east_KQJ',1],['prev_class','LOW']],'action':'LOW'})
         patched+=1
 
