@@ -30,6 +30,13 @@ v52.v45._ENG=eng;v52.v45._E=e
 dec=[];raw=[]
 tree=v52.v45.explore(eng,e,root,best,dec,raw,{})
 comp=sem.compress(eng,e,tree,top,bottom)
+# Reviewed first repair for SUITPLAY_ENC: after the first trick has forced
+# one K/Q/J honor from each defender, keep T by ducking another low card.
+if a.case_id=='SUITPLAY_ENC' and comp.get('ok'):
+    for item in comp['program']:
+        k=item['key']
+        if k[0]==2 and k[1]=='response' and k[4]==0 and k[5]=='TA' and k[6]=='':
+            item['rules'].insert(0,{'if':[['seen_KQJ',2],['west_KQJ',1],['east_KQJ',1]],'action':'LOW'})
 pm=sem._program_map(comp.get('program') or [])
 
 losses=[]
