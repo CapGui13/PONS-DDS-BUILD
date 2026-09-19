@@ -45,6 +45,23 @@ jobs:
             } for x in r["first_defender_branches"]]
           },ensure_ascii=False,indent=2))
           PY
+      - name: Certify adaptive deep-finesse motif
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import sys
+          from fractions import Fraction
+          from pathlib import Path
+          sys.path.insert(0, str(Path("$RUNNER_TEMP/unpacked")/"runtime"))
+          sys.path.insert(0, "maniements-v5/dictionary")
+          import integrated_engine as eng
+          import human_motif_v61_adaptive_double_finesse as v61
+          p,m=v61.evaluate(eng,"AKT92","765",4)
+          oracle=Fraction(eng.Engine2("AKT92","765",4).solve(include_policy=False)["probability_fraction"])
+          print("V61 motif",p,"oracle",oracle,"mask",m)
+          assert p==oracle==Fraction(103,115),(p,oracle)
+          print("GREEN V6.1 ARX92/765 target4 exact motif")
+          PY
       - uses: actions/upload-artifact@v4
         with:
           name: MANIEMENTS_V61_ARX92_765_T4_DIAGNOSTIC
