@@ -54,6 +54,11 @@ def action(eng,e,s,z):
     behind='E' if before=='W' else 'W'
 
     if s.pos==0:
+        # Key adaptive branch: if the first deep finesse card (9) has lost to
+        # Q/J behind the target hand, cash K immediately before continuing.
+        # This distinguishes the 4-trick safety line from a mechanical repeat.
+        if (seen_at(eng,s,behind)&HONORS) and (not has(eng,s,target,'9')) and has(eng,s,target,'K'):
+            return target,'K'
         if hand(s,feeder):
             return feeder,low(eng,hand(s,feeder))
         if hand(s,target):
@@ -77,14 +82,6 @@ def action(eng,e,s,z):
         w=cheapest_above(eng,hand(s,target),p)
         if w:
             return target,w
-
-    # Once Q or J has won/appeared behind the target hand on an earlier round,
-    # switch from the deep finesse to a top honour. This catches the companion
-    # honour when the offside holding is short enough.
-    if seen_at(eng,s,behind)&HONORS:
-        t=cheapest_top(eng,s,target)
-        if t:
-            return target,t
 
     # Otherwise continue the progressive deep finesse: 9, then 10, ...
     t=target_low_card(eng,s,target)
