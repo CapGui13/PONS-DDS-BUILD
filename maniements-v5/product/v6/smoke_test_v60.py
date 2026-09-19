@@ -28,4 +28,16 @@ for o in r["objectives"]:
 t4=next(o for o in r["objectives"] if o["target"]==4)
 assert t4["candidates"][0]["label"]=="IMPASSE_PROFONDE_ADAPTATIVE",t4["candidates"][:3]
 assert t4["candidates"][0]["source"]=="V61",t4["candidates"][0]
+assert t4["candidates"][0]["layout_reason"]["mode"]=="CERTIFIED_V61_FAILURE_BREAKDOWN",t4["candidates"][0]["layout_reason"]
+
+t5=next(o for o in r["objectives"] if o["target"]==5)
+best5=t5["candidates"][0]
+assert best5["label"]=="IMPASSE_REPETEE",best5
+assert best5["layout_reason"]["mode"]=="CERTIFIED_V61_CASE_BREAKDOWN",best5["layout_reason"]
+assert sum(Fraction(x["fraction"]) for x in best5["layout_reason"]["cases"])==Fraction(best5["fraction"])
+
+probe5=next(x for x in t5["candidates"] if x["label"]=="COUP_DE_SONDE_PUIS_IMPASSE" and x["fraction"]=="52/575")
+assert probe5["layout_reason"]["mode"]=="CERTIFIED_V61_CASE_BREAKDOWN",probe5["layout_reason"]
+assert sum(Fraction(x["fraction"]) for x in probe5["layout_reason"]["cases"])==Fraction(probe5["fraction"])
+
 print("GREEN",[(o["target"],o["oracle_fraction"],o["candidate_count"],o["optimal_candidate_count"],o["human_oracle_matched"]) for o in r["objectives"]])
