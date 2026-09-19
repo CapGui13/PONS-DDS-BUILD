@@ -79,7 +79,11 @@ def strategy_action(eng,e,s,cash,feeder,target,targets):
                 prev='-' if not r else eng.I2R[r];break
         if prev not in (None,'-') and RVAL[prev]>RVAL[t]:
             w=cheapest_winner(eng,hand_mask(s,target),prev)
-            if w:return (target,w)
+            if w:
+                return (target,w)
+            # The defender has inserted an unbeatable card. Do not throw away
+            # the finesse card: duck cheaply and preserve it for a later round.
+            return (target,lowest(eng,hand_mask(s,target)))
         return (target,t)
 
     # Any other declarer response is non-strategic for this motif.
