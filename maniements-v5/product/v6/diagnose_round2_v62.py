@@ -22,7 +22,7 @@ import prototype_v3_inspect as ins
 
 def seen_cards(e,s,seat):
     m=s.west_seen if seat=='W' else s.east_seen
-    return ''.join(e.I2R[r] for r in sorted(e.ranks(m),reverse=True)) or '-'
+    return ''.join(eng.I2R[r] for r in sorted(eng.ranks(m),reverse=True)) or '-'
 
 out=[]
 for cid,north,south,target in CASES:
@@ -40,8 +40,8 @@ for cid,north,south,target in CASES:
               'won':s.won,
               'west_seen':seen_cards(e,s,'W'),
               'east_seen':seen_cards(e,s,'E'),
-              'north_remaining':ins.hand_text(eng,s.north),
-              'south_remaining':ins.hand_text(eng,s.south),
+              'north_remaining':''.join(eng.I2R[r] for r in sorted(eng.ranks(s.north),reverse=True)) or '-',
+              'south_remaining':''.join(eng.I2R[r] for r in sorted(eng.ranks(s.south),reverse=True)) or '-',
               'next':None if nxt is None else f'{nxt[0]}:{nxt[1]}',
               'mass':str(e.model.weight(mask)),
             })
