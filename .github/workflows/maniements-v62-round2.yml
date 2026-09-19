@@ -1,0 +1,38 @@
+name: MANIEMENTS V6.2 — Round-two diagnostics
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "maniements-v5/product/v6/V62_ROUND2_START"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Rebuild frozen runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          ZIP="$RUNNER_TEMP/runtime.zip"
+          cat maniements-v5/runtime/runtime_v2.b64.part-00               maniements-v5/runtime/runtime_v2.b64.part-01               maniements-v5/runtime/runtime_v2.b64.part-02a               maniements-v5/runtime/runtime_v2.b64.part-02b               maniements-v5/runtime/runtime_v2.b64.part-03               maniements-v5/runtime/runtime_v2.b64.part-04               maniements-v5/runtime/runtime_v2.b64.part-05               maniements-v5/runtime/runtime_v2.b64.part-06 | base64 -d > "$ZIP"
+          test "$(sha256sum "$ZIP" | awk '{print $1}')" = "a0b580531f3c9e8bb00710b9c3e1c183b27cbfe9231c9d584e29a374ba88835d"
+          mkdir -p "$RUNNER_TEMP/unpacked"
+          unzip -q "$ZIP" -d "$RUNNER_TEMP/unpacked"
+      - name: Diagnose second-round choices
+        shell: bash
+        run: |
+          python3 maniements-v5/product/v6/diagnose_round2_v62.py             --runtime-root "$RUNNER_TEMP/unpacked"             --tools-root maniements-v5/dictionary             --output V62_ROUND2.json | tee V62_ROUND2.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MANIEMENTS_V62_ROUND2
+          path: |
+            V62_ROUND2.json
+            V62_ROUND2.txt
+          retention-days: 30
