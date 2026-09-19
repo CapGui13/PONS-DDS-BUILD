@@ -1,1 +1,1 @@
-V6.1 HUMAN COVERAGE BENCH START\ncases=human_batch_v44.CASES\nrerun=v572-continuation-fix\nrerun=v62-preserve-finesse-card\nrerun=v62-adaptive-fallback\n
+V6.1 HUMAN COVERAGE BENCH START\ncases=human_batch_v44.CASES\nrerun=v572-continuation-fix\nrerun=v62-preserve-finesse-card\nrerun=v62-adaptive-fallback\nrerun=v62-semantic-exact-vs-compact\n
