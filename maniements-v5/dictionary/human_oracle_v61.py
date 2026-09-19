@@ -173,3 +173,130 @@ def recognize(eng,inspect,north,south,target):
             "derrière Main 1, dans une longueur d’au moins quatre cartes."
         ),
     }
+
+
+def _case_mask(e,side_qj=None,length=None,q_single_behind=False,j_single_behind=False,
+               before='W',behind='E'):
+    qi,ji=e.eng.R2I['Q'],e.eng.R2I['J'] if hasattr(e,'eng') else (None,None)
+
+def explain_qj_mask(eng,north,south,target,mask,target_hand):
+    """Recognize exact, disjoint Q/J layout cases for the AKT9 family.
+
+    Returns None unless the supplied success mask equals one of the certified
+    bridge-readable templates below. Percentages are computed from the exact
+    WorldModel weights, never from independent approximations.
+    """
+    ori=_orientation(north,south)
+    if not ori:
+        return None
+    feeder,th,before,behind=ori
+    if target_hand not in (None,th):
+        return None
+    e=eng.Engine2(north,south,target)
+    mask=int(mask)
+    qi,ji=eng.R2I['Q'],eng.R2I['J']
+
+    def own(i,side,r):
+        return bool(e.model.owner[side][r]&(1<<i))
+    def slen(i,side):
+        return _side_mask(e,side,i).bit_count()
+    def pm(pred):
+        return _predicate_mask(e,pred)
+    def part(name,m):
+        p=e.model.weight(m)
+        return {
+            'name':name,'mask':str(m),'fraction':str(p),
+            'percent':float(p)*100.0,
+        }
+
+    before_pair_len={
+        k:pm(lambda i,k=k: own(i,before,qi) and own(i,before,ji) and slen(i,before)==k)
+        for k in range(2,6)
+    }
+    behind_pair_len={
+        k:pm(lambda i,k=k: own(i,behind,qi) and own(i,behind,ji) and slen(i,behind)==k)
+        for k in range(2,6)
+    }
+    q_single_behind=pm(lambda i: own(i,behind,qi) and slen(i,behind)==1 and own(i,before,ji))
+    j_single_behind=pm(lambda i: own(i,behind,ji) and slen(i,behind)==1 and own(i,before,qi))
+
+    templates=[]
+
+    # Repeated deep finesse for all tricks: QJ together in front, at most fourth.
+    m=before_pair_len[2]|before_pair_len[3]|before_pair_len[4]
+    templates.append((
+        m,
+        "Dame et Valet sont réunis devant Main 1, au plus quatrièmes.",
+        [
+            part("Dame-Valet seconds devant Main 1",before_pair_len[2]),
+            part("Dame-Valet troisièmes devant Main 1",before_pair_len[3]),
+            part("Dame-Valet quatrièmes devant Main 1",before_pair_len[4]),
+        ],
+    ))
+
+    # Probe then finesse: either QJ drop together doubleton in front, or exactly
+    # one of the two is singleton behind and the other can then be finessed.
+    m=before_pair_len[2]|q_single_behind|j_single_behind
+    templates.append((
+        m,
+        "Le coup de sonde gagne si Dame-Valet sont seconds ensemble devant Main 1, "
+        "ou si la Dame ou le Valet est sec derrière Main 1 et l’autre honneur est devant.",
+        [
+            part("Dame-Valet seconds ensemble devant Main 1",before_pair_len[2]),
+            part("Dame sèche derrière Main 1, Valet devant",q_single_behind),
+            part("Valet sec derrière Main 1, Dame devant",j_single_behind),
+        ],
+    ))
+
+    # One deep finesse then play top: QJ together in front, second or third.
+    m=before_pair_len[2]|before_pair_len[3]
+    templates.append((
+        m,
+        "Dame et Valet sont réunis devant Main 1, au plus troisièmes.",
+        [
+            part("Dame-Valet seconds devant Main 1",before_pair_len[2]),
+            part("Dame-Valet troisièmes devant Main 1",before_pair_len[3]),
+        ],
+    ))
+
+    for tm,reason,cases in templates:
+        if mask==tm:
+            total=e.model.weight(mask)
+            # Drop zero-probability pieces defensively and verify exact disjoint sum.
+            cases=[x for x in cases if Fraction(x['fraction'])>0]
+            if sum((Fraction(x['fraction']) for x in cases),Fraction(0))!=total:
+                continue
+            return {
+                'certified':True,
+                'mode':'CERTIFIED_V61_CASE_BREAKDOWN',
+                'reason':reason,
+                'cases':cases,
+                'fraction':str(total),
+                'percent':float(total)*100.0,
+            }
+
+    # Success everywhere except QJ together behind in a long holding.
+    for min_len in (5,4):
+        fail=0
+        for k in range(min_len,6):
+            fail |= behind_pair_len[k]
+        if mask==(e.model.all & ~fail):
+            fp=e.model.weight(fail); sp=e.model.weight(mask)
+            fcases=[
+                part(f"Dame-Valet {'quatrièmes' if k==4 else 'cinquièmes'} derrière Main 1",behind_pair_len[k])
+                for k in range(min_len,6) if behind_pair_len[k]
+            ]
+            return {
+                'certified':True,
+                'mode':'CERTIFIED_V61_FAILURE_BREAKDOWN',
+                'reason':(
+                    "Le maniement échoue uniquement lorsque Dame et Valet sont réunis "
+                    f"derrière Main 1 dans une longueur d’au moins {min_len} cartes."
+                ),
+                'cases':fcases,
+                'failure_fraction':str(fp),
+                'failure_percent':float(fp)*100.0,
+                'fraction':str(sp),
+                'percent':float(sp)*100.0,
+            }
+    return None
