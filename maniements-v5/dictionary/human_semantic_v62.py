@@ -78,6 +78,25 @@ def enrich(f):
     z['east_T98']=sum(bool(f.get('east_'+r)) for r in 'T98')
     z['n_strat']=''.join(x for x in ranks_from_text(f.get('n_rem')) if x in 'AKQJT98')
     z['s_strat']=''.join(x for x in ranks_from_text(f.get('s_rem')) if x in 'AKQJT98')
+    z['second_rank']=None
+    z['prev_below_second']=False
+    z['seen_above_second']=0
+    z['west_above_second']=0
+    z['east_above_second']=0
+    if f.get('phase')=='response' and f.get('seat') in ('N','S'):
+        rr=sorted(hand_ranks(f,f['seat']),key=lambda r:RVAL[r],reverse=True)
+        if len(rr)>=2:
+            second=rr[1];z['second_rank']=second
+            pv=f.get('prev_card')
+            if pv not in (None,'-') and pv in RVAL:
+                z['prev_below_second']=RVAL[pv] < RVAL[second]
+            for side in ('west','east'):
+                cnt=0
+                for r in 'AKQJT98765432':
+                    if RVAL[r]>RVAL[second] and f.get(side+'_'+r):
+                        cnt+=1
+                z[side+'_above_second']=cnt
+            z['seen_above_second']=z['west_above_second']+z['east_above_second']
     return z
 
 def semantic_label_for_actual(eng,e,s,f,action):
@@ -176,6 +195,8 @@ def rule_search(samples,label,uncovered):
     return best
 
 def atom_fr(k,v):
+    rel=relative_atom_fr(k,v)
+    if rel is not None:return rel
     if k=='prev_class':
         return {
           'HONOR':"l’adversaire vient de fournir un honneur",
@@ -204,6 +225,19 @@ def atom_fr(k,v):
         side='Ouest' if k.startswith('west') else 'Est';r=k.split('_',1)[1]
         return f"{side} {'a déjà montré' if v else 'n’a pas montré'} {v52.v51.fr_rank(r)}"
     return f"{k}={v}"
+
+def relative_atom_fr(k,v):
+    if k=='prev_below_second':
+        return "la carte fournie est inférieure à l’intermédiaire conservé" if v else "la carte fournie n’est pas inférieure à l’intermédiaire conservé"
+    if k=='seen_above_second':
+        return f"{v} honneur(s) supérieur(s) à l’intermédiaire sont déjà tombés"
+    if k=='west_above_second':
+        return f"Ouest a déjà fourni {v} honneur(s) supérieur(s) à l’intermédiaire"
+    if k=='east_above_second':
+        return f"Est a déjà fourni {v} honneur(s) supérieur(s) à l’intermédiaire"
+    if k=='second_rank':
+        return "l’intermédiaire conservé est "+v52.v51.fr_rank(v)
+    return None
 
 def action_fr(label,phase,top,bottom):
     if phase=='lead':
@@ -401,3 +435,101 @@ def evaluate_program(eng,north,south,goal,program,debug=False):
     if debug:
         return e.model.weight(mask),mask,diag
     return e.model.weight(mask),mask
+
+
+def render_program(program,top,bottom):
+    lines=[]
+    for item in program:
+        rnd,phase,leader,seat,won,nstr,sstr=item['key']
+        prefix=f"Au {rnd}{'er' if rnd==1 else 'e'} tour"
+        for rule in item.get('rules') or []:
+            cond=' et '.join(atom_fr(k,v) for k,v in rule['if'])
+            lines.append(f"{prefix}, si {cond} : {action_fr(rule['action'],phase,top,bottom)}.")
+        leadin='sinon : ' if item.get('rules') else ''
+        lines.append(f"{prefix}, {leadin}{action_fr(item['default'],phase,top,bottom)}.")
+    ded=[]
+    for x in lines:
+        if x not in ded:ded.append(x)
+    return ded
+
+def _missing_above_second(north,south,seat,second):
+    owned=set(north+south)
+    return [r for r in 'AKQJT98765432' if RVAL[r]>RVAL[second] and r not in owned]
+
+def apply_generic_repairs(north,south,program):
+    repairs=[]
+    for item in program:
+        k=item['key']
+        rnd,phase,leader,seat,won,nstr,sstr=k
+        if phase!='response' or seat not in ('N','S') or won!=0:
+            continue
+        # Generic honor-exhaustion safety family:
+        # with exactly three missing cards above the second-highest card in the
+        # acting hand, once two have been forced out one on each side, preserve
+        # the intermediate against a lower card and force the last honor.
+        hand = north if seat=='N' else south
+        rr=sorted(hand,key=lambda r:RVAL[r],reverse=True)
+        if len(rr)<2:continue
+        second=rr[1]
+        missing=_missing_above_second(north,south,seat,second)
+        if len(missing)!=3:continue
+        rule={
+          'if':[
+            ['second_rank',second],
+            ['seen_above_second',2],
+            ['west_above_second',1],
+            ['east_above_second',1],
+            ['prev_below_second',True],
+          ],
+          'action':'LOW'
+        }
+        sig=json.dumps(rule,sort_keys=True)
+        if any(json.dumps(x,sort_keys=True)==sig for x in item.get('rules') or []):
+            continue
+        item.setdefault('rules',[]).insert(0,rule)
+        repairs.append({
+          'kind':'HONOR_EXHAUSTION',
+          'seat':seat,'second_rank':second,'missing_above':missing,
+          'round':rnd,
+        })
+    return repairs
+
+def certified_humanize(eng,north,south,target,display,oracle):
+    from fractions import Fraction
+    e=eng.Engine2(north,south,target)
+    root=e.initial()
+    best=max(e.frontier(root),key=lambda m:(e.model.weight(m),m))
+    if e.model.weight(best)!=Fraction(oracle):
+        return {'found':False,'reason':'oracle_mask_mismatch'}
+    v52.v45._ENG=eng;v52.v45._E=e
+    tree=v52.v45.explore(eng,e,root,best,[],[],{})
+    comp=compress(eng,e,tree,display[0],display[1])
+    if not comp.get('ok'):
+        return {'found':False,'reason':comp.get('reason','compression_failed')}
+    before,mb=evaluate_program(eng,north,south,target,comp['program'])
+    repairs=[]
+    if before!=Fraction(oracle) or int(mb)!=int(best):
+        repairs=apply_generic_repairs(north,south,comp['program'])
+    after,ma=evaluate_program(eng,north,south,target,comp['program'])
+    if after!=Fraction(oracle) or int(ma)!=int(best):
+        return {
+          'found':False,'reason':'semantic_replay_below_oracle',
+          'before_fraction':str(before),'after_fraction':str(after),
+          'repairs':repairs,
+        }
+    lines=render_program(comp['program'],display[0],display[1])
+    compact=len(lines)<=14
+    kind='EPUISEMENT_DES_HONNEURS_SUPERIEURS' if any(r['kind']=='HONOR_EXHAUSTION' for r in repairs) else 'PROGRAMME_ADAPTATIF_SEMANTIQUE'
+    return {
+      'found':True,'certified':True,'kind':kind,
+      'probability_fraction':str(after),'success_mask':str(ma),
+      'program':comp['program'],'lines_fr':lines,
+      'visible_lines':len(lines),'human_compact':compact,
+      'repairs':repairs,
+      'certification':{
+        'exhaustive_program_replay':True,
+        'probability_equals_oracle':True,
+        'success_mask_equals_oracle':True,
+        'semantic_actions_executable':True,
+      },
+    }
