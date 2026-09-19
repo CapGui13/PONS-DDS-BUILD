@@ -66,7 +66,8 @@ def load_modules(runtime_root: Path, tools_root: Path):
     import prototype_v3_inspect as inspect
     import human_oracle_v61 as v61
     import human_adaptive_prefix_v62 as v62
-    return eng,v57,v59,v512,v513,v514,v581,inspect,v61,v62
+    import human_semantic_v62 as sem62
+    return eng,v57,v59,v512,v513,v514,v581,inspect,v61,v62,sem62
 
 
 def motif_label(source, spec, kind=None):
@@ -126,7 +127,7 @@ def add_candidate(rows, *, source, label, spec, lines, prob, mask, oracle, targe
 
 
 def collect_candidates(mods, north, south, target, oracle):
-    eng,v57,v59,v512,v513,v514,v581,inspect,v61,v62=mods
+    eng,v57,v59,v512,v513,v514,v581,inspect,v61,v62,sem62=mods
     display=[frhand(north),frhand(south)]
     rows=[];stats={}
 
@@ -217,8 +218,34 @@ def collect_candidates(mods, north, south, target, oracle):
             rows[-1]["certified_adaptive_humanization"]=h2
             human_oracle_matched=True
 
-    # Only if V6.2 still cannot explain the optimum, retain the exact public
-    # oracle policy as a technical candidate to humanize later.
+    # V6.2 semantic fallback: compile the exact public policy into executable
+    # bridge-semantic actions and certify the resulting program by exhaustive replay.
+    if not human_oracle_matched:
+        hs=sem62.certified_humanize(eng,north,south,target,display,oracle)
+        if hs.get("found") and hs.get("certified") and Fraction(hs["probability_fraction"])==oracle:
+            add_candidate(
+                rows,
+                source="V62S",
+                label=hs["kind"],
+                spec={
+                    "program":hs["program"],
+                    "repairs":hs.get("repairs") or [],
+                    "certification":hs["certification"],
+                    "human_compact":hs["human_compact"],
+                    "visible_lines":hs["visible_lines"],
+                },
+                lines=hs["lines_fr"],
+                prob=oracle,
+                mask=int(hs["success_mask"]),
+                oracle=oracle,
+                target_hand=None,
+            )
+            rows[-1]["certified_semantic_humanization"]=hs
+            rows[-1]["human_compact"]=bool(hs["human_compact"])
+            human_oracle_matched=True
+
+    # Only if V6.2 semantic compilation still cannot explain the optimum,
+    # retain the exact public oracle policy as a technical candidate.
     if not human_oracle_matched:
         e_oracle=eng.Engine2(north,south,target)
         solved=e_oracle.solve(include_policy=True)
@@ -266,6 +293,16 @@ def collect_candidates(mods, north, south, target, oracle):
     # Conservative exact layout explanation from the existing certified reasoner.
     e=eng.Engine2(north,south,target)
     for r in unique[:30]:
+        if r.get("certified_semantic_humanization"):
+            h=r["certified_semantic_humanization"]
+            r["layout_reason"]={
+                "certified":True,
+                "mode":"CERTIFIED_V62_SEMANTIC_PROGRAM",
+                "reason":"Programme adaptatif sémantique certifié par replay exhaustif contre toutes les défenses.",
+                "visible_lines":h["visible_lines"],
+                "human_compact":h["human_compact"],
+            }
+            continue
         if r.get("certified_adaptive_humanization"):
             h=r["certified_adaptive_humanization"]
             r["layout_reason"]={
