@@ -1,0 +1,38 @@
+name: MANIEMENTS V6.2 — ARX probe diagnostic
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "maniements-v5/product/v6/V62_ARX_PROBE_START"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  diag:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Rebuild runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          ZIP="$RUNNER_TEMP/runtime.zip"
+          cat maniements-v5/runtime/runtime_v2.b64.part-00 \
+              maniements-v5/runtime/runtime_v2.b64.part-01 \
+              maniements-v5/runtime/runtime_v2.b64.part-02a \
+              maniements-v5/runtime/runtime_v2.b64.part-02b \
+              maniements-v5/runtime/runtime_v2.b64.part-03 \
+              maniements-v5/runtime/runtime_v2.b64.part-04 \
+              maniements-v5/runtime/runtime_v2.b64.part-05 \
+              maniements-v5/runtime/runtime_v2.b64.part-06 | base64 -d > "$ZIP"
+          mkdir -p "$RUNNER_TEMP/unpacked" && unzip -q "$ZIP" -d "$RUNNER_TEMP/unpacked"
+      - name: Diagnose
+        shell: bash
+        run: |
+          python3 maniements-v5/product/v6/diag_arx_probe_v62.py \
+            --runtime-root "$RUNNER_TEMP/unpacked" \
+            --tools-root maniements-v5/dictionary
