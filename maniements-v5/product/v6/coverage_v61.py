@@ -27,6 +27,7 @@ for c in batch.CASES:
     candidates,stats=comp.collect_candidates(mods,c['north'],c['south'],c['target'],oracle)
     optimal=[x for x in candidates if Fraction(x['fraction'])==oracle]
     human=[x for x in optimal if x['source']!='ORACLE']
+    compact_human=[x for x in human if x.get('human_compact',True)]
     top=optimal[0] if optimal else None
     row={
       'id':c['id'],'north':c['north'],'south':c['south'],'display':c['display'],'target':c['target'],
@@ -34,23 +35,30 @@ for c in batch.CASES:
       'candidate_count':len(candidates),
       'exact_covered':bool(optimal),
       'human_covered':bool(human),
+      'compact_human_covered':bool(compact_human),
       'optimal_human_sources':sorted(set(x['source'] for x in human)),
       'optimal_human_labels':sorted(set(x['label'] for x in human)),
+      'compact_human_sources':sorted(set(x['source'] for x in compact_human)),
+      'compact_human_labels':sorted(set(x['label'] for x in compact_human)),
       'top_source':None if top is None else top['source'],
       'top_label':None if top is None else top['label'],
       'seconds':round(time.monotonic()-t0,3),
       'family_stats':stats,
     }
     rows.append(row)
-    print(json.dumps({k:row[k] for k in ('id','target','oracle_fraction','candidate_count','human_covered','optimal_human_sources','optimal_human_labels','seconds')},ensure_ascii=False),flush=True)
+    print(json.dumps({k:row[k] for k in ('id','target','oracle_fraction','candidate_count','human_covered','compact_human_covered','optimal_human_sources','optimal_human_labels','seconds')},ensure_ascii=False),flush=True)
 
 human_n=sum(x['human_covered'] for x in rows)
+compact_n=sum(x['compact_human_covered'] for x in rows)
 summary={
   'schema':'MANIEMENTS_V61_HUMAN_COVERAGE_BENCH_V1',
   'cases':len(rows),
   'human_covered':human_n,
   'human_coverage_percent':round(100*human_n/len(rows),2) if rows else 0,
+  'compact_human_covered':compact_n,
+  'compact_human_coverage_percent':round(100*compact_n/len(rows),2) if rows else 0,
   'uncovered':[x['id'] for x in rows if not x['human_covered']],
+  'noncompact':[x['id'] for x in rows if x['human_covered'] and not x['compact_human_covered']],
   'elapsed_seconds':round(time.monotonic()-started,3),
   'runtime_frozen_sha256':'a0b580531f3c9e8bb00710b9c3e1c183b27cbfe9231c9d584e29a374ba88835d'
 }
